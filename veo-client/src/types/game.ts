@@ -1,6 +1,6 @@
 import { ClauseBuilder, ParsedEntity, UnionOfModelData, HistoricalToriiQueryBuilder } from '@dojoengine/sdk';
 import { SchemaType } from '../generated/models.gen.ts';
-import { useDojoConfig } from "@/contexts/starknet";
+import { useDojoConfig } from "../contexts/starknet";
 
 export interface Item {
   id: number;
@@ -123,6 +123,15 @@ export interface Quest {
   targetScore: number;
 }
 
+export interface GameSettingsData {
+  name: string;
+  in_battle: boolean;
+  game_seed: number;
+  game_seed_until_xp: number;
+  adventurer: Adventurer;
+  bag: Item[];
+}
+
 export type GameSchemaType = SchemaType;
 export type GameSchemaModels = GameSchemaType['lootsurvivor'];
 export type GameComponentModels = GameSchemaType['tournaments'];
@@ -136,10 +145,10 @@ export class GameClauseBuilder extends ClauseBuilder<GameSchemaType> { }
 
 export const useEntityModel = () => {
   const dojoConfig = useDojoConfig();
-  
+
   const getEntityModel = <M extends GameModelType>(entity: GameEntity, modelName: GameSchemaModelNames | GameComponentModelNames): M => (
     entity?.models[`${dojoConfig.namespace}`]?.[modelName] as M
   );
-  
+
   return { getEntityModel };
 };

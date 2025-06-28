@@ -1,36 +1,32 @@
-import { getContractByName } from "@dojoengine/core";
 import { useDojoConfig } from "@/contexts/starknet";
+import { getContractByName } from "@dojoengine/core";
 import { useAccount } from "@starknet-react/core";
 import { CallData } from 'starknet';
-import { ItemPurchase, Stats } from "../types/game";
+import { GameSettingsData, ItemPurchase, Stats } from "@/types/game";
 
-/**
- * Custom hook to handle system calls and state management in the Dojo application.
- * Provides functionality for game actions and managing optimistic updates.
- *
- * @returns An object containing system call functions:
- *   - mintAndStartGame: Function to mint a new game
- *   - startGame: Function to start a new game with a weapon
- *   - explore: Function to explore the world
- *   - attack: Function to attack a beast
- *   - flee: Function to flee from a beast
- *   - equip: Function to equip items
- *   - drop: Function to drop items
- *   - levelUp: Function to level up and purchase items
- */
 export const useSystemCalls = () => {
   const { account } = useAccount();
   const dojoConfig = useDojoConfig();
   
   const namespace = dojoConfig.namespace;
+  const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const GAME_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "game_systems")?.address
   const GAME_TOKEN_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "game_token_systems")?.address
+  const SETTINGS_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "settings_systems")?.address
 
   /**
-   * Executes a list of calls with optional VRF
-   * @param calls Array of calls to execute
-   * @param includeVRF Whether to include VRF in the transaction
-   * @returns {Promise<any>} The result of the execution
+   * Custom hook to handle system calls and state management in the Dojo application.
+   * Provides functionality for game actions and managing optimistic updates.
+   *
+   * @returns An object containing system call functions:
+   *   - mintAndStartGame: Function to mint a new game
+   *   - startGame: Function to start a new game with a weapon
+   *   - explore: Function to explore the world
+   *   - attack: Function to attack a beast
+   *   - flee: Function to flee from a beast
+   *   - equip: Function to equip items
+   *   - drop: Function to drop items
+   *   - levelUp: Function to level up and purchase items
    */
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
     try {
@@ -110,7 +106,7 @@ export const useSystemCalls = () => {
    */
   const requestRandom = () => {
     return {
-      contractAddress: import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS,
+      contractAddress: VRF_PROVIDER_ADDRESS,
       entrypoint: 'request_random',
       calldata: CallData.compile({
         caller: GAME_ADDRESS,
@@ -207,6 +203,41 @@ export const useSystemCalls = () => {
     }
   };
 
+  const createSettings = async (settings: GameSettingsData) => {
+    let bag = {
+      item_1: settings.bag[0] ? { id: settings.bag[0].id, xp: settings.bag[0].xp } : { id: 0, xp: 0 },
+      item_2: settings.bag[1] ? { id: settings.bag[1].id, xp: settings.bag[1].xp } : { id: 0, xp: 0 },
+      item_3: settings.bag[2] ? { id: settings.bag[2].id, xp: settings.bag[2].xp } : { id: 0, xp: 0 },
+      item_4: settings.bag[3] ? { id: settings.bag[3].id, xp: settings.bag[3].xp } : { id: 0, xp: 0 },
+      item_5: settings.bag[4] ? { id: settings.bag[4].id, xp: settings.bag[4].xp } : { id: 0, xp: 0 },
+      item_6: settings.bag[5] ? { id: settings.bag[5].id, xp: settings.bag[5].xp } : { id: 0, xp: 0 },
+      item_7: settings.bag[6] ? { id: settings.bag[6].id, xp: settings.bag[6].xp } : { id: 0, xp: 0 },
+      item_8: settings.bag[7] ? { id: settings.bag[7].id, xp: settings.bag[7].xp } : { id: 0, xp: 0 },
+      item_9: settings.bag[8] ? { id: settings.bag[8].id, xp: settings.bag[8].xp } : { id: 0, xp: 0 },
+      item_10: settings.bag[9] ? { id: settings.bag[9].id, xp: settings.bag[9].xp } : { id: 0, xp: 0 },
+      item_11: settings.bag[10] ? { id: settings.bag[10].id, xp: settings.bag[10].xp } : { id: 0, xp: 0 },
+      item_12: settings.bag[11] ? { id: settings.bag[11].id, xp: settings.bag[11].xp } : { id: 0, xp: 0 },
+      item_13: settings.bag[12] ? { id: settings.bag[12].id, xp: settings.bag[12].xp } : { id: 0, xp: 0 },
+      item_14: settings.bag[13] ? { id: settings.bag[13].id, xp: settings.bag[13].xp } : { id: 0, xp: 0 },
+      item_15: settings.bag[14] ? { id: settings.bag[14].id, xp: settings.bag[14].xp } : { id: 0, xp: 0 },
+      mutated: false
+    }
+
+    return await executeAction([
+      {
+        contractAddress: SETTINGS_ADDRESS,
+        entrypoint: 'add_settings',
+        calldata: [
+          settings.name,
+          settings.adventurer,
+          bag,
+          settings.game_seed,
+          settings.game_seed_until_xp,
+          settings.in_battle
+        ]
+      }
+    ], () => { });
+  };
 
   return {
     startGame,
@@ -217,6 +248,7 @@ export const useSystemCalls = () => {
     drop,
     buyItems,
     selectStatUpgrades,
+    createSettings,
     mintGame,
     requestRandom,
     executeAction,

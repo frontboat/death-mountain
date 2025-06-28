@@ -1,5 +1,5 @@
-import { useDojoConfig } from "@/contexts/starknet";
-import { GameQueryBuilder } from "@/types/game";
+import { useDojoConfig } from "@/desktop/contexts/starknet";
+import { GameQueryBuilder } from "@/desktop/types/game";
 import { ClauseBuilder } from "@dojoengine/sdk";
 import { addAddressPadding } from "starknet";
 

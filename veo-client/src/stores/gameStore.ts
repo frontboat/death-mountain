@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Adventurer, Beast, Item, Metadata, Quest } from '../types/game';
+import { Adventurer, Beast, Item, Metadata, Quest } from '@/types/game';
 import { GameEvent } from '@/utils/events';
 import { ItemUtils } from '@/utils/loot';
 import { getNewItemsEquipped } from '@/utils/game';

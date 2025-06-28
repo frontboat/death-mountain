@@ -1,6 +1,6 @@
 import { BEAST_MIN_DAMAGE } from "@/constants/beast";
 import { MIN_DAMAGE } from "@/constants/game";
-import { Adventurer, Beast, CombatStats, Equipment, Item } from "@/types/game";
+import { Adventurer, Beast, CombatStats, Equipment, Item } from "@/desktop/types/game";
 import { getArmorType, getAttackType } from "./beast";
 import { ItemType, ItemUtils } from "./loot";
 

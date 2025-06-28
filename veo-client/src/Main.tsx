@@ -10,7 +10,7 @@ import type { SchemaType } from "./generated/models.gen.ts";
 
 import { createDojoConfig } from "@dojoengine/core";
 import { useEffect, useState } from "react";
-import { DynamicConnectorProvider, useDynamicConnector } from "./contexts/starknet";
+import { DynamicConnectorProvider, useDynamicConnector } from "./desktop/contexts/starknet.tsx";
 import "./index.css";
 
 function DojoApp() {

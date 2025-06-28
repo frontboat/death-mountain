@@ -6,7 +6,7 @@ import {
 } from "../constants/beast";
 
 import * as starknet from "@scure/starknet";
-import { Beast } from "../types/game";
+import { Beast } from "../desktop/types/game";
 import { ItemUtils } from "./loot";
 
 const MAX_ID = BigInt(75);

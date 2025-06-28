@@ -13,7 +13,7 @@ import {
 
 // Import icons
 import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from '@/constants/beast';
-import { Beast, Item, Stats } from '@/types/game';
+import { Beast, Item, Stats } from '@/desktop/types/game';
 import { calculateLevel } from './game';
 
 // Import icons

@@ -1,10 +1,16 @@
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES, BEAST_NAMES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
-import { Adventurer, Attack, Beast, useEntityModel, Item, ItemPurchase, Obstacle, Stats } from "@/types/game";
-import { getBeastName, getBeastTier, getBeastType } from "./beast";
-import { streamIds } from "./cloudflare";
 import { OBSTACLE_NAMES } from "@/constants/obstacle";
-import { ItemUtils } from "./loot";
+import { Adventurer, Attack, Beast, Item, ItemPurchase, Obstacle, Stats, useEntityModel } from "@/desktop/types/game";
+import adventurerImg from '../mobile/assets/images/adventurer.png';
+import barrierImg from '../mobile/assets/images/barrier.png';
+import goldImg from '../mobile/assets/images/gold.png';
+import healthImg from '../mobile/assets/images/health.png';
+import marketImg from '../mobile/assets/images/market.png';
+import upgrade from '../mobile/assets/images/upgrade.png';
 import { preloadAssets } from "./assetLoader";
+import { getBeastImageById, getBeastName, getBeastTier, getBeastType } from "./beast";
+import { streamIds } from "./cloudflare";
+import { ItemUtils } from "./loot";
 
 export interface GameEvent {
   type: 'adventurer' | 'bag' | 'beast' | 'discovery' | 'obstacle' | 'defeated_beast' | 'fled_beast' | 'stat_upgrade' |
@@ -254,15 +260,6 @@ export const transitionVideos = [
   streamIds.explore,
 ]
 
-export const ExplorerLogEvents = [
-  'discovery',
-  'obstacle',
-  'defeated_beast',
-  'fled_beast',
-  'stat_upgrade',
-  'buy_items',
-]
-
 export const BattleEvents = [
   'attack',
   'beast_attack',
@@ -281,6 +278,29 @@ export const ExplorerReplayEvents = [
   'equip',
   'drop',
 ]
+
+export const getEventIcon = (event: GameEvent) => {
+  switch (event.type) {
+    case 'discovery':
+      if (event.discovery?.type === 'Gold') return goldImg;
+      if (event.discovery?.type === 'Health') return healthImg;
+      if (event.discovery?.type === 'Loot') return ItemUtils.getItemImage(event.discovery?.amount!);
+    case 'obstacle':
+      return barrierImg;
+    case 'defeated_beast':
+      return getBeastImageById(event.beast_id!);
+    case 'fled_beast':
+      return getBeastImageById(event.beast_id!);
+    case 'stat_upgrade':
+      return adventurerImg;
+    case 'level_up':
+      return upgrade;
+    case 'buy_items':
+      return marketImg;
+    default:
+      return adventurerImg;
+  }
+};
 
 export const getEventTitle = (event: GameEvent) => {
   switch (event.type) {

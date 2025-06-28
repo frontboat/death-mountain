@@ -5,7 +5,7 @@ import { useDojoConfig } from "@/contexts/starknet";
 export const useStarknetApi = () => {
   const dojoConfig = useDojoConfig();
   
-  const fetchAdventurer = async (adventurerId: number): Promise<Adventurer | null> => {
+  const getAdventurer = async (adventurerId: number): Promise<Adventurer | null> => {
     try {
       const response = await fetch(dojoConfig.rpcUrl, {
         method: "POST",
@@ -91,5 +91,5 @@ export const useStarknetApi = () => {
     return null;
   };
 
-  return { fetchAdventurer };
+  return { getAdventurer };
 };
