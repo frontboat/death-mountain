@@ -123,7 +123,7 @@ export const getBeastImage = (name: string) => {
 
 export const getBeastImageById = (id: number) => {
   const name = BEAST_NAMES[id]
-  return `ìmages/beasts/${name.replace(" ", "_").toLowerCase()}.png`
+  return `/images/beasts/${name.replace(" ", "_").toLowerCase()}.png`
 }
 
 export const getTierGlowColor = (tier: string): string => {

@@ -323,7 +323,7 @@ export default function MarketScreen() {
           <Box sx={styles.potionsSection}>
             <Box sx={styles.potionSliderContainer}>
               <Box sx={styles.potionLeftSection}>
-                <Box component="img" src={'/images/mobile/health_potion.png'} alt="Health Icon" sx={styles.potionImage} />
+                <Box component="img" src={'/images/health.png'} alt="Health Icon" sx={styles.potionImage} />
                 <Box sx={styles.potionInfo}>
                   <Typography sx={styles.potionLabel}>Buy Potions</Typography>
                   <Typography sx={styles.potionHelperText}>+10 Health</Typography>

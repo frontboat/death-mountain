@@ -23,7 +23,7 @@ export const mobileRoutes = [
     content: <MobileStartPage />
   },
   {
-    path: '/game',
+    path: '/play',
     content: <MobileGamePage />
   },
   {

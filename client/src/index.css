@@ -47,6 +47,14 @@ b {
   overflow: hidden;
 }
 
+.container {
+  background: rgba(17, 17, 17, 1);
+  border: 3px solid rgba(34, 34, 34, 1);
+  border-radius: 5px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
 .imageContainer {
   position: fixed;
   top: 0;

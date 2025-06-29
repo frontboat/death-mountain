@@ -19,13 +19,13 @@ const STAT_DESCRIPTIONS = {
 };
 
 const STAT_ICONS = {
-  strength: '/images/mobile/strength.png',
-  dexterity: '/images/mobile/dexterity.png',
-  vitality: '/images/mobile/vitality.png',
-  intelligence: '/images/mobile/intelligence.png',
-  wisdom: '/images/mobile/wisdom.png',
-  charisma: '/images/mobile/charisma.png',
-  luck: '/images/mobile/luck.png',
+  strength: '/images/types/strength.svg',
+  dexterity: '/images/types/dexterity.svg',
+  vitality: '/images/types/vitality.svg',
+  intelligence: '/images/types/intelligence.svg',
+  wisdom: '/images/types/wisdom.svg',
+  charisma: '/images/types/charisma.svg',
+  luck: '/images/types/luck.svg',
 };
 
 export default function StatSelectionScreen() {
