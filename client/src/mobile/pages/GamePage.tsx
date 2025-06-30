@@ -35,11 +35,12 @@ export default function GamePage() {
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
   const settings_id = Number(searchParams.get('settingsId'));
+  const guest = searchParams.get('guest');
 
   async function mint() {
     setLoadingProgress(45)
     let tokenId = await mintGame(account, playerName, settings_id);
-    navigate(`/play?id=${tokenId}`, { replace: true });
+    navigate(`/play?id=${tokenId}${guest === 'true' && '&guest=true'}`, { replace: true });
   }
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function GamePage() {
   useEffect(() => {
     if (!sdk || isPending) return;
 
-    if (!address) return login();
+    if (!address && guest !== 'true') return login();
 
     if (!account) {
       forceUpdate()

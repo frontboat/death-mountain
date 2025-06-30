@@ -1,4 +1,5 @@
 import { useStarknetApi } from '@/api/starknet';
+import { useDynamicConnector } from '@/contexts/starknet';
 import { Settings, useGameSettings } from '@/dojo/useGameSettings';
 import { useGameTokens } from '@/dojo/useGameTokens';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
@@ -72,13 +73,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const { sdk } = useDojoSDK();
   const { startGame, executeAction, requestRandom, explore, attack,
     flee, buyItems, selectStatUpgrades, equip, drop } = useSystemCalls();
+  const { currentNetworkConfig } = useDynamicConnector();
   const { getAdventurer } = useStarknetApi();
   const { getSettingsList } = useGameSettings();
   const { fetchMetadata } = useGameTokens();
   const { getEntityModel } = useEntityModel();
   const { processGameEvent } = useEvents();
   const { gameEventsQuery } = useQueries();
-
 
   const { gameId, adventurer, adventurerState, setAdventurer, setBag, setBeast, setExploreLog, setBattleEvent, newInventoryItems,
     setMarketItemIds, setNewMarket, setNewInventoryItems, metadata, gameSettings, setGameSettings } = useGameStore();
@@ -103,7 +104,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     if (gameId && metadata && !gameSettings) {
       getSettingsList(null, [metadata.settings_id]).then((settings: Settings[]) => {
         setGameSettings(settings[0])
-        setVRFEnabled(settings[0].game_seed === 0);
+        setVRFEnabled(currentNetworkConfig.vrf && settings[0].game_seed === 0);
         subscribeEvents(gameId!, settings[0]);
       })
     }
@@ -112,7 +113,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (!gameSettings || !adventurer || VRFEnabled) return;
 
-    if (gameSettings.game_seed_until_xp !== 0 && adventurer.xp >= gameSettings.game_seed_until_xp) {
+    if (currentNetworkConfig.vrf && gameSettings.game_seed_until_xp !== 0 && adventurer.xp >= gameSettings.game_seed_until_xp) {
       setVRFEnabled(true);
     }
   }, [gameSettings, adventurer]);
@@ -155,7 +156,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       .filter((entity: any) => Boolean(getEntityModel(entity, "GameEvent")))
       .map((entity: any) => processGameEvent(entity))
       .sort((a, b) => a.action_count - b.action_count);
-
 
     if (spectating) {
       handleSpectating(events);

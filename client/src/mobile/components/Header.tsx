@@ -1,4 +1,5 @@
 import { useGameStore } from '@/stores/gameStore';
+import { useController } from '@/contexts/controller';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Box, IconButton } from '@mui/material';
 import { useState } from 'react';
@@ -9,6 +10,7 @@ import WalletConnect from './WalletConnect';
 
 function Header() {
   const { gameId, adventurer } = useGameStore();
+  const { address } = useController();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handleSettingsClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -32,7 +34,7 @@ function Header() {
           <Network />
         </Box>
 
-        <WalletConnect />
+        {address && <WalletConnect />}
 
         <IconButton
           onClick={handleSettingsClick}

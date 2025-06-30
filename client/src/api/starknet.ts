@@ -1,10 +1,11 @@
 import { getContractByName } from "@dojoengine/core";
 import { Adventurer } from "@/types/game";
 import { useDojoConfig } from "@/contexts/starknet";
+import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
 export const useStarknetApi = () => {
   const dojoConfig = useDojoConfig();
-  
+
   const getAdventurer = async (adventurerId: number): Promise<Adventurer | null> => {
     try {
       const response = await fetch(dojoConfig.rpcUrl, {
@@ -91,5 +92,38 @@ export const useStarknetApi = () => {
     return null;
   };
 
-  return { getAdventurer };
+  const createBurnerAccount = async (rpcProvider: RpcProvider) => {
+    const privateKey = stark.randomAddress();
+    const publicKey = ec.starkCurve.getStarkKey(privateKey);
+
+    const accountClassHash = "0x07dc7899aa655b0aae51eadff6d801a58e97dd99cf4666ee59e704249e51adf2"
+    // Calculate future address of the account
+    const constructorCalldata = CallData.compile({ publicKey });
+    const contractAddress = hash.calculateContractAddressFromHash(
+      publicKey,
+      accountClassHash,
+      constructorCalldata,
+      0
+    );
+
+    const account = new Account(rpcProvider, contractAddress, privateKey, "1");
+    const { transaction_hash } = await account.deployAccount({
+      classHash: accountClassHash,
+      constructorCalldata: constructorCalldata,
+      addressSalt: publicKey,
+    }, {
+      version: "3",
+      nonce: num.toHex(0),
+      maxFee: num.toHex(0),
+    });
+
+    const receipt = await account.waitForTransaction(transaction_hash, { retryInterval: 100 });
+
+    if (receipt) {
+      localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey, version: "1" }))
+      return account
+    }
+  };
+
+  return { getAdventurer, createBurnerAccount };
 };

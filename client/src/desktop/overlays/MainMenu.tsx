@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function MainMenu() {
   const navigate = useNavigate();
-  const { address, isPending } = useController();
+  const { address, isPending, playAsGuest } = useController();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [left, setLeft] = useState(getMenuLeftOffset());
 
@@ -83,6 +83,28 @@ export default function MainMenu() {
             <Box sx={styles.bottom}>
               <Network />
               <WalletConnect />
+
+              {!address && (
+                <>
+                  <Box sx={styles.orDivider}>
+                    <Divider sx={{ flex: 1 }} />
+                    <Typography sx={styles.orText}>or</Typography>
+                    <Divider sx={{ flex: 1 }} />
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    sx={{ textAlign: 'center', justifyContent: 'center', height: '36px' }}
+                    onClick={() => {
+                      playAsGuest();
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '0.8rem' }}>Play as Guest</Typography>
+                  </Button>
+                </>
+              )}
+
               <Box sx={styles.bottomRow}>
                 <Typography sx={styles.alphaVersion}>
                   ALPHA VERSION 0.0.1
@@ -167,5 +189,16 @@ const styles = {
     fontSize: '0.7rem',
     opacity: 0.8,
     letterSpacing: 1,
+  },
+  orDivider: {
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+  },
+  orText: {
+    margin: '0 1rem',
+    fontSize: '0.8rem',
+    opacity: 0.8,
+    textAlign: 'center',
   },
 };

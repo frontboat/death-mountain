@@ -1,3 +1,4 @@
+import { useDynamicConnector } from '@/contexts/starknet';
 import { Settings, useGameSettings } from '@/dojo/useGameSettings';
 import { useGameTokens } from '@/dojo/useGameTokens';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
@@ -44,6 +45,7 @@ const ExplorerLogEvents = [
 
 export const GameDirector = ({ children }: PropsWithChildren) => {
   const { sdk } = useDojoSDK();
+  const { currentNetworkConfig } = useDynamicConnector();
   const { startGame, executeAction, requestRandom, explore, attack,
     flee, buyItems, selectStatUpgrades, equip, drop } = useSystemCalls();
   const { getSettingsList } = useGameSettings();
@@ -61,7 +63,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [actionFailed, setActionFailed] = useReducer(x => x + 1, 0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [eventQueue, setEventQueue] = useState<any[]>([]);
-
   const [videoQueue, setVideoQueue] = useState<string[]>([]);
 
   useEffect(() => {
@@ -74,7 +75,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     if (gameId && metadata && !gameSettings) {
       getSettingsList(null, [metadata.settings_id]).then((settings: Settings[]) => {
         setGameSettings(settings[0])
-        setVRFEnabled(settings[0].game_seed === 0);
+        setVRFEnabled(currentNetworkConfig.vrf && settings[0].game_seed === 0);
         subscribeEvents(gameId!, settings[0]);
       })
     }
@@ -83,7 +84,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (!gameSettings || !adventurer || VRFEnabled) return;
 
-    if (gameSettings.game_seed_until_xp !== 0 && adventurer.xp >= gameSettings.game_seed_until_xp) {
+    if (currentNetworkConfig.vrf && gameSettings.game_seed_until_xp !== 0 && adventurer.xp >= gameSettings.game_seed_until_xp) {
       setVRFEnabled(true);
     }
   }, [gameSettings, adventurer]);

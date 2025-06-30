@@ -1,5 +1,9 @@
+import { useStarknetApi } from "@/api/starknet";
+import { ChainId, NETWORKS } from "@/utils/networkConfig";
 import { useAccount, useConnect, useDisconnect } from '@starknet-react/core';
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import { Account, RpcProvider } from 'starknet';
 import { useDynamicConnector } from './starknet';
 
 export interface ControllerContext {
@@ -7,10 +11,12 @@ export interface ControllerContext {
   address: string | undefined;
   playerName: string;
   isPending: boolean;
+  isGuest: boolean;
 
   openProfile: () => void;
   login: () => void;
   logout: () => void;
+  playAsGuest: () => void;
 }
 
 // Create a context
@@ -21,9 +27,14 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { account, address, isConnecting } = useAccount();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
-  const { currentNetworkConfig } = useDynamicConnector();
+  const { currentNetworkConfig, switchToNetwork } = useDynamicConnector();
+  const { createBurnerAccount } = useStarknetApi();
+  const navigate = useNavigate();
 
+  const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
+
+  const demoRpcProvider = useMemo(() => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl, }), []);
 
   useEffect(() => {
     if (account) {
@@ -33,6 +44,15 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       }
     }
   }, [account]);
+
+  useEffect(() => {
+    if (localStorage.getItem('burner')) {
+      let burner = JSON.parse(localStorage.getItem('burner') as string)
+      setBurner(new Account(demoRpcProvider, burner.address, burner.privateKey, "1"))
+    } else {
+      createBurner()
+    }
+  }, []);
 
   // Get username when connector changes
   useEffect(() => {
@@ -48,15 +68,33 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (connector) getUsername();
   }, [connector]);
 
+  const createBurner = async () => {
+    let account = await createBurnerAccount(demoRpcProvider)
+
+    if (account) {
+      setBurner(account)
+    }
+  }
+
+  const playAsGuest = () => {
+    if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
+      switchToNetwork(ChainId.WP_PG_SLOT);
+    }
+
+    navigate('/play?guest=true');
+  }
+
   return (
     <ControllerContext.Provider value={{
-      account,
+      account: account || burner,
       address,
       playerName: userName || "Adventurer",
       isPending: isConnecting || isPending,
+      isGuest: !account,
       openProfile: () => (connector as any)?.controller?.openProfile(),
       login: () => connect({ connector: connectors.find(conn => conn.id === "controller") }),
-      logout: () => disconnect()
+      logout: () => disconnect(),
+      playAsGuest
     }}>
       {children}
     </ControllerContext.Provider>

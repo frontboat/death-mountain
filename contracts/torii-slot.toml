@@ -1,0 +1,14 @@
+world_address = "0x05d6e4908d93d94a4487bd3b77dcfacb1565a8f4cfde767a0a79082cf27b224b"
+rpc = "https://api.cartridge.gg/x/pg-slot/katana"
+
+[events]
+raw = true
+
+[sql]
+historical = ["ls_0_0_1-GameEvent"]
+
+[indexing]
+pending = true
+contracts = [
+    "erc721:0x7ab74ce30c66e15862aa0be7e8a41c0773ff7446c9de61e347a824ad11c480d"
+]

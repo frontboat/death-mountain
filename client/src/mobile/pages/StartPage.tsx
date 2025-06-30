@@ -5,11 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import GameTokensList from '../components/GameTokensList';
 
 export default function LandingPage() {
-  const { address } = useController();
+  const { address, playAsGuest, login } = useController();
   const navigate = useNavigate();
 
   const handleStartGame = async () => {
-    navigate(`/play`)
+    if (address) {
+      navigate(`/play`)
+    } else {
+      login();
+    }
   };
 
   return (
@@ -28,9 +32,30 @@ export default function LandingPage() {
             startIcon={<img src={'/images/mobile/dice.png'} alt='dice' height='20px' />}
           >
             <Typography variant='h5' color='#111111'>
-              Play now
+              {address ? 'Play now' : 'Login'}
             </Typography>
           </Button>
+
+          {!address && (
+            <>
+              <Box sx={styles.orDivider}>
+                <Box sx={{ flex: 1, height: '1px', bgcolor: 'rgba(255,255,255,0.3)' }} />
+                <Typography sx={styles.orText}>or</Typography>
+                <Box sx={{ flex: 1, height: '1px', bgcolor: 'rgba(255,255,255,0.3)' }} />
+              </Box>
+              <Button
+                fullWidth
+                variant="outlined"
+                size="small"
+                sx={{ textAlign: 'center', justifyContent: 'center', height: '36px' }}
+                onClick={() => {
+                  playAsGuest()
+                }}
+              >
+                <Typography sx={{ fontSize: '0.8rem' }}>Play as Guest</Typography>
+              </Button>
+            </>
+          )}
 
           {address && <>
             <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
@@ -65,5 +90,17 @@ const styles = {
   logoContainer: {
     maxWidth: '70%',
     mb: 2
+  },
+  orDivider: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+    justifyContent: 'center',
+    margin: '10px 0'
+  },
+  orText: {
+    fontSize: '0.8rem',
+    color: 'rgba(255,255,255,0.3)',
+    margin: '0 10px'
   },
 };
