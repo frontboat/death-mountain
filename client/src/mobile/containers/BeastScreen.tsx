@@ -189,7 +189,7 @@ export default function BeastScreen() {
         <Box sx={styles.middleSection}>
           <Box sx={styles.combatLogContainer}>
             <AnimatedText text={combatLog} />
-            {(combatLog === fleeMessage || combatLog === attackMessage || combatLog === equipMessage) && <div className='dotLoader yellow' style={{ marginTop: '6px' }} />}
+            {(combatLog === fleeMessage || combatLog === attackMessage || combatLog === equipMessage) && <div className='dotLoader green' style={{ marginTop: '6px' }} />}
           </Box>
         </Box>
 
@@ -264,7 +264,7 @@ export default function BeastScreen() {
                     ATTACK
                   </Button>
                   <Typography sx={styles.probabilityText}>
-                  {`${calculateAttackDamage(adventurer!.equipment.weapon!, adventurer!, beast!).baseDamage} damage`}
+                    {`${calculateAttackDamage(adventurer!.equipment.weapon!, adventurer!, beast!).baseDamage} damage`}
                   </Typography>
                 </Box>
                 <Box sx={styles.actionButtonContainer}>

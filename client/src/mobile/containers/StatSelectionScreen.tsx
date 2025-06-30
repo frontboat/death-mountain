@@ -203,7 +203,7 @@ export default function StatSelectionScreen() {
           {isSelectingStats
             ? <Box display={'flex'} alignItems={'baseline'}>
               <Typography variant={'h4'} lineHeight={'16px'}>Selecting Stats</Typography>
-              <div className='dotLoader yellow' />
+              <div className='dotLoader green' />
             </Box>
             : <Typography variant={'h4'} lineHeight={'16px'}>
               Select Stats

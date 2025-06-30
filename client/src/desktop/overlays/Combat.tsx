@@ -85,7 +85,7 @@ export default function CombatOverlay() {
 
   const fleePercentage = ability_based_percentage(adventurer!.xp, adventurer!.stats.dexterity);
   const combatStats = calculateCombatStats(adventurer!, bag, beast);
-  
+
   const hasNewItemsEquipped = useMemo(() => {
     if (!adventurer?.equipment || !adventurerState?.equipment) return false;
     return getNewItemsEquipped(adventurer.equipment, adventurerState.equipment).length > 0;
@@ -105,7 +105,8 @@ export default function CombatOverlay() {
       <Box sx={styles.middleSection}>
         <Box sx={styles.combatLogContainer}>
           <AnimatedText text={combatLog} />
-          {(combatLog === fleeMessage || combatLog === attackMessage || combatLog === equipMessage) && <div className='dotLoader yellow' style={{ marginTop: '6px' }} />}
+          {(combatLog === fleeMessage || combatLog === attackMessage || combatLog === equipMessage)
+            && <div className='dotLoader yellow' style={{ marginTop: '6px' }} />}
         </Box>
       </Box>
 

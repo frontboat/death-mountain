@@ -305,7 +305,7 @@ export default function MarketScreen() {
                   <Typography variant='h5'>
                     Processing
                   </Typography>
-                  <div className='dotLoader yellow' />
+                  <div className='dotLoader green' />
                 </Box>
                 : <Typography variant='h5'>
                   Checkout

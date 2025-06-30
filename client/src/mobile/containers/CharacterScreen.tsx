@@ -297,7 +297,7 @@ export default function CharacterScreen() {
                     <Typography>
                       Dropping items
                     </Typography>
-                    <div className='dotLoader yellow' />
+                    <div className='dotLoader green' />
                   </Box>
                   : <Typography>
                     Confirm

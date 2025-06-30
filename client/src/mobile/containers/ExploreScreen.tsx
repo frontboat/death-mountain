@@ -152,7 +152,7 @@ export default function ExploreScreen() {
                 <Typography variant={'h4'} lineHeight={'16px'}>
                   EXPLORING
                 </Typography>
-                <div className='dotLoader yellow' />
+                <div className='dotLoader green' />
               </Box>
               : <Typography variant={'h4'} lineHeight={'16px'}>
                 EXPLORE
