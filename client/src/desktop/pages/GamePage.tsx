@@ -1,4 +1,5 @@
 import { useController } from '@/contexts/controller';
+import { useDynamicConnector } from '@/contexts/starknet';
 import VideoPlayer from '@/desktop/components/VideoPlayer';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import CombatOverlay from '@/desktop/overlays/Combat';
@@ -8,6 +9,7 @@ import LoadingOverlay from '@/desktop/overlays/Loading';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { useGameStore } from '@/stores/gameStore';
 import { streamIds } from '@/utils/cloudflare';
+import { ChainId } from '@/utils/networkConfig';
 import { getMenuLeftOffset } from '@/utils/utils';
 import { useDojoSDK } from '@dojoengine/sdk/react';
 import { Box } from '@mui/material';
@@ -37,6 +39,7 @@ export default function GamePage() {
   const { sdk } = useDojoSDK();
   const { mintGame } = useSystemCalls();
   const { account, address, playerName, login, isPending } = useController();
+  const { currentNetworkConfig, switchToNetwork } = useDynamicConnector();
   const { gameId, adventurer, exitGame, setGameId, beast, showOverlay, setShowOverlay } = useGameStore();
   const { subscription, setVideoQueue, actionFailed } = useGameDirector();
 
@@ -72,6 +75,11 @@ export default function GamePage() {
 
     if (!address && guest !== 'true') return login();
 
+    if (guest === 'true' && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
+      switchToNetwork(ChainId.WP_PG_SLOT);
+      return;
+    }
+
     if (!account) {
       forceUpdate()
       return
@@ -82,7 +90,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, address, isPending, sdk, update]);
+  }, [game_id, address, isPending, sdk, update, currentNetworkConfig.chainId]);
 
   useEffect(() => {
     return () => {

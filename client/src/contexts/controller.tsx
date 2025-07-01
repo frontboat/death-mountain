@@ -31,6 +31,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { createBurnerAccount } = useStarknetApi();
   const navigate = useNavigate();
 
+  const [creatingBurner, setCreatingBurner] = useState(false);
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
 
@@ -69,11 +70,13 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   }, [connector]);
 
   const createBurner = async () => {
+    setCreatingBurner(true);
     let account = await createBurnerAccount(demoRpcProvider)
 
     if (account) {
       setBurner(account)
     }
+    setCreatingBurner(false);
   }
 
   const playAsGuest = () => {
@@ -89,7 +92,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       account: account || burner,
       address,
       playerName: userName || "Adventurer",
-      isPending: isConnecting || isPending,
+      isPending: isConnecting || isPending || creatingBurner,
       isGuest: !account,
       openProfile: () => (connector as any)?.controller?.openProfile(),
       login: () => connect({ connector: connectors.find(conn => conn.id === "controller") }),

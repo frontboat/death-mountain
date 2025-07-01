@@ -54,8 +54,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const { processGameEvent } = useEvents();
   const { gameEventsQuery } = useQueries();
 
-  const { gameId, adventurer, adventurerState, setAdventurer, setBag, setBeast, setExploreLog, setBattleEvent, newInventoryItems,
-    setMarketItemIds, setNewMarket, setNewInventoryItems, metadata, gameSettings, setGameSettings, setShowInventory, setShowOverlay } = useGameStore();
+  const {
+    gameId, adventurer, adventurerState, setAdventurer, setBag, setBeast, setExploreLog, setBattleEvent,
+    newInventoryItems, setMarketItemIds, setNewMarket, setNewInventoryItems, metadata, gameSettings,
+    setGameSettings, setShowInventory, setShowOverlay,
+  } = useGameStore();
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
   const [spectating, setSpectating] = useState(false);
