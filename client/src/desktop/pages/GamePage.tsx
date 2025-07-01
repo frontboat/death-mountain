@@ -107,7 +107,7 @@ export default function GamePage() {
   async function mint() {
     setVideoQueue([streamIds.start]);
     let tokenId = await mintGame(account, playerName, settings_id);
-    navigate(`/play?id=${tokenId}${guest === 'true' && '&guest=true'}`, { replace: true });
+    navigate(`/play?id=${tokenId}${guest === 'true' ? '&guest=true' : ''}`, { replace: true });
     setShowOverlay(false);
   }
 
