@@ -97,6 +97,12 @@ const ItemSlot = memo(({
               />
             </Box>
             <Box sx={styles.itemImageContainer}>
+              <Box
+                sx={[
+                  styles.itemGlow,
+                  { backgroundColor: ItemUtils.getTierColor(ItemUtils.getItemTier(item.id)) }
+                ]}
+              />
               <img
                 src={metadata.imageUrl}
                 alt={metadata.name}
@@ -454,6 +460,19 @@ const styles = {
   itemImage: {
     width: '40px',
     height: '40px',
+    position: 'relative' as const,
+    zIndex: 2,
+  },
+  itemGlow: {
+    position: 'absolute' as const,
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -60%)',
+    width: '72px',
+    height: '40px',
+    filter: 'blur(6px)',
+    opacity: 0.5,
+    zIndex: 1,
   },
   itemName: {
     color: 'rgba(128, 255, 0, 0.7)',
@@ -512,6 +531,7 @@ const styles = {
     right: 0,
     padding: '2px',
     borderRadius: '4px',
+    zIndex: 3,
   },
   itemTierText: {
     color: 'rgba(0, 0, 0, 0.8)',
@@ -522,7 +542,7 @@ const styles = {
     position: 'absolute',
     top: 0,
     left: 5,
-    zIndex: 1,
+    zIndex: 3,
   },
   itemLevelText: {
     color: '#EDCF33',

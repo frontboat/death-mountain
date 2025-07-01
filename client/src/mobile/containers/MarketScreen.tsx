@@ -394,6 +394,12 @@ export default function MarketScreen() {
               >
                 <Box sx={styles.itemImageContainer}>
                   <Box
+                    sx={[
+                      styles.itemGlow,
+                      { backgroundColor: ItemUtils.getTierColor(item.tier) }
+                    ]}
+                  />
+                  <Box
                     component="img"
                     src={item.imageUrl}
                     alt={item.name}
@@ -421,6 +427,7 @@ export default function MarketScreen() {
                             height: 16,
                             filter: 'invert(1) sepia(1) saturate(3000%) hue-rotate(50deg) brightness(0.8)',
                             opacity: 0.9,
+                            zIndex: 3,
                           }}
                         />
                       )}
@@ -668,6 +675,19 @@ const styles = {
     width: '100%',
     height: '100%',
     objectFit: 'contain',
+    position: 'relative',
+    zIndex: 2,
+  },
+  itemGlow: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '100%',
+    height: '100%',
+    filter: 'blur(8px)',
+    opacity: 0.4,
+    zIndex: 1,
   },
   itemTierBadge: {
     position: 'absolute',
@@ -678,6 +698,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 3,
   },
   itemTierText: {
     color: '#111111',
