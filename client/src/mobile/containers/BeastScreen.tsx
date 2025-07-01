@@ -1,16 +1,19 @@
-import { Box, Button, Checkbox, LinearProgress, Menu, Typography, keyframes } from '@mui/material';
+import { useGameDirector } from '@/mobile/contexts/GameDirector';
+import { useGameStore } from '@/stores/gameStore';
+import { Item } from '@/types/game';
+import { screenVariants } from '@/utils/animations';
+import { getBeastImageById } from '@/utils/beast';
+import { ability_based_percentage, calculateAttackDamage, calculateCombatStats, calculateLevel, getNewItemsEquipped } from '@/utils/game';
+import { ItemUtils, slotIcons } from '@/utils/loot';
+import { Box, Button, Checkbox, LinearProgress, Menu, Tooltip, Typography, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useLottie } from 'lottie-react';
 import { useEffect, useMemo, useState } from 'react';
+import { isMobile } from 'react-device-detect';
 import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
-import { useGameDirector } from '@/mobile/contexts/GameDirector';
-import { useGameStore } from '@/stores/gameStore';
-import { screenVariants } from '@/utils/animations';
-import { getBeastImageById, getItemTypeStrength, getItemTypeWeakness } from '@/utils/beast';
-import { ability_based_percentage, calculateAttackDamage, calculateLevel, getNewItemsEquipped } from '@/utils/game';
-import { ItemUtils, slotIcons } from '@/utils/loot';
+import ItemTooltip from '../components/ItemTooltip';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -117,6 +120,24 @@ export default function BeastScreen() {
     executeGameAction({ type: 'equip' });
   };
 
+  const getOffsetY = (isWeapon: boolean, isNameMatch: boolean, level: number, specialSeed: number) => {
+    let offset = 230;
+
+    if (isWeapon) {
+      offset += 17;
+    }
+
+    if (isNameMatch) {
+      offset += 30;
+    }
+
+    if (level >= 15 || (specialSeed !== 0)) {
+      offset += 30;
+    }
+
+    return offset;
+  }
+
   const fleePercentage = ability_based_percentage(adventurer!.xp, adventurer!.stats.dexterity);
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
   const maxHealth = gameSettings?.adventurer.health! + (adventurer!.stats.vitality * 15);
@@ -125,6 +146,9 @@ export default function BeastScreen() {
     if (!adventurer?.equipment || !adventurerState?.equipment) return false;
     return getNewItemsEquipped(adventurer.equipment, adventurerState.equipment).length > 0;
   }, [adventurer?.equipment]);
+
+  const combatStats = beast ? calculateCombatStats(adventurer!, bag, beast) : null;
+  const bestItemIds = combatStats?.bestItems.map((item: Item) => item.id) || [];
 
   return (
     <motion.div
@@ -300,11 +324,8 @@ export default function BeastScreen() {
         {/* Equipped Items Section */}
         <Box sx={styles.equippedItemsContainer}>
           <Box sx={styles.equippedItemsGrid}>
-            {Object.entries(slotIcons).map(([slot, icon]) => {
+            {Object.entries(slotIcons).map(([slot, icon], index) => {
               const equippedItem = adventurer?.equipment[slot.toLowerCase() as keyof typeof adventurer.equipment];
-              const itemType = equippedItem && equippedItem.id !== 0 ? ItemUtils.getItemType(equippedItem.id) : null;
-              const isStrong = itemType && getItemTypeStrength(itemType) === beast!.type;
-              const isWeak = itemType && getItemTypeWeakness(itemType) === beast!.type;
               const level = calculateLevel(equippedItem!.xp);
               const isNameMatch = ItemUtils.isNameMatch(equippedItem!.id, level, adventurer!.item_specials_seed, beast!);
               const isArmorSlot = ['Head', 'Chest', 'Legs', 'Hands', 'Waist'].includes(slot);
@@ -312,49 +333,84 @@ export default function BeastScreen() {
               const isNameMatchDanger = isNameMatch && isArmorSlot;
               const isNameMatchPower = isNameMatch && isWeaponSlot;
 
+              const offsetY = getOffsetY(isWeaponSlot, (isNameMatchDanger || isNameMatchPower), level, adventurer!.item_specials_seed);
+
               return (
-                <Box
-                  key={slot}
-                  onClick={(e) => {
-                    setSelectedSlot(slot);
-                    setMenuAnchor(e.currentTarget);
-                  }}
-                  sx={{
-                    ...styles.equippedItemSlot,
-                    ...(isStrong && styles.strongItemSlot),
-                    ...(isWeak && styles.weakItemSlot),
-                    ...(isNameMatchDanger && styles.nameMatchDangerSlot),
-                    ...(isNameMatchPower && styles.nameMatchPowerSlot)
+                <Tooltip
+                  title={equippedItem && equippedItem.id !== 0 ? <ItemTooltip itemSpecialsSeed={adventurer!.item_specials_seed} item={equippedItem} /> : null}
+                  placement="top-start"
+                  slotProps={{
+                    popper: {
+                      disablePortal: isMobile,
+                      modifiers: [
+                        {
+                          name: 'preventOverflow',
+                          enabled: true,
+                          options: { rootBoundary: 'viewport' },
+                        },
+                        {
+                          name: 'offset',
+                          options: {
+                            offset: [-(index * 30), offsetY], // [x, y] offset in pixels
+                          },
+                        },
+                      ],
+                    },
+                    tooltip: {
+                      sx: {
+                        bgcolor: 'transparent',
+                        border: 'none',
+                      },
+                    },
                   }}
                 >
-                  {equippedItem && equippedItem.id !== 0 ? (
-                    <Box sx={styles.equippedItemImageContainer}>
-                      <Box
-                        component="img"
-                        src={ItemUtils.getItemImage(equippedItem.id)}
-                        alt={ItemUtils.getItemName(equippedItem.id)}
-                        sx={styles.equippedItemImage}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    </Box>
-                  ) : (
-                    <Box sx={styles.equippedItemSlotIcon}>
-                      <Box
-                        component="img"
-                        src={icon}
-                        alt={slot}
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          filter: 'invert(1) sepia(1) saturate(3000%) hue-rotate(50deg) brightness(1.1)',
-                          opacity: 0.3,
-                        }}
-                      />
-                    </Box>
-                  )}
-                </Box>
+                  <Box
+                    key={slot}
+                    onClick={(e) => {
+                      setSelectedSlot(slot);
+                      setMenuAnchor(e.currentTarget);
+                    }}
+                    sx={{
+                      ...styles.equippedItemSlot,
+                      ...(isNameMatchDanger && styles.nameMatchDangerSlot),
+                      ...(isNameMatchPower && styles.nameMatchPowerSlot)
+                    }}
+                  >
+                    {equippedItem && equippedItem.id !== 0 ? (
+                      <Box sx={styles.equippedItemImageContainer}>
+                        <Box
+                          sx={[
+                            styles.itemGlow,
+                            { backgroundColor: ItemUtils.getTierColor(ItemUtils.getItemTier(equippedItem.id)) }
+                          ]}
+                        />
+                        <Box
+                          component="img"
+                          src={ItemUtils.getItemImage(equippedItem.id)}
+                          alt={ItemUtils.getItemName(equippedItem.id)}
+                          sx={styles.equippedItemImage}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </Box>
+                    ) : (
+                      <Box sx={styles.equippedItemSlotIcon}>
+                        <Box
+                          component="img"
+                          src={icon}
+                          alt={slot}
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            filter: 'invert(1) sepia(1) saturate(3000%) hue-rotate(50deg) brightness(1.1)',
+                            opacity: 0.3,
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Box>
+                </Tooltip>
               );
             })}
           </Box>
@@ -392,41 +448,78 @@ export default function BeastScreen() {
             <Box sx={styles.swapMenuGrid}>
               {bag
                 .filter(item => ItemUtils.getItemSlot(item.id).toLowerCase() === selectedSlot?.toLowerCase())
-                .map((item) => {
+                .map((item, index) => {
                   const level = calculateLevel(item.xp);
-                  const itemType = ItemUtils.getItemType(item.id);
-                  const isStrong = getItemTypeStrength(itemType) === beast!.type;
-                  const isWeak = getItemTypeWeakness(itemType) === beast!.type;
                   const isNameMatch = ItemUtils.isNameMatch(item.id, level, adventurer!.item_specials_seed, beast!);
                   const isArmorSlot = ['Head', 'Chest', 'Legs', 'Hands', 'Waist'].includes(ItemUtils.getItemSlot(item.id));
                   const isWeaponSlot = ItemUtils.getItemSlot(item.id) === 'Weapon';
+                  const isDefenseItem = bestItemIds.includes(item.id);
+                  const isNameMatchDanger = isNameMatch && isArmorSlot;
+                  const isNameMatchPower = isNameMatch && isWeaponSlot;
+                  const offsetY = getOffsetY(isWeaponSlot, (isNameMatchDanger || isNameMatchPower), level, adventurer!.item_specials_seed);
 
                   return (
-                    <Box
-                      key={item.id}
-                      onClick={() => {
-                        equipItem(item);
-                        setMenuAnchor(null);
-                        setSelectedSlot(null);
-                      }}
-                      sx={{
-                        ...styles.swapMenuItem,
-                        ...(isStrong && styles.strongSwapMenuItem),
-                        ...(isWeak && styles.weakSwapMenuItem),
-                        ...(isNameMatch && isArmorSlot && styles.nameMatchDangerSwapMenuItem),
-                        ...(isNameMatch && isWeaponSlot && styles.nameMatchPowerSwapMenuItem)
+                    <Tooltip
+                      title={<ItemTooltip itemSpecialsSeed={adventurer!.item_specials_seed} item={item} />}
+                      placement="top"
+                      slotProps={{
+                        popper: {
+                          disablePortal: isMobile,
+                          modifiers: [
+                            {
+                              name: 'preventOverflow',
+                              enabled: true,
+                              options: { rootBoundary: 'viewport' },
+                            },
+                            {
+                              name: 'offset',
+                              options: {
+                                offset: [-(index * 30), offsetY], // [x, y] offset in pixels
+                              },
+                            },
+                          ],
+                        },
+                        tooltip: {
+                          sx: {
+                            bgcolor: 'transparent',
+                            border: 'none',
+                          },
+                        },
                       }}
                     >
                       <Box
-                        component="img"
-                        src={ItemUtils.getItemImage(item.id)}
-                        alt={ItemUtils.getItemName(item.id)}
-                        sx={styles.swapMenuItemImage}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
+                        key={item.id}
+                        onClick={() => {
+                          equipItem(item);
+                          setMenuAnchor(null);
+                          setSelectedSlot(null);
                         }}
-                      />
-                    </Box>
+                        sx={{
+                          ...styles.swapMenuItem,
+                          ...(isDefenseItem && styles.strongSwapMenuItem),
+                          ...(isNameMatch && isArmorSlot && styles.nameMatchDangerSwapMenuItem),
+                          ...(isNameMatch && isWeaponSlot && styles.nameMatchPowerSwapMenuItem)
+                        }}
+                      >
+                        <Box sx={styles.swapMenuItemImageContainer}>
+                          <Box
+                            sx={[
+                              styles.swapMenuItemGlow,
+                              { backgroundColor: ItemUtils.getTierColor(ItemUtils.getItemTier(item.id)) }
+                            ]}
+                          />
+                          <Box
+                            component="img"
+                            src={ItemUtils.getItemImage(item.id)}
+                            alt={ItemUtils.getItemName(item.id)}
+                            sx={styles.swapMenuItemImage}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Tooltip>
                   );
                 })}
             </Box>
@@ -875,6 +968,19 @@ const styles = {
     width: '100%',
     height: '100%',
     objectFit: 'contain',
+    position: 'relative',
+    zIndex: 2,
+  },
+  itemGlow: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '100%',
+    height: '100%',
+    filter: 'blur(6px)',
+    opacity: 0.4,
+    zIndex: 1,
   },
   equippedItemTierBadge: {
     position: 'absolute',
@@ -1057,9 +1163,30 @@ const styles = {
       zIndex: 1,
     }
   },
+  swapMenuItemImageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swapMenuItemGlow: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '100%',
+    height: '100%',
+    filter: 'blur(4px)',
+    opacity: 0.4,
+    zIndex: 1,
+  },
   swapMenuItemImage: {
     width: '100%',
     height: '100%',
     objectFit: 'contain',
+    position: 'relative',
+    zIndex: 2,
   },
 };

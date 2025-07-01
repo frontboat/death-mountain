@@ -2,7 +2,7 @@ import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
 import { calculateLevel } from '@/utils/game';
-import { ItemUtils, typeIcons } from '@/utils/loot';
+import { ItemUtils, Tier, typeIcons } from '@/utils/loot';
 import { Star } from '@mui/icons-material';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
 import { memo, useCallback, useEffect, useState } from 'react';
@@ -242,9 +242,15 @@ export default function CharacterScreen() {
             </Box>
             <Box sx={styles.itemGrid}>
               {bag?.map((item, index) => {
-                const isSelected = itemsToDrop.includes(item.id);
                 const isNew = newItems.includes(item.id);
+                const tier = ItemUtils.getItemTier(item.id);
+                const isSelected = itemsToDrop.includes(item.id);
                 const highlight = isDropMode && itemsToDrop.length === 0;
+                const isWeaponSlot = ItemUtils.getItemSlot(item.id).toLowerCase() === 'weapon';
+
+                if (isNew && isWeaponSlot && [Tier.T1, Tier.T2, Tier.T3].includes(tier) && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5) {
+                  handleItemClick(item, true);
+                }
 
                 return (
                   <ItemSlot
