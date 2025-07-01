@@ -23,3 +23,38 @@ export const getShortNamespace = (namespace: string) => {
   let short = parts[0] + parts.slice(1).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
   return short;
 }
+
+export function getMenuLeftOffset() {
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+  const windowAspect = windowWidth / windowHeight;
+  const imageAspect = 16 / 9;
+
+  let imageWidth, imageHeight, leftOffset;
+  if (windowAspect > imageAspect) {
+    // Window is wider than 16:9
+    imageHeight = windowHeight;
+    imageWidth = imageHeight * imageAspect;
+    leftOffset = (windowWidth - imageWidth) / 2;
+  } else {
+    // Window is taller than 16:9
+    imageWidth = windowWidth;
+    imageHeight = imageWidth / imageAspect;
+    leftOffset = 0;
+  }
+  return leftOffset;
+}
+
+export function beastNameSize(name: string) {
+  if (name.length > 30) {
+    return '12px';
+  } else if (name.length > 28) {
+    return '13px';
+  } else if (name.length > 26) {
+    return '14px';
+  } else if (name.length > 24) {
+    return '15px';
+  } else {
+    return '16px';
+  }
+}

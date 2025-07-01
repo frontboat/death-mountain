@@ -8,9 +8,9 @@ import { DojoSdkProvider } from "@dojoengine/sdk/react";
 import { setupWorld } from "./generated/contracts.gen.ts";
 import type { SchemaType } from "./generated/models.gen.ts";
 
+import { DynamicConnectorProvider, useDynamicConnector } from "@/contexts/starknet.tsx";
 import { createDojoConfig } from "@dojoengine/core";
 import { useEffect, useState } from "react";
-import { DynamicConnectorProvider, useDynamicConnector } from "./contexts/starknet";
 import "./index.css";
 
 function DojoApp() {

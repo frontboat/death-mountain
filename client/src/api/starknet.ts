@@ -1,11 +1,10 @@
 import { getContractByName } from "@dojoengine/core";
-import { useDojoConfig } from "@/contexts/starknet";
 import { Adventurer } from "@/types/game";
+import { useDojoConfig } from "@/contexts/starknet";
+import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
 export const useStarknetApi = () => {
   const dojoConfig = useDojoConfig();
-  
-  const ADVENTURER_ADDRESS = getContractByName(dojoConfig.manifest, dojoConfig.namespace, "adventurer_systems")?.address
 
   const getAdventurer = async (adventurerId: number): Promise<Adventurer | null> => {
     try {
@@ -19,7 +18,7 @@ export const useStarknetApi = () => {
           method: "starknet_call",
           params: [
             {
-              contract_address: ADVENTURER_ADDRESS,
+              contract_address: getContractByName(dojoConfig.manifest, dojoConfig.namespace, "adventurer_systems")?.address,
               entry_point_selector: "0x3d3148be1dfdfcfcd22f79afe7aee5a3147ef412bfb2ea27949e7f8c8937a7",
               calldata: [adventurerId.toString(16)],
             },
@@ -93,5 +92,38 @@ export const useStarknetApi = () => {
     return null;
   };
 
-  return { getAdventurer };
+  const createBurnerAccount = async (rpcProvider: RpcProvider) => {
+    const privateKey = stark.randomAddress();
+    const publicKey = ec.starkCurve.getStarkKey(privateKey);
+
+    const accountClassHash = "0x07dc7899aa655b0aae51eadff6d801a58e97dd99cf4666ee59e704249e51adf2"
+    // Calculate future address of the account
+    const constructorCalldata = CallData.compile({ publicKey });
+    const contractAddress = hash.calculateContractAddressFromHash(
+      publicKey,
+      accountClassHash,
+      constructorCalldata,
+      0
+    );
+
+    const account = new Account(rpcProvider, contractAddress, privateKey, "1");
+    const { transaction_hash } = await account.deployAccount({
+      classHash: accountClassHash,
+      constructorCalldata: constructorCalldata,
+      addressSalt: publicKey,
+    }, {
+      version: "3",
+      nonce: num.toHex(0),
+      maxFee: num.toHex(0),
+    });
+
+    const receipt = await account.waitForTransaction(transaction_hash, { retryInterval: 100 });
+
+    if (receipt) {
+      localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey, version: "1" }))
+      return account
+    }
+  };
+
+  return { getAdventurer, createBurnerAccount };
 };

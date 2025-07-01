@@ -1,6 +1,6 @@
 import { ClauseBuilder, ParsedEntity, UnionOfModelData, HistoricalToriiQueryBuilder } from '@dojoengine/sdk';
 import { SchemaType } from '../generated/models.gen.ts';
-import { useDojoConfig } from "@/contexts/starknet";
+import { useDojoConfig } from "../contexts/starknet.tsx";
 
 export interface Item {
   id: number;
@@ -121,6 +121,15 @@ export interface Quest {
   id: number;
   chapterId: number;
   targetScore: number;
+}
+
+export interface GameSettingsData {
+  name: string;
+  in_battle: boolean;
+  game_seed: number;
+  game_seed_until_xp: number;
+  adventurer: Adventurer;
+  bag: Item[];
 }
 
 export type GameSchemaType = SchemaType;

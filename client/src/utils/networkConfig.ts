@@ -1,5 +1,6 @@
 import { getContractByName } from "@dojoengine/core";
 import manifest_sepolia from "../../manifest_sepolia.json";
+import manifest_slot from "../../manifest_slot.json";
 
 export interface NetworkConfig {
   chainId: ChainId;
@@ -12,6 +13,7 @@ export interface NetworkConfig {
     target: string;
     method: string;
   }>;
+  vrf: boolean;
   chains: Array<{
     rpcUrl: string;
   }>;
@@ -21,7 +23,7 @@ export interface NetworkConfig {
 }
 
 export enum ChainId {
-  KATANA = "WP_PG",
+  WP_PG_SLOT = "WP_PG_SLOT",
   SN_MAIN = "SN_MAIN",
   SN_SEPOLIA = "SN_SEPOLIA",
 }
@@ -38,7 +40,8 @@ export const NETWORKS = {
     tokens: {
       erc20: [],
     },
-    manifest: manifest_sepolia
+    manifest: manifest_sepolia,
+    vrf: true
   },
   SN_SEPOLIA: {
     chainId: ChainId.SN_SEPOLIA,
@@ -51,22 +54,25 @@ export const NETWORKS = {
     tokens: {
       erc20: [],
     },
-    manifest: manifest_sepolia
+    manifest: manifest_sepolia,
+    vrf: true
   },
-  KATANA: {
-    chainId: ChainId.KATANA,
+  WP_PG_SLOT: {
+    chainId: ChainId.WP_PG_SLOT,
     name: 'Katana',
-    status: 'offline',
+    status: 'online',
     namespace: 'ls_0_0_1',
-    slot: 'lootsurvivor-sepolia-2',
-    rpcUrl: 'https://api.cartridge.gg/x/starknet/sepolia',
-    torii: 'http://localhost:5000/torii',
+    slot: 'pg-slot',
+    rpcUrl: 'https://api.cartridge.gg/x/pg-slot/katana',
+    torii: 'https://api.cartridge.gg/x/pg-slot/torii',
     tokens: {
       erc20: [],
     },
-    manifest: manifest_sepolia
+    manifest: manifest_slot,
+    vrf: false
   }
 }
+
 
 export function getNetworkConfig(networkKey: ChainId): NetworkConfig | null {
   const network = NETWORKS[networkKey as keyof typeof NETWORKS];
@@ -131,6 +137,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig | null {
     namespace: network.namespace,
     slot: network.slot,
     preset: 'loot-survivor',
+    vrf: network.vrf,
     policies,
     chains: [{ rpcUrl: network.rpcUrl }],
     tokens: network.tokens,
@@ -145,7 +152,7 @@ export function translateName(network: string): ChainId | null {
   } else if (network === 'sepolia') {
     return ChainId.SN_SEPOLIA;
   } else if (network === 'katana') {
-    return ChainId.KATANA;
+    return ChainId.WP_PG_SLOT;
   }
 
   return null;

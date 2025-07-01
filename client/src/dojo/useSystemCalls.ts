@@ -1,14 +1,13 @@
+import { useController } from "@/contexts/controller";
 import { useDojoConfig } from "@/contexts/starknet";
+import { GameSettingsData, ItemPurchase, Stats } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
-import { useAccount } from "@starknet-react/core";
 import { CallData } from 'starknet';
-import { ItemPurchase, Stats } from "../types/game";
-import { GameSettingsData } from "@/components/GameSettings";
 
 export const useSystemCalls = () => {
-  const { account } = useAccount();
+  const { account } = useController();
   const dojoConfig = useDojoConfig();
-  
+
   const namespace = dojoConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const GAME_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "game_systems")?.address
@@ -69,7 +68,13 @@ export const useSystemCalls = () => {
       ], { version: 3 });
 
       const receipt: any = await account!.waitForTransaction(tx.transaction_hash, { retryInterval: 500 })
-      let gameId = parseInt(receipt.events[0].data[3], 16)
+
+      let gameId = 0;
+      if (receipt.events[0].data.length > 0) {
+        gameId = parseInt(receipt.events[0].data[receipt.events[0].data.length - 1], 16)
+      } else {
+        gameId = parseInt(receipt.events[1].data[receipt.events[1].data.length - 1], 16)
+      }
 
       return gameId;
     } catch (error) {
