@@ -1,6 +1,7 @@
 import { useController } from '@/contexts/controller';
 import discordIcon from '@/desktop/assets/images/discord.png';
 import AdventurersList from '@/desktop/components/AdventurersList';
+import Settings from '@/desktop/components/Settings';
 import Network from '@/desktop/components/Network';
 import WalletConnect from '@/desktop/components/WalletConnect';
 import { getMenuLeftOffset } from '@/utils/utils';
@@ -22,6 +23,7 @@ export default function MainMenu() {
   const navigate = useNavigate();
   const { address, isPending, playAsGuest } = useController();
   const [showAdventurers, setShowAdventurers] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [left, setLeft] = useState(getMenuLeftOffset());
 
   useEffect(() => {
@@ -40,8 +42,9 @@ export default function MainMenu() {
     <Box sx={{ ...styles.container, left: `${left + 32}px` }}>
       <AnimatePresence mode="wait">
         {showAdventurers && <AdventurersList onBack={() => setShowAdventurers(false)} />}
+        {showSettings && <Settings onBack={() => setShowSettings(false)} />}
 
-        {!showAdventurers && (
+        {!showAdventurers && !showSettings && (
           <>
             <Typography sx={styles.title}>
               LOOT<br />SURVIVOR 2
@@ -76,6 +79,7 @@ export default function MainMenu() {
               fullWidth
               size="large"
               startIcon={<SettingsOutlinedIcon sx={styles.icon} />}
+              onClick={() => setShowSettings(true)}
             >
               Settings
             </Button>

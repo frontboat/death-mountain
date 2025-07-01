@@ -5,8 +5,10 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import XIcon from '@mui/icons-material/X';
 import GitHubIcon from '@mui/icons-material/GitHub';
+import ComputerIcon from '@mui/icons-material/Computer';
 import { useSound } from '@/contexts/Sound';
 import { useUIStore } from '@/stores/uiStore';
+import { isDesktop } from 'react-device-detect';
 
 interface HeaderMenuProps {
   anchorEl: HTMLElement | null;
@@ -15,10 +17,14 @@ interface HeaderMenuProps {
 
 function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
   const { playing, setPlaying, volume, setVolume } = useSound();
-  const { setGameSettingsListOpen } = useUIStore();
+  const { setGameSettingsListOpen, setUseMobileClient } = useUIStore();
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {
     setVolume((newValue as number) / 100);
+  };
+
+  const handleSwitchToDesktop = () => {
+    setUseMobileClient(false);
   };
 
   return (
@@ -101,6 +107,15 @@ function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
           <Typography variant="h6">Game Settings</Typography>
         </ListItemText>
       </MenuItem>
+
+      {isDesktop && <MenuItem onClick={() => { handleSwitchToDesktop(); handleClose(); }}>
+        <ListItemIcon>
+          <ComputerIcon fontSize="small" sx={{ color: '#80FF00' }} />
+        </ListItemIcon>
+        <ListItemText>
+          <Typography variant="h6">Switch to Desktop</Typography>
+        </ListItemText>
+      </MenuItem>}
 
       <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 

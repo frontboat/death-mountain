@@ -7,6 +7,7 @@ import { ControllerProvider } from '@/contexts/controller';
 import { SoundProvider } from '@/contexts/Sound';
 import { GameDirector } from '@/desktop/contexts/GameDirector';
 import { GameDirector as MobileGameDirector } from '@/mobile/contexts/GameDirector';
+import { useUIStore } from '@/stores/uiStore';
 import { isBrowser, isMobile } from 'react-device-detect';
 import GameSettings from './mobile/components/GameSettings';
 import GameSettingsList from './mobile/components/GameSettingsList';
@@ -15,13 +16,16 @@ import { desktopRoutes, mobileRoutes } from './utils/routes';
 import { desktopTheme, mobileTheme } from './utils/themes';
 
 function App() {
+  const { useMobileClient } = useUIStore();
+  const shouldShowMobile = isMobile || (isBrowser && useMobileClient);
+
   return (
     <BrowserRouter>
       <StyledEngineProvider injectFirst>
         <SnackbarProvider anchorOrigin={{ vertical: 'top', horizontal: 'center' }} preventDuplicate autoHideDuration={3000}>
           <ControllerProvider>
 
-            {isBrowser && (
+            {!shouldShowMobile && (
               <ThemeProvider theme={desktopTheme}>
                 <SoundProvider>
                   <GameDirector>
@@ -39,7 +43,7 @@ function App() {
               </ThemeProvider>
             )}
 
-            {isMobile && (
+            {shouldShowMobile && (
               <ThemeProvider theme={mobileTheme}>
                 <Box className='bgImage'>
                   <SoundProvider>
