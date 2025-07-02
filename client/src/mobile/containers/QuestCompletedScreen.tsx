@@ -50,7 +50,7 @@ export default function QuestCompletedScreen() {
         </Box>
 
         <Box sx={styles.buttonContainer}>
-          <Button
+          {/* <Button
             variant="outlined"
             component="a"
             href={`https://x.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`}
@@ -58,7 +58,7 @@ export default function QuestCompletedScreen() {
             sx={styles.shareButton}
           >
             Share on X
-          </Button>
+          </Button> */}
           <Button
             variant="contained"
             onClick={backToCampaign}

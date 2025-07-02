@@ -58,7 +58,7 @@ export default function DeathOverlay() {
         </Box>
 
         <Box sx={styles.buttonContainer}>
-          <Button
+          {/* <Button
             variant="outlined"
             component="a"
             href={`https://x.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`}
@@ -66,7 +66,7 @@ export default function DeathOverlay() {
             sx={styles.shareButton}
           >
             Share on X
-          </Button>
+          </Button> */}
           <Button
             variant="contained"
             onClick={backToMenu}
