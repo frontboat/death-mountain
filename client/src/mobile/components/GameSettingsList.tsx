@@ -59,7 +59,7 @@ function GameSettingsList() {
   }, [isGameSettingsListOpen, tab, search]);
 
   const startNewGame = async () => {
-    navigate(`/play?settingsId=${selectedSettings?.settings_id}`)
+    navigate(`/survivor/play?settingsId=${selectedSettings?.settings_id}`)
     setGameSettingsListOpen(false);
   };
 
@@ -190,8 +190,8 @@ function GameSettingsList() {
                 </Button>
               </Box>
 
-              <Box sx={{ 
-                width: '100%', 
+              <Box sx={{
+                width: '100%',
                 height: '340px',
                 overflowY: 'auto',
                 pr: 0.5

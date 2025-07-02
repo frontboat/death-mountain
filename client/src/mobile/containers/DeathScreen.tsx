@@ -25,9 +25,9 @@ export default function DeathScreen() {
 
   const backToMenu = () => {
     if (quest) {
-      navigate(`/campaign?chapter=${quest.chapterId}`, { replace: true });
+      navigate(`/survivor/campaign?chapter=${quest.chapterId}`, { replace: true });
     } else {
-      navigate('/', { replace: true });
+      navigate('/survivor', { replace: true });
     }
   }
 

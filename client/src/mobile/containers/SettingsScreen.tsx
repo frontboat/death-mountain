@@ -17,7 +17,7 @@ export default function SettingsScreen() {
   const { getAdventurer } = useStarknetApi();
 
   const handleExitGame = () => {
-    navigate('/');
+    navigate('/survivor');
   };
 
   const handleUnstuck = async () => {

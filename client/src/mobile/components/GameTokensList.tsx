@@ -38,7 +38,7 @@ export default function GameTokensList() {
   }, [account]);
 
   function handleResumeGame(gameId: number) {
-    navigate(`/play?id=${gameId}`)
+    navigate(`/survivor/play?id=${gameId}`)
   }
 
   const renderTimeRemaining = (timestamp: number) => {

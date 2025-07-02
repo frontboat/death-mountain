@@ -91,7 +91,7 @@ export default function GameSettings() {
   }, [gameSettings.in_battle, gameSettings.adventurer.xp, gameSettings.game_seed]);
 
   const handlePlay = () => {
-    navigate(`/play?settingsId=${selectedSettingsId}`)
+    navigate(`/survivor/play?settingsId=${selectedSettingsId}`)
     setGameSettingsDialogOpen(false)
     setGameSettingsListOpen(false)
     setSelectedSettingsId(null)

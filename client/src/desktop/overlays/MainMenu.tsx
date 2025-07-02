@@ -35,7 +35,7 @@ export default function MainMenu() {
   }, []);
 
   const handleStartGame = () => {
-    navigate(`/play`);
+    navigate(`/survivor/play`);
   };
 
   return (

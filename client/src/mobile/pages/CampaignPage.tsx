@@ -93,7 +93,7 @@ export default function CampaignPage() {
       setSelectedChapter(chapter);
       setSelectedQuest(null);
       // Update URL with selected chapter
-      navigate(`/campaign?chapter=${chapter.id}`, { replace: true });
+      navigate(`/survivor/campaign?chapter=${chapter.id}`, { replace: true });
     }
   };
 
@@ -115,7 +115,7 @@ export default function CampaignPage() {
         chapterId: selectedChapter!.id,
         targetScore: selectedQuest.targetScore,
       });
-      navigate(`/play?settingsId=${selectedQuest.settingsId}`);
+      navigate(`/survivor/play?settingsId=${selectedQuest.settingsId}`);
     }
   };
 
@@ -123,7 +123,7 @@ export default function CampaignPage() {
     setSelectedChapter(null);
     setSelectedQuest(null);
     // Remove chapter parameter from URL
-    navigate('/campaign', { replace: true });
+          navigate('/survivor/campaign', { replace: true });
   };
 
   const renderChapterStatus = (chapter: Chapter) => {

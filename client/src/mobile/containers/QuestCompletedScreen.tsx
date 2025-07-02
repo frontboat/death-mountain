@@ -20,7 +20,7 @@ export default function QuestCompletedScreen() {
       }
     }
 
-    navigate(`/campaign?chapter=${quest?.chapterId}`, { replace: true });
+    navigate(`/survivor/campaign?chapter=${quest?.chapterId}`, { replace: true });
   }
 
   return (

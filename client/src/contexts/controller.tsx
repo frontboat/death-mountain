@@ -84,7 +84,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       switchToNetwork(ChainId.WP_PG_SLOT);
     }
 
-    navigate('/play?guest=true');
+    navigate('/survivor/play?guest=true');
   }
 
   return (

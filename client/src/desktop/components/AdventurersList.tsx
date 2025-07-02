@@ -40,7 +40,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
   }, [address]);
 
   const handleResumeGame = (gameId: number) => {
-    navigate(`/play?id=${gameId}`);
+    navigate(`/survivor/play?id=${gameId}`);
   };
 
   const renderTimeRemaining = (timestamp: number) => {

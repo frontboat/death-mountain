@@ -43,12 +43,12 @@ export default function GamePage() {
   async function mint() {
     setLoadingProgress(45)
     let tokenId = await mintGame(account, playerName, settings_id);
-    navigate(`/play?id=${tokenId}${guest === 'true' ? '&guest=true' : ''}`, { replace: true });
+    navigate(`/survivor/play?id=${tokenId}${guest === 'true' ? '&guest=true' : ''}`, { replace: true });
   }
 
   useEffect(() => {
     if (!account && gameId && adventurer) {
-      navigate('/');
+      navigate('/survivor');
     }
   }, [account]);
 

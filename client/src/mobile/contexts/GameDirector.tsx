@@ -170,13 +170,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   const handleSpectating = async (events: any[]) => {
     if (events.length === 0) {
-      return navigate('/');
+      return navigate('/survivor');
     }
 
     // Fetch adventurer state
     const adventurer = await getAdventurer(gameId!);
     if (!adventurer) {
-      return navigate('/');
+      return navigate('/survivor');
     }
 
     if (adventurer.health > 0) {

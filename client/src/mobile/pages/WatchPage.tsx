@@ -32,7 +32,7 @@ export default function WatchPage() {
       setSpectating(true);
     } else {
       setSpectating(false);
-      navigate('/');
+      navigate('/survivor');
     }
   }, [game_id]);
 
@@ -60,7 +60,7 @@ export default function WatchPage() {
 
   const handleEndWatching = () => {
     setSpectating(false);
-    navigate('/');
+    navigate('/survivor');
   };
 
   const handlePlayPause = (play: boolean) => {

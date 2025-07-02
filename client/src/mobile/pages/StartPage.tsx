@@ -10,7 +10,7 @@ export default function LandingPage() {
 
   const handleStartGame = async () => {
     if (address) {
-      navigate(`/play`)
+      navigate(`/survivor/play`)
     } else {
       login();
     }
