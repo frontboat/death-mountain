@@ -770,12 +770,16 @@ pub impl ImplAdventurer of IAdventurer {
             .neck
             .jewelry_armor_bonus(armor_details.item_type, combat_result.base_armor);
 
-        // adjust damage for jewelry armor bonus
+        
+        // jewelry armor bonus
         if combat_result.total_damage > (jewelry_armor_bonus + MINIMUM_DAMAGE_FROM_OBSTACLES.into()) {
             combat_result.total_damage -= jewelry_armor_bonus;
         } else {
             combat_result.total_damage = MINIMUM_DAMAGE_FROM_OBSTACLES.into();
         }
+
+        // reduce damage by 50%
+        combat_result.total_damage = combat_result.total_damage / 2;
 
         // return combat_result and jewelry_armor_bonus
         (combat_result, jewelry_armor_bonus)

@@ -1361,8 +1361,13 @@ mod game_systems {
         let critical_hit_chance = game_libs.beast.get_critical_hit_chance(adventurer.get_level(), is_ambush);
 
         // process beast attack
-        let (combat_result, _jewlery_armor_bonus) = adventurer
+        let (mut combat_result, _jewlery_armor_bonus) = adventurer
             .defend(beast, armor, armor_specials, armor_details, critical_hit_rnd, critical_hit_chance);
+
+        // reduce ambush damage by 50%
+        if is_ambush {
+            combat_result.total_damage = combat_result.total_damage / 2;
+        }
 
         // deduct damage taken from adventurer's health
         adventurer.decrease_health(combat_result.total_damage);
