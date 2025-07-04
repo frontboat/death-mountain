@@ -12,6 +12,7 @@ export interface Settings {
   game_seed: number;
   game_seed_until_xp: number;
   in_battle: boolean;
+  stats_mode: number;
 }
 
 export const useGameSettings = () => {
@@ -90,7 +91,8 @@ export const useGameSettings = () => {
         bag: formatBag(item),
         in_battle: item.in_battle,
         game_seed: parseInt(item.game_seed, 16),
-        game_seed_until_xp: item.game_seed_until_xp
+        game_seed_until_xp: item.game_seed_until_xp,
+        stats_mode: item.stats_mode
       }));
 
       // Sort by the order of input IDs if provided

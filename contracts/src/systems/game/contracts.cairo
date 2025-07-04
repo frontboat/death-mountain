@@ -38,7 +38,7 @@ mod game_systems {
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::models::beast::{Beast, IBeast};
     use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
-    use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked, GameSettings};
+    use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked, GameSettings, StatsMode};
     use death_mountain::models::game::{
         AttackEvent, BeastEvent, BuyItemsEvent, DefeatedBeastEvent, DiscoveryEvent, FledBeastEvent, GameEvent,
         GameEventDetails, ItemEvent, LevelUpEvent, MarketItemsEvent, ObstacleEvent, StatUpgradeEvent,
@@ -48,7 +48,7 @@ mod game_systems {
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait};
-    use death_mountain::utils::cartridge::VRFImpl;
+    use death_mountain::utils::vrf::VRFImpl;
 
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
@@ -116,7 +116,7 @@ mod game_systems {
 
                 // get random seed
                 let (beast_seed, market_seed) = _get_random_seed(
-                    world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                    world, adventurer_id, adventurer.xp, game_settings
                 );
 
                 _emit_game_event(
@@ -198,11 +198,11 @@ mod game_systems {
 
             // get random seed
             let (explore_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                world, adventurer_id, adventurer.xp, game_settings
             );
 
             // go explore
-            _explore(ref world, ref adventurer, ref bag, adventurer_id, explore_seed, till_beast, game_libs);
+            _explore(ref world, ref adventurer, ref bag, adventurer_id, explore_seed, till_beast, game_libs, game_settings);
 
             if bag.mutated {
                 _save_bag(ref world, adventurer_id, adventurer.action_count, bag, game_libs);
@@ -289,7 +289,7 @@ mod game_systems {
             let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
             let (level_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                world, adventurer_id, adventurer.xp, game_settings
             );
 
             let mut game_events: Array<GameEventDetails> = array![];
@@ -305,6 +305,7 @@ mod game_systems {
                 to_the_death,
                 beast_level_rnd,
                 game_libs,
+                game_settings,
             );
 
             // emit events
@@ -396,7 +397,7 @@ mod game_systems {
 
             // get random seed
             let (flee_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                world, adventurer_id, adventurer.xp, game_settings
             );
 
             // attempt to flee
@@ -411,6 +412,7 @@ mod game_systems {
                 beast,
                 to_the_death,
                 game_libs,
+                game_settings,
             );
 
             // emit events
@@ -501,7 +503,7 @@ mod game_systems {
 
                 // get random seed
                 let (seed, _) = _get_random_seed(
-                    world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                    world, adventurer_id, adventurer.xp, game_settings
                 );
 
                 // get randomness for combat
@@ -511,7 +513,7 @@ mod game_systems {
 
                 // process beast attack
                 let beast_attack_details = _beast_attack(
-                    ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs,
+                    ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs, game_settings,
                 );
 
                 _emit_game_event(
@@ -839,6 +841,7 @@ mod game_systems {
         explore_seed: u64,
         explore_till_beast: bool,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) {
         let (rnd1_u32, _, rnd3_u16, rnd4_u16, rnd5_u8, rnd6_u8, rnd7_u8, explore_rnd) = game_libs
             .adventurer
@@ -859,6 +862,7 @@ mod game_systems {
                     specials1_rnd: rnd5_u8, // use same entropy for crit hit, initial attack location, and beast specials
                     specials2_rnd: rnd6_u8, // to create some fun organic lore for the beast special names
                     game_libs: game_libs,
+                    game_settings: game_settings,
                 );
 
                 // save seed to get correct beast
@@ -897,6 +901,7 @@ mod game_systems {
                     dodge_rnd: rnd7_u8,
                     item_specials_rnd: rnd3_u16,
                     game_libs: game_libs,
+                    game_settings: game_settings,
                 );
                 _emit_game_event(
                     ref world, adventurer_id, adventurer.action_count, GameEventDetails::obstacle(obstacle_event),
@@ -920,7 +925,7 @@ mod game_systems {
         // if explore_till_beast is true and adventurer can still explore
         if explore_till_beast && adventurer.can_explore() {
             // Keep exploring
-            _explore(ref world, ref adventurer, ref bag, adventurer_id, explore_seed, explore_till_beast, game_libs);
+            _explore(ref world, ref adventurer, ref bag, adventurer_id, explore_seed, explore_till_beast, game_libs, game_settings);
         }
     }
 
@@ -1011,6 +1016,7 @@ mod game_systems {
         specials1_rnd: u8,
         specials2_rnd: u8,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) -> (Beast, AttackEvent) {
         let adventurer_level = adventurer.get_level();
 
@@ -1031,14 +1037,17 @@ mod game_systems {
         adventurer.beast_health = beast.starting_health;
 
         // check if beast ambushed adventurer
-        let is_ambush = ImplAdventurer::is_ambushed(adventurer_level, adventurer.stats.wisdom, ambush_rnd);
-
+        let is_ambush = if game_settings.stats_mode == StatsMode::Dodge {
+            ImplAdventurer::is_ambushed(adventurer_level, adventurer.stats.wisdom, ambush_rnd)
+        } else {
+            true
+        };
+        
         // if adventurer was ambushed
         let mut beast_attack_details = _empty_attack_event();
         if (is_ambush) {
             // process beast attack
-            beast_attack_details =
-                _beast_attack(ref adventurer, beast, seed, crit_hit_rnd, dmg_location_rnd, is_ambush, game_libs);
+            _beast_attack(ref adventurer, beast, seed, crit_hit_rnd, dmg_location_rnd, is_ambush, game_libs, game_settings);
         }
 
         (beast, beast_attack_details)
@@ -1058,6 +1067,7 @@ mod game_systems {
         dodge_rnd: u8,
         item_specials_rnd: u16,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) -> ObstacleEvent {
         // get adventurer's level
         let adventurer_level = adventurer.get_level();
@@ -1076,7 +1086,7 @@ mod game_systems {
         let (combat_result, _) = adventurer.get_obstacle_damage(obstacle, armor, armor_details, crit_hit_rnd);
 
         // pull damage taken out of combat result for easy access
-        let damage_taken = combat_result.total_damage;
+        let mut damage_taken = combat_result.total_damage;
 
         // get base xp reward for obstacle
         let base_reward = obstacle.get_xp_reward(adventurer_level);
@@ -1085,7 +1095,16 @@ mod game_systems {
         let item_xp_reward = base_reward * ITEM_XP_MULTIPLIER_OBSTACLES.into();
 
         // attempt to dodge obstacle
-        let dodged = ImplCombat::ability_based_avoid_threat(adventurer_level, adventurer.stats.intelligence, dodge_rnd);
+        let dodged = if game_settings.stats_mode == StatsMode::Dodge {
+            ImplCombat::ability_based_avoid_threat(adventurer_level, adventurer.stats.intelligence, dodge_rnd)
+        } else {
+            false
+        };
+        
+        if (game_settings.stats_mode == StatsMode::Reduction) {
+            let damage_reduction = ImplCombat::ability_based_damage_reduction(adventurer_level, adventurer.stats.intelligence);
+            damage_taken = damage_taken * (100 - damage_reduction).into() / 100;
+        }
 
         // create obstacle details for event
         let obstacle_details = ObstacleEvent {
@@ -1098,7 +1117,7 @@ mod game_systems {
         };
 
         // if adventurer did not dodge obstacle
-        if (!dodged) {
+        if (!dodged && damage_taken > 0) {
             // adventurer takes damage
             adventurer.decrease_health(damage_taken);
         }
@@ -1253,6 +1272,7 @@ mod game_systems {
         fight_to_the_death: bool,
         item_specials_seed: u16,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) {
         battle_count = ImplAdventurer::increment_battle_action_count(battle_count);
 
@@ -1296,7 +1316,7 @@ mod game_systems {
 
             // process beast counter attack
             let _beast_attack_details = _beast_attack(
-                ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs,
+                ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs, game_settings,
             );
 
             game_events.append(GameEventDetails::beast_attack(_beast_attack_details));
@@ -1320,6 +1340,7 @@ mod game_systems {
                     true,
                     item_specials_seed,
                     game_libs,
+                    game_settings,
                 );
             }
         }
@@ -1344,6 +1365,7 @@ mod game_systems {
         attack_location_rnd: u8,
         is_ambush: bool,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) -> AttackEvent {
         // beasts attack random location on adventurer
         let attack_location = ImplAdventurer::get_attack_location(attack_location_rnd);
@@ -1364,9 +1386,9 @@ mod game_systems {
         let (mut combat_result, _jewlery_armor_bonus) = adventurer
             .defend(beast, armor, armor_specials, armor_details, critical_hit_rnd, critical_hit_chance);
 
-        // reduce ambush damage by 50%
-        if is_ambush {
-            combat_result.total_damage = combat_result.total_damage / 2;
+        if is_ambush && game_settings.stats_mode == StatsMode::Reduction {
+            let damage_reduction = ImplCombat::ability_based_damage_reduction(adventurer.get_level(), adventurer.stats.wisdom);
+            combat_result.total_damage = combat_result.total_damage * (100 - damage_reduction).into() / 100;
         }
 
         // deduct damage taken from adventurer's health
@@ -1399,6 +1421,7 @@ mod game_systems {
         beast: Beast,
         flee_to_the_death: bool,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) {
         battle_count = ImplAdventurer::increment_battle_action_count(battle_count);
 
@@ -1424,7 +1447,7 @@ mod game_systems {
         } else {
             // if the flee attempt failed, beast counter attacks
             let _beast_attack_details = _beast_attack(
-                ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs,
+                ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs, game_settings,
             );
 
             // Save battle events
@@ -1434,7 +1457,7 @@ mod game_systems {
             // if player is still alive and elected to flee till death
             if (flee_to_the_death && adventurer.health != 0) {
                 // reattempt flee
-                _flee(ref adventurer, ref game_events, ref battle_count, flee_seed, beast_seed, beast, true, game_libs);
+                _flee(ref adventurer, ref game_events, ref battle_count, flee_seed, beast_seed, beast, true, game_libs, game_settings);
             }
         }
     }
@@ -1718,14 +1741,14 @@ mod game_systems {
     /// @param adventurer_xp A u16 representing the adventurer's XP.
     /// @return A felt252 representing the random seed.
     fn _get_random_seed(
-        world: WorldStorage, adventurer_id: u64, adventurer_xp: u16, game_seed: u64, game_seed_until_xp: u16,
+        world: WorldStorage, adventurer_id: u64, adventurer_xp: u16, game_settings: GameSettings,
     ) -> (u64, u64) {
         let mut seed: felt252 = 0;
 
-        if game_seed != 0 && (game_seed_until_xp == 0 || game_seed_until_xp > adventurer_xp) {
-            seed = ImplAdventurer::get_simple_entropy(adventurer_xp, game_seed);
+        if game_settings.game_seed != 0 && (game_settings.game_seed_until_xp == 0 || game_settings.game_seed_until_xp > adventurer_xp) {
+            seed = ImplAdventurer::get_simple_entropy(adventurer_xp, game_settings.game_seed);
         } else if _network_supports_vrf() {
-            seed = VRFImpl::seed();
+            seed = VRFImpl::seed(game_settings.vrf_address);
         } else {
             seed = ImplAdventurer::get_simple_entropy(adventurer_xp, adventurer_id);
         }

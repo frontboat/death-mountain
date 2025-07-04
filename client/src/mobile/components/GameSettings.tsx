@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS: GameSettingsData = {
   in_battle: false,
   game_seed: 0,
   game_seed_until_xp: 0,
+  stats_mode: 0,
   adventurer: {
     health: 100,
     xp: 1,

@@ -235,11 +235,13 @@ export const useSystemCalls = () => {
         entrypoint: 'add_settings',
         calldata: [
           settings.name,
+          settings.vrf_address,
           settings.adventurer,
           bag,
           settings.game_seed,
           settings.game_seed_until_xp,
-          settings.in_battle
+          settings.in_battle,
+          settings.stats_mode
         ]
       }
     ], () => { });

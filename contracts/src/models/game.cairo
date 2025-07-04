@@ -50,11 +50,19 @@ pub struct GameSettingsMetadata {
 pub struct GameSettings {
     #[key]
     pub settings_id: u32,
+    pub vrf_address: ContractAddress,
     pub adventurer: Adventurer,
     pub bag: Bag,
     pub game_seed: u64,
     pub game_seed_until_xp: u16,
     pub in_battle: bool,
+    pub stats_mode: StatsMode,
+}
+
+#[derive(Introspect, Copy, Drop, Serde, PartialEq)]
+pub enum StatsMode {
+    Dodge,
+    Reduction,
 }
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]

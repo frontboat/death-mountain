@@ -8,7 +8,8 @@ mod game_token_systems {
     use death_mountain::models::adventurer::adventurer::{ImplAdventurer};
     use death_mountain::models::adventurer::bag::{ImplBag};
 
-    use death_mountain::models::game::{GameSettings, GameSettingsMetadata};
+    use death_mountain::models::game::{GameSettings, GameSettingsMetadata, StatsMode};
+    use death_mountain::utils::vrf::VRFImpl;
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::systems::renderer::contracts::{IRendererSystemsDispatcherTrait};
     use dojo::model::ModelStorage;
@@ -92,11 +93,13 @@ mod game_token_systems {
             .write_model(
                 @GameSettings {
                     settings_id: 0,
+                    vrf_address: VRFImpl::cartridge_vrf_address(),
                     adventurer: ImplAdventurer::new(0),
                     bag: ImplBag::new(),
                     game_seed: 0,
                     game_seed_until_xp: 0,
                     in_battle: false,
+                    stats_mode: StatsMode::Dodge,
                 },
             );
 
