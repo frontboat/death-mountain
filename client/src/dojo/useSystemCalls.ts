@@ -241,7 +241,8 @@ export const useSystemCalls = () => {
           settings.game_seed,
           settings.game_seed_until_xp,
           settings.in_battle,
-          settings.stats_mode
+          settings.stats_mode,
+          settings.base_damage_reduction
         ]
       }
     ], () => { });

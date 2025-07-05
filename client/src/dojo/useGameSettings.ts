@@ -7,12 +7,14 @@ export interface Settings {
   settings_id: number;
   name: string;
   created_by: string;
+  vrf_address: string;
   adventurer: Adventurer;
   bag: Item[];
   game_seed: number;
   game_seed_until_xp: number;
   in_battle: boolean;
   stats_mode: number;
+  base_damage_reduction: number;
 }
 
 export const useGameSettings = () => {
@@ -87,12 +89,14 @@ export const useGameSettings = () => {
         settings_id: item.settings_id,
         name: hexToAscii(item.name).replace(/^\0+/, ''),
         created_by: item.created_by,
+        vrf_address: item.vrf_address || '',
         adventurer: formatAdventurer(item),
         bag: formatBag(item),
         in_battle: item.in_battle,
         game_seed: parseInt(item.game_seed, 16),
         game_seed_until_xp: item.game_seed_until_xp,
-        stats_mode: item.stats_mode
+        stats_mode: item.stats_mode,
+        base_damage_reduction: item.base_damage_reduction || 0
       }));
 
       // Sort by the order of input IDs if provided

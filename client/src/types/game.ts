@@ -130,6 +130,7 @@ export interface GameSettingsData {
   game_seed: number;
   game_seed_until_xp: number;
   stats_mode: number;
+  base_damage_reduction: number;
   adventurer: Adventurer;
   bag: Item[];
 }
