@@ -485,11 +485,11 @@ pub impl ImplCombat of ICombat {
         if ratio > SCALE {
             ratio = SCALE;
         }
-    
+
         let r2 = ratio * ratio / SCALE;
         let r3 = r2 * ratio / SCALE;
         let smooth = 3 * r2 - 2 * r3;
-    
+
         (100 * smooth / SCALE).try_into().unwrap()
     }
 }

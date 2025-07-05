@@ -9,9 +9,9 @@ mod game_token_systems {
     use death_mountain::models::adventurer::bag::{ImplBag};
 
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, StatsMode};
-    use death_mountain::utils::vrf::VRFImpl;
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::systems::renderer::contracts::{IRendererSystemsDispatcherTrait};
+    use death_mountain::utils::vrf::VRFImpl;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage};
 
@@ -100,6 +100,7 @@ mod game_token_systems {
                     game_seed_until_xp: 0,
                     in_battle: false,
                     stats_mode: StatsMode::Dodge,
+                    base_damage_reduction: 0,
                 },
             );
 

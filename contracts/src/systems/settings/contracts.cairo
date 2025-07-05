@@ -1,7 +1,7 @@
-use starknet::ContractAddress;
 use death_mountain::models::adventurer::adventurer::Adventurer;
 use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::game::{GameSettings, StatsMode};
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait ISettingsSystems<T> {
@@ -15,6 +15,7 @@ pub trait ISettingsSystems<T> {
         game_seed_until_xp: u16,
         in_battle: bool,
         stats_mode: StatsMode,
+        base_damage_reduction: u8,
     ) -> u32;
     fn setting_details(self: @T, settings_id: u32) -> GameSettings;
     fn game_settings(self: @T, game_id: u64) -> GameSettings;
@@ -23,13 +24,13 @@ pub trait ISettingsSystems<T> {
 
 #[dojo::contract]
 mod settings_systems {
-    use starknet::ContractAddress;
     use death_mountain::constants::world::{DEFAULT_NS, VERSION};
     use death_mountain::models::adventurer::adventurer::Adventurer;
     use death_mountain::models::adventurer::bag::Bag;
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter, StatsMode};
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage};
+    use starknet::ContractAddress;
     use super::ISettingsSystems;
     use tournaments::components::models::game::TokenMetadata;
 
@@ -45,6 +46,7 @@ mod settings_systems {
             game_seed_until_xp: u16,
             in_battle: bool,
             stats_mode: StatsMode,
+            base_damage_reduction: u8,
         ) -> u32 {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
             // increment settings counter
@@ -62,6 +64,7 @@ mod settings_systems {
                         game_seed_until_xp,
                         in_battle,
                         stats_mode,
+                        base_damage_reduction,
                     },
                 );
             world

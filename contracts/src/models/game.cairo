@@ -57,6 +57,7 @@ pub struct GameSettings {
     pub game_seed_until_xp: u16,
     pub in_battle: bool,
     pub stats_mode: StatsMode,
+    pub base_damage_reduction: u8,
 }
 
 #[derive(Introspect, Copy, Drop, Serde, PartialEq)]
