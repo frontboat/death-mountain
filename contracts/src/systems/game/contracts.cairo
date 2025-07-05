@@ -20,6 +20,7 @@ pub trait IGameSystems<T> {
 #[dojo::contract]
 mod game_systems {
     use core::panic_with_felt252;
+    use starknet::ContractAddress;
     use death_mountain::constants::adventurer::{
         ITEM_MAX_GREATNESS, ITEM_XP_MULTIPLIER_BEASTS, ITEM_XP_MULTIPLIER_OBSTACLES, MAX_GREATNESS_STAT_BONUS,
         POTION_HEALTH_AMOUNT, STARTING_HEALTH, XP_FOR_DISCOVERIES,
@@ -116,7 +117,7 @@ mod game_systems {
 
                 // get random seed
                 let (beast_seed, market_seed) = _get_random_seed(
-                    world, adventurer_id, adventurer.xp, game_settings
+                    adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp, game_settings.vrf_address
                 );
 
                 _emit_game_event(
@@ -198,7 +199,7 @@ mod game_systems {
 
             // get random seed
             let (explore_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings
+                adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp, game_settings.vrf_address
             );
 
             // go explore
@@ -289,7 +290,7 @@ mod game_systems {
             let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
             let (level_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings
+                adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp, game_settings.vrf_address
             );
 
             let mut game_events: Array<GameEventDetails> = array![];
@@ -397,7 +398,7 @@ mod game_systems {
 
             // get random seed
             let (flee_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings
+                adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp, game_settings.vrf_address
             );
 
             // attempt to flee
@@ -503,7 +504,7 @@ mod game_systems {
 
                 // get random seed
                 let (seed, _) = _get_random_seed(
-                    world, adventurer_id, adventurer.xp, game_settings
+                    adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp, game_settings.vrf_address
                 );
 
                 // get randomness for combat
@@ -1740,15 +1741,14 @@ mod game_systems {
     /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
     /// @param adventurer_xp A u16 representing the adventurer's XP.
     /// @return A felt252 representing the random seed.
-    fn _get_random_seed(
-        world: WorldStorage, adventurer_id: u64, adventurer_xp: u16, game_settings: GameSettings,
+    fn _get_random_seed(adventurer_id: u64, adventurer_xp: u16, game_seed: u64, game_seed_until_xp: u16, vrf_address: ContractAddress,
     ) -> (u64, u64) {
         let mut seed: felt252 = 0;
 
-        if game_settings.game_seed != 0 && (game_settings.game_seed_until_xp == 0 || game_settings.game_seed_until_xp > adventurer_xp) {
-            seed = ImplAdventurer::get_simple_entropy(adventurer_xp, game_settings.game_seed);
+        if game_seed != 0 && (game_seed_until_xp == 0 || game_seed_until_xp > adventurer_xp) {
+            seed = ImplAdventurer::get_simple_entropy(adventurer_xp, game_seed);
         } else if _network_supports_vrf() {
-            seed = VRFImpl::seed(game_settings.vrf_address);
+            seed = VRFImpl::seed(vrf_address);
         } else {
             seed = ImplAdventurer::get_simple_entropy(adventurer_xp, adventurer_id);
         }
