@@ -311,6 +311,7 @@ export default function BeastScreen() {
                   </Typography>
                   <Checkbox
                     checked={untilDeath}
+                    disabled={attackInProgress || fleeInProgress || equipInProgress}
                     onChange={(e) => setUntilDeath(e.target.checked)}
                     size="small"
                     sx={styles.deathCheckbox}

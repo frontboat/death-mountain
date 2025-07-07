@@ -192,6 +192,7 @@ export default function CombatOverlay() {
               </Typography>
               <Checkbox
                 checked={untilDeath}
+                disabled={attackInProgress || fleeInProgress || equipInProgress}
                 onChange={(e) => setUntilDeath(e.target.checked)}
                 size="medium"
                 sx={styles.deathCheckbox}
