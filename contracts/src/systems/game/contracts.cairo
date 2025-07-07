@@ -1608,21 +1608,28 @@ mod game_systems {
 mod tests {
     use death_mountain::constants::adventurer::{BASE_POTION_PRICE, POTION_HEALTH_AMOUNT};
     use death_mountain::constants::beast::BeastSettings;
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
     use death_mountain::constants::loot::{ItemId};
+
     use death_mountain::constants::world::DEFAULT_NS;
 
-    use death_mountain::models::adventurer::stats::{IStat};
+    use death_mountain::libs::game::{GameLibs, ImplGameLibs};
+    use death_mountain::models::adventurer::adventurer::{IAdventurer, ImplAdventurer};
+    use death_mountain::models::adventurer::stats::{IStat, Stats};
+    use death_mountain::models::game::{AdventurerEntropy};
     use death_mountain::models::game::{
         e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings, m_GameSettingsMetadata,
         m_SettingsCounter,
     };
-    use death_mountain::systems::adventurer::contracts::{adventurer_systems};
+    use death_mountain::models::market::{ItemPurchase};
+    use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
     use death_mountain::systems::beast::contracts::{beast_systems};
     use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
     use death_mountain::systems::game_token::contracts::{game_token_systems};
-    use death_mountain::systems::loot::contracts::{loot_systems};
+    use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
     use death_mountain::systems::renderer::contracts::{renderer_systems};
-    use dojo::world::{IWorldDispatcherTrait};
+    use dojo::model::{ModelStorage};
+    use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
     };
