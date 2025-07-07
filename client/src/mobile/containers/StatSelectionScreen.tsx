@@ -3,7 +3,7 @@ import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Stats } from '@/types/game';
 import { screenVariants } from '@/utils/animations';
-import { ability_based_percentage, calculateLevel } from '@/utils/game';
+import { ability_based_damage_reduction, ability_based_percentage, calculateLevel } from '@/utils/game';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
@@ -18,6 +18,12 @@ const STAT_DESCRIPTIONS = {
   charisma: "Provides discounts on the marketplace."
 };
 
+const STAT_DESCRIPTIONS_REDUCTION = {
+  ...STAT_DESCRIPTIONS,
+  intelligence: "Reduces damage taken by Obstacles.",
+  wisdom: "Reduces damage taken by Beast ambush.",
+};
+
 const STAT_ICONS = {
   strength: '/images/types/Strength.svg',
   dexterity: '/images/types/Dexterity.svg',
@@ -29,7 +35,7 @@ const STAT_ICONS = {
 };
 
 export default function StatSelectionScreen() {
-  const { adventurer } = useGameStore();
+  const { adventurer, gameSettings } = useGameStore();
   const { executeGameAction, actionFailed } = useGameDirector();
 
   const [isSelectingStats, setIsSelectingStats] = useState(false);
@@ -91,11 +97,23 @@ export default function StatSelectionScreen() {
     } else if (stat === 'intelligence') {
       let currentIntelligence = adventurer!.stats.intelligence;
       let newIntelligence = currentIntelligence + selectedStats.intelligence;
+
+      if (gameSettings?.stats_mode === 'Reduction') {
+        if (selectedStats[stat] === 0) return `${ability_based_damage_reduction(adventurer!.xp, currentIntelligence)}% damage reduction`;
+        return `${ability_based_damage_reduction(adventurer!.xp, currentIntelligence)}% → ${ability_based_damage_reduction(adventurer!.xp, newIntelligence)}%`;
+      }
+
       if (selectedStats[stat] === 0) return `${ability_based_percentage(adventurer!.xp, currentIntelligence)}% chance of avoiding obstacles`;
       return `${ability_based_percentage(adventurer!.xp, currentIntelligence)}% → ${ability_based_percentage(adventurer!.xp, newIntelligence)}%`;
     } else if (stat === 'wisdom') {
       let currentWisdom = adventurer!.stats.wisdom;
       let newWisdom = currentWisdom + selectedStats.wisdom;
+
+      if (gameSettings?.stats_mode === 'Reduction') {
+        if (selectedStats[stat] === 0) return `${ability_based_damage_reduction(adventurer!.xp, currentWisdom)}% damage reduction`;
+        return `${ability_based_damage_reduction(adventurer!.xp, currentWisdom)}% → ${ability_based_damage_reduction(adventurer!.xp, newWisdom)}%`;
+      }
+
       if (selectedStats[stat] === 0) return `${ability_based_percentage(adventurer!.xp, currentWisdom)}% chance of avoiding ambush`;
       return `${ability_based_percentage(adventurer!.xp, currentWisdom)}% → ${ability_based_percentage(adventurer!.xp, newWisdom)}%`;
     } else if (stat === 'charisma') {
@@ -128,7 +146,7 @@ export default function StatSelectionScreen() {
         </Box>
 
         <Box sx={styles.statsGrid}>
-          {Object.entries(STAT_DESCRIPTIONS).map(([stat, description]) => (
+          {Object.entries(gameSettings?.stats_mode === 'Reduction' ? STAT_DESCRIPTIONS_REDUCTION : STAT_DESCRIPTIONS).map(([stat, description]) => (
             <Box key={stat} sx={styles.statCard}>
               <Box sx={styles.statHeader}>
                 <Box sx={styles.statTitleContainer}>

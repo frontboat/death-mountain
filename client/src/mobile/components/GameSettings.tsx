@@ -13,7 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PreviewIcon from '@mui/icons-material/Preview';
-import { Box, Button, Dialog, Divider, Input, LinearProgress, TextField, Typography } from '@mui/material';
+import { Box, Button, Dialog, Divider, Input, LinearProgress, MenuItem, Select, TextField, Typography } from '@mui/material';
 import { motion } from "framer-motion";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -21,14 +21,17 @@ import EncountersDialog from './EncountersDialog';
 import ItemList from './ItemList';
 
 const DEFAULT_SETTINGS: GameSettingsData = {
+  vrf_address: '0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f',
   name: '',
   in_battle: false,
   game_seed: 0,
   game_seed_until_xp: 0,
+  stats_mode: 'Dodge',
+  base_damage_reduction: 0,
   adventurer: {
     health: 100,
     xp: 1,
-    gold: 35,
+    gold: 40,
     beast_health: 0,
     stat_upgrades_available: 0,
     stats: {
@@ -226,6 +229,39 @@ export default function GameSettings() {
             <Typography color='primary' sx={{ cursor: gameSettingsEdit ? 'pointer' : 'default' }}>
               {getValue(field) ? 'Yes' : 'No'}
             </Typography>
+          </Box>
+        </Box>
+      );
+    }
+
+    if (type === 'select') {
+      return (
+        <Box sx={styles.settingContainer}>
+          <Typography color='primary'>
+            {label}
+          </Typography>
+
+          <Box sx={styles.settingValueContainer}>
+            <Select
+              value={getValue(field)}
+              onChange={(e) => setValue(field, e.target.value)}
+              disabled={!gameSettingsEdit}
+              size='small'
+              sx={{
+                color: '#80FF00',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#ffffff50',
+                },
+                '& .MuiSelect-select': {
+                  padding: '4px 8px',
+                  fontSize: '14px',
+                },
+                minWidth: '100px',
+              }}
+            >
+              <MenuItem value={'Dodge'}>Dodge</MenuItem>
+              <MenuItem value={'Reduction'}>Reduction</MenuItem>
+            </Select>
           </Box>
         </Box>
       );
@@ -471,9 +507,8 @@ export default function GameSettings() {
                   {Object.entries(slotIcons).map(([slot, icon]) => {
                     const equippedItem = gameSettings.adventurer.equipment[slot.toLowerCase() as keyof Equipment];
                     return (
-                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <Box key={slot} sx={{ display: 'flex', flexDirection: 'column' }}>
                         <Box
-                          key={slot}
                           sx={{
                             ...styles.equippedItemSlot,
                             cursor: gameSettingsEdit ? 'pointer' : 'default',
@@ -570,7 +605,7 @@ export default function GameSettings() {
 
               {gameSettings.bag.length > 0 && <Box sx={styles.equippedItemsContainer} mt={1}>
                 <Box sx={styles.equippedItemsGrid}>
-                  {gameSettings.bag.length > 0 && gameSettings.bag.map((item, index) => (
+                  {gameSettings.bag.length > 0 && gameSettings.bag.map((item) => (
                     <Box sx={{ display: 'flex', flexDirection: 'column' }} key={item.id}>
                       <Box sx={styles.equippedItemSlot}>
                         {ItemUtils.getMetadata(item.id) && (
@@ -640,6 +675,12 @@ export default function GameSettings() {
             </Box>
             <Box sx={{ width: '100%', mt: 1 }}>
               {renderSettingItem('Game Seed', 'game_seed', 'seed')}
+            </Box>
+            <Box sx={{ width: '100%', mt: 1 }}>
+              {renderSettingItem('Stats Mode', 'stats_mode', 'select')}
+            </Box>
+            <Box sx={{ width: '100%', mt: 1 }}>
+              {renderSettingItem('Base Damage Reduction', 'base_damage_reduction', 'number', [0, 100])}
             </Box>
 
             {gameSettings.in_battle && beast !== null ? (

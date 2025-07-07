@@ -234,12 +234,15 @@ export const useSystemCalls = () => {
         contractAddress: SETTINGS_ADDRESS,
         entrypoint: 'add_settings',
         calldata: [
+          settings.vrf_address,
           settings.name,
           settings.adventurer,
           bag,
           settings.game_seed,
           settings.game_seed_until_xp,
-          settings.in_battle
+          settings.in_battle,
+          settings.stats_mode === 'Dodge' ? 0 : 1,
+          settings.base_damage_reduction
         ]
       }
     ], () => { });

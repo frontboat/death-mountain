@@ -477,6 +477,21 @@ pub impl ImplCombat of ICombat {
             relevant_stat.into() > scaled_chance
         }
     }
+
+    fn ability_based_damage_reduction(adventurer_level: u8, relevant_stat: u8) -> u8 {
+        const SCALE: u128 = 1_000_000;
+
+        let mut ratio = SCALE * relevant_stat.into() / adventurer_level.into();
+        if ratio > SCALE {
+            ratio = SCALE;
+        }
+
+        let r2 = ratio * ratio / SCALE;
+        let r3 = r2 * ratio / SCALE;
+        let smooth = 3 * r2 - 2 * r3;
+
+        (100 * smooth / SCALE).try_into().unwrap()
+    }
 }
 
 // ---------------------------

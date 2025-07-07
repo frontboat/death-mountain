@@ -14,12 +14,12 @@ pub enum Source {
 
 #[generate_trait]
 pub impl VRFImpl of VRFTrait {
-    fn vrf_address() -> ContractAddress {
+    fn cartridge_vrf_address() -> ContractAddress {
         contract_address_const::<0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f>()
     }
 
-    fn seed() -> felt252 {
-        let vrf_provider = IVrfProviderDispatcher { contract_address: Self::vrf_address() };
+    fn seed(vrf_address: ContractAddress) -> felt252 {
+        let vrf_provider = IVrfProviderDispatcher { contract_address: vrf_address };
         let random_value: felt252 = vrf_provider.consume_random(Source::Nonce(get_caller_address()));
         return random_value;
     }

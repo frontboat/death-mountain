@@ -143,6 +143,22 @@ export const ability_based_avoid_threat = (adventurer_level: number, relevant_st
   }
 }
 
+export const ability_based_damage_reduction = (adventurer_xp: number, relevant_stat: number) => {
+  let adventurer_level = calculateLevel(adventurer_xp);
+  const SCALE = 1_000_000;
+
+  let ratio = SCALE * relevant_stat / adventurer_level;
+  if (ratio > SCALE) {
+    ratio = SCALE;
+  }
+
+  let r2 = (ratio * ratio) / SCALE;
+  let r3 = (r2 * ratio) / SCALE;
+  let smooth = 3 * r2 - 2 * r3;
+
+  return Math.floor((100 * smooth / SCALE));
+}
+
 export const calculateBeastDamage = (beast: Beast, adventurer: Adventurer, armor: Item) => {
   const baseAttack = beast.level * (6 - Number(beast.tier));
   let damage = baseAttack;

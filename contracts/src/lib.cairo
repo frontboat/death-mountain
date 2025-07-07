@@ -44,7 +44,7 @@ pub mod utils {
         pub mod encoding;
         pub mod renderer_utils;
     }
-    pub mod cartridge;
+    pub mod vrf;
 }
 
 pub mod constants {
