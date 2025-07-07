@@ -283,7 +283,7 @@ mod game_systems {
             );
 
             let mut game_events: Array<GameEventDetails> = array![];
-            let mut battle_count = 0;
+            let mut battle_count = adventurer.action_count;
             _attack(
                 ref adventurer,
                 ref game_events,
@@ -342,7 +342,7 @@ mod game_systems {
 
             // attempt to flee
             let mut game_events: Array<GameEventDetails> = array![];
-            let mut battle_count = 0;
+            let mut battle_count = adventurer.action_count;
             _flee(
                 ref adventurer,
                 ref game_events,
