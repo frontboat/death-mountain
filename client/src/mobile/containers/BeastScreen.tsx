@@ -305,7 +305,11 @@ export default function BeastScreen() {
                     {adventurer!.stats.dexterity === 0 ? 'No Dexterity' : `${fleePercentage}% chance`}
                   </Typography>
                 </Box>
-                <Box sx={styles.deathCheckboxContainer} onClick={() => setUntilDeath(!untilDeath)}>
+                <Box sx={styles.deathCheckboxContainer} onClick={() => {
+                  if (!attackInProgress && !fleeInProgress && !equipInProgress) {
+                    setUntilDeath(!untilDeath);
+                  }
+                }}>
                   <Typography sx={styles.deathCheckboxLabel}>
                     until<br />death
                   </Typography>
