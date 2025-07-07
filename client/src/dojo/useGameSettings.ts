@@ -13,13 +13,13 @@ export interface Settings {
   game_seed: number;
   game_seed_until_xp: number;
   in_battle: boolean;
-  stats_mode: number;
+  stats_mode: string;
   base_damage_reduction: number;
 }
 
 export const useGameSettings = () => {
   const dojoConfig = useDojoConfig();
-  
+
   const getRecommendedSettings = async (): Promise<Settings[]> => {
     try {
       let url = `${dojoConfig.toriiUrl}/sql?query=

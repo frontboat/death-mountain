@@ -46,7 +46,7 @@ export const NETWORKS = {
   SN_SEPOLIA: {
     chainId: ChainId.SN_SEPOLIA,
     name: 'Sepolia',
-    status: 'online',
+    status: 'offline',
     namespace: 'ls_0_0_1',
     slot: 'lootsurvivor-sepolia-2',
     rpcUrl: 'https://api.cartridge.gg/x/starknet/sepolia',
@@ -61,7 +61,7 @@ export const NETWORKS = {
     chainId: ChainId.WP_PG_SLOT,
     name: 'Katana',
     status: 'online',
-    namespace: 'ls_0_0_1',
+    namespace: 'ls_0_0_2',
     slot: 'pg-slot',
     rpcUrl: 'https://api.cartridge.gg/x/pg-slot/katana',
     torii: 'https://api.cartridge.gg/x/pg-slot/torii',

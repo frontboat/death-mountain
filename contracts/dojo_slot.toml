@@ -7,12 +7,12 @@ seed = "pg-slot"
 rpc_url = "https://api.cartridge.gg/x/pg-slot/katana"
 
 [namespace]
-default = "ls_0_0_1"
+default = "ls_0_0_2"
 
 [writers]
-"ls_0_0_1" = ["ls_0_0_1-game_systems", "ls_0_0_1-game_token_systems", "ls_0_0_1-settings_systems"]
+"ls_0_0_2" = ["ls_0_0_2-game_systems", "ls_0_0_2-game_token_systems", "ls_0_0_2-settings_systems"]
 
 [init_call_args]
-"ls_0_0_1-game_token_systems" = [
+"ls_0_0_2-game_token_systems" = [
     "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
 ]

@@ -862,9 +862,10 @@ mod game_systems {
         let mut beast_attack_details = AttackEvent { damage: 0, location: Slot::None, critical_hit: false };
         if (is_ambush) {
             // process beast attack
-            _beast_attack(
-                ref adventurer, beast, seed, crit_hit_rnd, dmg_location_rnd, is_ambush, game_libs, game_settings,
-            );
+            beast_attack_details =
+                _beast_attack(
+                    ref adventurer, beast, seed, crit_hit_rnd, dmg_location_rnd, is_ambush, game_libs, game_settings,
+                );
         }
 
         (beast, beast_attack_details)

@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: GameSettingsData = {
   in_battle: false,
   game_seed: 0,
   game_seed_until_xp: 0,
-  stats_mode: 0,
+  stats_mode: 'Dodge',
   base_damage_reduction: 0,
   adventurer: {
     health: 100,
@@ -244,7 +244,7 @@ export default function GameSettings() {
           <Box sx={styles.settingValueContainer}>
             <Select
               value={getValue(field)}
-              onChange={(e) => setValue(field, Number(e.target.value))}
+              onChange={(e) => setValue(field, e.target.value)}
               disabled={!gameSettingsEdit}
               size='small'
               sx={{
@@ -259,8 +259,8 @@ export default function GameSettings() {
                 minWidth: '100px',
               }}
             >
-              <MenuItem value={0}>Dodge</MenuItem>
-              <MenuItem value={1}>Reduction</MenuItem>
+              <MenuItem value={'Dodge'}>Dodge</MenuItem>
+              <MenuItem value={'Reduction'}>Reduction</MenuItem>
             </Select>
           </Box>
         </Box>

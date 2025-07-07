@@ -38,8 +38,11 @@ function GameSettingsList() {
     if (tab === 'recommended') {
       const settings = await getRecommendedSettings();
       setSettingsList(settings ?? []);
+    } else if (tab === 'my') {
+      const settings = await getSettingsList(account?.address ?? null, null);
+      setSettingsList(settings ?? []);
     } else {
-      const settings = await getSettingsList(account?.address ?? null, [parseInt(search)]);
+      const settings = await getSettingsList(null, search ? [parseInt(search)] : null);
       setSettingsList(settings ?? []);
     }
 
