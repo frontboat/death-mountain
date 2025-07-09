@@ -92,6 +92,10 @@ export const useStarknetApi = () => {
     return null;
   };
 
+  const isBeastCollectable = (beastId: number): boolean => {
+    return true;
+  }
+
   const createBurnerAccount = async (rpcProvider: RpcProvider) => {
     const privateKey = stark.randomAddress();
     const publicKey = ec.starkCurve.getStarkKey(privateKey);
@@ -125,5 +129,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getAdventurer, createBurnerAccount };
+  return { getAdventurer, createBurnerAccount, isBeastCollectable };
 };
