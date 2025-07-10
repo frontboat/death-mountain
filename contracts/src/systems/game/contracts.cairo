@@ -24,6 +24,7 @@ mod game_systems {
         ITEM_MAX_GREATNESS, ITEM_XP_MULTIPLIER_BEASTS, ITEM_XP_MULTIPLIER_OBSTACLES, MAX_GREATNESS_STAT_BONUS,
         POTION_HEALTH_AMOUNT, STARTING_HEALTH, XP_FOR_DISCOVERIES,
     };
+    use death_mountain::constants::beast::BeastSettings::BEAST_SPECIAL_NAME_LEVEL_UNLOCK;
     use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
     use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
     use death_mountain::constants::game::{MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID, STARTER_BEAST_ATTACK_DAMAGE, messages};
@@ -36,7 +37,7 @@ mod game_systems {
     use death_mountain::models::adventurer::equipment::{ImplEquipment};
     use death_mountain::models::adventurer::item::{ImplItem, Item};
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
-    use death_mountain::models::beast::{Beast, IBeast};
+    use death_mountain::models::beast::{Beast, IBeast, ImplBeast};
     use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
     use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked, GameSettings, StatsMode};
     use death_mountain::models::game::{
@@ -296,6 +297,7 @@ mod game_systems {
                 beast_level_rnd,
                 game_libs,
                 game_settings,
+                adventurer_id,
             );
 
             _emit_events(ref world, adventurer_id, adventurer.action_count, game_events);
@@ -353,6 +355,7 @@ mod game_systems {
                 to_the_death,
                 game_libs,
                 game_settings,
+                adventurer_id,
             );
 
             _emit_events(ref world, adventurer_id, adventurer.action_count, game_events);
@@ -414,6 +417,7 @@ mod game_systems {
                     false,
                     game_libs,
                     game_settings,
+                    adventurer_id,
                 );
 
                 _emit_game_event(
@@ -590,6 +594,7 @@ mod game_systems {
         item_specials_rnd: u16,
         level_seed: u64,
         game_libs: GameLibs,
+        adventurer_id: u64,
     ) {
         // zero out beast health
         adventurer.beast_health = 0;
@@ -621,33 +626,21 @@ mod game_systems {
                     },
                 ),
             );
-        // // if beast beast level is above collectible threshold
-    // if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() && _network_supports_vrf() {
-    //     // mint beast to owner of the adventurer or controller delegate if set
-    //     _mint_beast(@self, beast, get_caller_address());
-    // }
+
+        // if beast beast level is above collectible threshold
+        if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+            game_libs
+                .beast
+                .add_collectable(
+                    beast.id,
+                    beast.combat_spec.level,
+                    beast.starting_health,
+                    beast.combat_spec.specials.special2,
+                    beast.combat_spec.specials.special3,
+                    adventurer_id,
+                );
+        }
     }
-
-    // fn _mint_beast(self: @ContractState, beast: Beast, to_address: ContractAddress) {
-    //     let beasts_dispatcher = self._beasts_dispatcher.read();
-
-    //     let is_beast_minted = beasts_dispatcher
-    //         .isMinted(beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3);
-
-    //     let beasts_minter = beasts_dispatcher.getMinter();
-
-    //     if !is_beast_minted && beasts_minter == starknet::get_contract_address() {
-    //         beasts_dispatcher
-    //             .mint(
-    //                 to_address,
-    //                 beast.id,
-    //                 beast.combat_spec.specials.special2,
-    //                 beast.combat_spec.specials.special3,
-    //                 beast.combat_spec.level,
-    //                 beast.starting_health,
-    //             );
-    //     }
-    // }
 
     fn _get_game_settings(world: WorldStorage, game_id: u64) -> GameSettings {
         let token_metadata: TokenMetadata = world.read_model(game_id);
@@ -675,6 +668,7 @@ mod game_systems {
             ExploreResult::Beast(()) => {
                 let (beast, ambush_event) = _beast_encounter(
                     ref adventurer,
+                    adventurer_id,
                     seed: rnd1_u32,
                     health_rnd: rnd3_u16,
                     level_rnd: rnd4_u16,
@@ -822,6 +816,7 @@ mod game_systems {
 
     fn _beast_encounter(
         ref adventurer: Adventurer,
+        adventurer_id: u64,
         seed: u32,
         health_rnd: u16,
         level_rnd: u16,
@@ -864,7 +859,15 @@ mod game_systems {
             // process beast attack
             beast_attack_details =
                 _beast_attack(
-                    ref adventurer, beast, seed, crit_hit_rnd, dmg_location_rnd, is_ambush, game_libs, game_settings,
+                    ref adventurer,
+                    beast,
+                    seed,
+                    crit_hit_rnd,
+                    dmg_location_rnd,
+                    is_ambush,
+                    game_libs,
+                    game_settings,
+                    adventurer_id,
                 );
         }
 
@@ -1067,6 +1070,7 @@ mod game_systems {
         item_specials_seed: u16,
         game_libs: GameLibs,
         game_settings: GameSettings,
+        adventurer_id: u64,
     ) {
         battle_count = ImplAdventurer::increment_battle_action_count(battle_count);
 
@@ -1103,6 +1107,7 @@ mod game_systems {
                 item_specials_seed,
                 level_seed,
                 game_libs,
+                adventurer_id,
             );
         } else {
             // if beast survived the attack, deduct damage dealt
@@ -1118,6 +1123,7 @@ mod game_systems {
                 false,
                 game_libs,
                 game_settings,
+                adventurer_id,
             );
 
             game_events.append(GameEventDetails::beast_attack(_beast_attack_details));
@@ -1142,6 +1148,7 @@ mod game_systems {
                     item_specials_seed,
                     game_libs,
                     game_settings,
+                    adventurer_id,
                 );
             }
         }
@@ -1156,6 +1163,7 @@ mod game_systems {
         is_ambush: bool,
         game_libs: GameLibs,
         game_settings: GameSettings,
+        adventurer_id: u64,
     ) -> AttackEvent {
         // beasts attack random location on adventurer
         let attack_location = ImplAdventurer::get_attack_location(attack_location_rnd);
@@ -1192,6 +1200,17 @@ mod game_systems {
         // deduct damage taken from adventurer's health
         adventurer.decrease_health(damage_taken);
 
+        if adventurer.health == 0 && beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+            game_libs
+                .beast
+                .add_kill(
+                    ImplBeast::get_beast_hash(
+                        beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                    ),
+                    adventurer_id,
+                );
+        }
+
         AttackEvent {
             damage: damage_taken, location: attack_location, critical_hit: combat_result.critical_hit_bonus > 0,
         }
@@ -1207,6 +1226,7 @@ mod game_systems {
         flee_to_the_death: bool,
         game_libs: GameLibs,
         game_settings: GameSettings,
+        adventurer_id: u64,
     ) {
         battle_count = ImplAdventurer::increment_battle_action_count(battle_count);
 
@@ -1240,6 +1260,7 @@ mod game_systems {
                 false,
                 game_libs,
                 game_settings,
+                adventurer_id,
             );
 
             // Save battle events
@@ -1259,6 +1280,7 @@ mod game_systems {
                     true,
                     game_libs,
                     game_settings,
+                    adventurer_id,
                 );
             }
         }
