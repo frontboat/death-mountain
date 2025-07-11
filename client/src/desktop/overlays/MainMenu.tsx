@@ -98,7 +98,7 @@ export default function MainMenu() {
               variant="outlined"
               fullWidth
               size="large"
-              onClick={() => setShowSettings(true)}
+              onClick={() => playAsGuest()}
               sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px' }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>

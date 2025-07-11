@@ -1,21 +1,11 @@
+import { BEAST_NAMES, BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from '@/constants/beast';
+import { useStatistics } from '@/contexts/Statistics';
+import CloseIcon from '@mui/icons-material/Close';
+import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
 import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import { BEAST_NAMES, BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from '@/constants/beast';
-import React from 'react';
-
-// Dummy price chart data
-const dummyPriceData = [
-  { time: 'Day 1', price: 1.00 },
-  { time: 'Day 2', price: 1.10 },
-  { time: 'Day 3', price: 1.25 },
-  { time: 'Day 4', price: 1.18 },
-  { time: 'Day 5', price: 1.35 },
-  { time: 'Day 6', price: 1.40 },
-  { time: 'Day 7', price: 1.52 },
-];
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Generate all beasts with random special names
 const generateAllBeasts = () => {
@@ -79,91 +69,166 @@ const getTier = (beastId: number): string => {
 
 const allBeasts = generateAllBeasts();
 
-// Enhanced SVG line chart with gradient and better styling
-function PriceChart() {
-  const width = 600;
-  const height = 220;
-  const padding = 40;
-  const points = dummyPriceData.map((d, i) => [
-    padding + i * ((width - 2 * padding) / (dummyPriceData.length - 1)),
-    height - padding - ((d.price - 1) / 0.52) * (height - 2 * padding)
-  ]);
-  const path = points.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
+// Custom tooltip component
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    // Get the data point using the payload index
+    const dataIndex = payload[0].payload.index;
+    const dataPoint = payload[0].payload;
+    
+    return (
+      <Box sx={{
+        background: 'rgba(26, 26, 26, 0.95)',
+        border: '1px solid rgba(255, 224, 130, 0.3)',
+        borderRadius: '8px',
+        padding: '12px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(10px)',
+      }}>
+        <Typography sx={{ color: '#ffe082', fontSize: '0.9rem', fontWeight: 600, mb: 1 }}>
+          {dataPoint.exactTime}
+        </Typography>
+        <Typography sx={{ color: '#fff', fontSize: '0.85rem' }}>
+          Price: <span style={{ color: '#ffb74d', fontWeight: 600 }}>${dataPoint.price.toFixed(2)}</span>
+        </Typography>
+      </Box>
+    );
+  }
+  return null;
+};
 
-  // Create area path for gradient fill
-  const areaPath = path + `L${points[points.length - 1][0]},${height - padding}L${points[0][0]},${height - padding}Z`;
+// Enhanced chart with Recharts
+function PriceChart() {
+  const { gamePriceHistory } = useStatistics();
+  
+  // Handle case where data is not available
+  if (!gamePriceHistory || gamePriceHistory.length === 0) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        height: '100%',
+        color: '#888',
+        fontStyle: 'italic'
+      }}>
+        Loading price data...
+      </Box>
+    );
+  }
+
+  // Transform data for Recharts with actual dates
+  const chartData = gamePriceHistory.map((item, index) => {
+    const date = new Date(item.start);
+    
+    return {
+      index: index, // Add index for tooltip identification
+      time: index, // Use index as the key for X-axis
+      displayTime: date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      }), // For display purposes
+      exactTime: date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }),
+      date: date,
+      price: parseFloat(item.vwap.toFixed(2)),
+      min: parseFloat(item.min.toFixed(2)),
+      max: parseFloat(item.max.toFixed(2))
+    };
+  });
+
+  // Calculate Y-axis range with padding
+  const allPrices = chartData.flatMap(d => [d.price, d.min, d.max]);
+  const minPrice = Math.min(...allPrices);
+  const maxPrice = Math.max(...allPrices);
+  const priceRange = maxPrice - minPrice;
+  const padding = priceRange * 0.1; // 10% padding
+
+  // Find indices where the day changes (first occurrence of each day)
+  const dayChangeIndices = [];
+  let lastDay = '';
+  chartData.forEach((item, index) => {
+    if (item.displayTime !== lastDay) {
+      dayChangeIndices.push(index);
+      lastDay = item.displayTime;
+    }
+  });
+
+  // Custom tick formatter to show labels only for day changes
+  const customTickFormatter = (value: number) => {
+    const dataPoint = chartData[value];
+    if (!dataPoint) return '';
+    
+    // Check if this is the first occurrence of this day
+    const isFirstOccurrence = dayChangeIndices.includes(value);
+    return isFirstOccurrence ? dataPoint.displayTime : '';
+  };
 
   return (
-    <svg width={width} height={height} style={{ width: '100%', maxWidth: 600, display: 'block' }}>
-      <defs>
-        <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#ffe082" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#ffe082" stopOpacity="0.05" />
-        </linearGradient>
-        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#ffd54f" />
-          <stop offset="50%" stopColor="#ffe082" />
-          <stop offset="100%" stopColor="#ffb74d" />
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* Grid lines */}
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-        <line
-          key={`grid-${i}`}
-          x1={padding + i * ((width - 2 * padding) / 6)}
-          y1={padding}
-          x2={padding + i * ((width - 2 * padding) / 6)}
-          y2={height - padding}
-          stroke="#333"
-          strokeWidth={1}
+    <ResponsiveContainer width="100%" height={280}>
+      <LineChart 
+        data={chartData} 
+        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+      >
+        <defs>
+          <linearGradient id="colorLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#ffd54f"/>
+            <stop offset="50%" stopColor="#ffe082"/>
+            <stop offset="100%" stopColor="#ffb74d"/>
+          </linearGradient>
+        </defs>
+        
+        <CartesianGrid 
+          strokeDasharray="3 3" 
+          stroke="#333" 
           opacity={0.3}
         />
-      ))}
-      {[0, 1, 2, 3].map((i) => (
-        <line
-          key={`grid-h-${i}`}
-          x1={padding}
-          y1={padding + i * ((height - 2 * padding) / 3)}
-          x2={width - padding}
-          y2={padding + i * ((height - 2 * padding) / 3)}
-          stroke="#333"
-          strokeWidth={1}
-          opacity={0.3}
+        
+        <XAxis 
+          dataKey="time" 
+          stroke="#888"
+          fontSize={12}
+          fontWeight={500}
+          tick={{ fill: '#888' }}
+          axisLine={{ stroke: '#444' }}
+          tickLine={{ stroke: '#444' }}
+          tickFormatter={customTickFormatter}
+          ticks={dayChangeIndices}
         />
-      ))}
-
-      {/* Area fill */}
-      <path d={areaPath} fill="url(#chartGradient)" />
-
-      {/* Main line */}
-      <path d={path} fill="none" stroke="url(#lineGradient)" strokeWidth={4} filter="url(#glow)" />
-
-      {/* Points with glow */}
-      {points.map((p, i) => (
-        <g key={i}>
-          <circle cx={p[0]} cy={p[1]} r={6} fill="#1a1a1a" stroke="#ffe082" strokeWidth={2} />
-          <circle cx={p[0]} cy={p[1]} r={3} fill="#ffe082" />
-        </g>
-      ))}
-
-      {/* Labels with better styling */}
-      {dummyPriceData.map((d, i) => (
-        <text key={i} x={points[i][0]} y={height - padding + 20} textAnchor="middle" fontSize="11" fill="#888" fontWeight="500">{d.time}</text>
-      ))}
-
-      {/* Y-axis labels */}
-      {[1, 1.2, 1.4, 1.52].map((v, i) => (
-        <text key={i} x={padding - 15} y={height - padding - ((v - 1) / 0.52) * (height - 2 * padding) + 4} textAnchor="end" fontSize="11" fill="#888" fontWeight="500">${v.toFixed(2)}</text>
-      ))}
-    </svg>
+        
+        <YAxis 
+          stroke="#888"
+          fontSize={12}
+          fontWeight={500}
+          tick={{ fill: '#888' }}
+          axisLine={{ stroke: '#444' }}
+          tickLine={{ stroke: '#444' }}
+          tickFormatter={(value) => `$${value.toFixed(2)}`}
+          domain={[minPrice - padding, maxPrice + padding]}
+        />
+        
+        <Tooltip content={<CustomTooltip />} />
+        
+        <Line 
+          type="monotone" 
+          dataKey="price" 
+          stroke="url(#colorLine)"
+          strokeWidth={3}
+          dot={false}
+          activeDot={{
+            fill: '#ffe082',
+            stroke: '#1a1a1a',
+            strokeWidth: 2,
+            r: 4
+          }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -202,7 +267,7 @@ export default function StatisticsModal({ open, onClose }: { open: boolean, onCl
               <Box sx={styles.sectionHeader}>
                 <Box sx={styles.chartDot} />
                 <Typography sx={styles.sectionTitle}>
-                  Game Cost Over Time
+                  Game Cost Last 7 Days
                 </Typography>
               </Box>
               <Box sx={styles.chartContainer}>
@@ -344,7 +409,7 @@ const styles = {
   sectionTitle: {
     color: '#ffe082',
     fontWeight: 700,
-    fontSize: '1.2rem',
+    fontSize: '1.1rem',
     letterSpacing: 0.5,
     textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
     flexShrink: 0
