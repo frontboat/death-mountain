@@ -453,6 +453,7 @@ mod game_systems {
             // assert action is valid (ownership of item is handled in internal function when we
             // iterate over items)
             _assert_not_dead(adventurer);
+            _assert_not_in_battle(orig_adv);
             assert(items.len() != 0, messages::NO_ITEMS);
             _assert_not_starter_beast(adventurer, messages::CANT_DROP_DURING_STARTER_BEAST);
 
@@ -1200,7 +1201,7 @@ mod game_systems {
         // deduct damage taken from adventurer's health
         adventurer.decrease_health(damage_taken);
 
-        if adventurer.health == 0 && beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+        if adventurer.health == 0 {
             game_libs
                 .beast
                 .add_kill(

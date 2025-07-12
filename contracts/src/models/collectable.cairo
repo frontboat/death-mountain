@@ -2,14 +2,15 @@
 #[dojo::model]
 pub struct CollectableBeast {
     #[key]
-    pub id: felt252, // hash of beast_id, prefix, suffix
     pub beast_id: u8,
+    #[key]
+    pub index: u16,
+    pub seed: u64,
     pub level: u16,
     pub health: u16,
     pub prefix: u8,
     pub suffix: u8,
     pub killed_by: u64, // adventurer id
-    pub collected: bool,
 }
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]
