@@ -48,9 +48,9 @@ export const NETWORKS = {
     name: 'Sepolia',
     status: 'offline',
     namespace: 'ls_0_0_1',
-    slot: 'lootsurvivor-sepolia-2',
+    slot: 'pg-sepolia',
     rpcUrl: 'https://api.cartridge.gg/x/starknet/sepolia',
-    torii: 'https://api.cartridge.gg/x/lootsurvivor-sepolia-2/torii',
+    torii: 'https://api.cartridge.gg/x/pg-sepolia/torii',
     tokens: {
       erc20: [],
     },
