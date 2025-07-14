@@ -4,8 +4,10 @@ use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::adventurer::item::Item;
 use death_mountain::models::adventurer::stats::Stats;
 
+
 #[starknet::interface]
 pub trait IAdventurerSystems<T> {
+    fn save_dropped_item(ref self: T, adventurer_id: u64, item: Item);
     fn generate_starting_stats(self: @T, seed: u64) -> Stats;
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
@@ -39,6 +41,7 @@ mod adventurer_systems {
     use death_mountain::models::adventurer::item::Item;
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::models::game::{AdventurerPacked, BagPacked};
+    use death_mountain::models::game_data::{AdventurerStats, DroppedItem};
     use death_mountain::models::market::ImplMarket;
     use dojo::model::ModelStorage;
     use dojo::world::WorldStorage;
@@ -48,6 +51,14 @@ mod adventurer_systems {
 
     #[abi(embed_v0)]
     impl AdventurerSystemsImpl of IAdventurerSystems<ContractState> {
+        fn save_dropped_item(ref self: ContractState, adventurer_id: u64, item: Item) {
+            let mut world: WorldStorage = self.world(@DEFAULT_NS());
+            let mut adventurer_stats: AdventurerStats = world.read_model(adventurer_id);
+            world.write_model(@DroppedItem { adventurer_id, index: adventurer_stats.items_dropped, item });
+            adventurer_stats.items_dropped += 1;
+            world.write_model(@adventurer_stats);
+        }
+
         fn generate_starting_stats(self: @ContractState, seed: u64) -> Stats {
             ImplStats::generate_starting_stats(seed)
         }

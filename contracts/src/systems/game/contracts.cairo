@@ -453,12 +453,12 @@ mod game_systems {
             // assert action is valid (ownership of item is handled in internal function when we
             // iterate over items)
             _assert_not_dead(adventurer);
-            _assert_not_in_battle(orig_adv);
+            _assert_not_in_battle(adventurer);
             assert(items.len() != 0, messages::NO_ITEMS);
             _assert_not_starter_beast(adventurer, messages::CANT_DROP_DURING_STARTER_BEAST);
 
             // drop items
-            _drop(ref adventurer, ref bag, items.clone(), game_libs);
+            _drop(ref adventurer, ref bag, items.clone(), game_libs, adventurer_id);
 
             _emit_game_event(
                 ref world,
@@ -633,6 +633,7 @@ mod game_systems {
             game_libs
                 .beast
                 .add_collectable(
+                    level_seed,
                     beast.id,
                     beast.combat_spec.level,
                     beast.starting_health,
@@ -1359,7 +1360,7 @@ mod game_systems {
         };
     }
 
-    fn _drop(ref adventurer: Adventurer, ref bag: Bag, items: Array<u8>, game_libs: GameLibs) {
+    fn _drop(ref adventurer: Adventurer, ref bag: Bag, items: Array<u8>, game_libs: GameLibs, adventurer_id: u64) {
         // for each item
         let mut i: u32 = 0;
         loop {
@@ -1407,6 +1408,8 @@ mod game_systems {
                     panic_with_felt252('Item not owned by adventurer');
                 }
             }
+
+            game_libs.adventurer.save_dropped_item(adventurer_id, item);
 
             i += 1;
         };

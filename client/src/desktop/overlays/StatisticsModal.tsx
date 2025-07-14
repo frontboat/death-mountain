@@ -10,20 +10,20 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 // Generate all beasts with random special names
 const generateAllBeasts = () => {
   const beasts = [];
-  
+
   for (let i = 1; i <= 75; i++) {
     if (BEAST_NAMES[i]) {
       // Generate random special name (prefix + suffix)
       const prefixIndex = Math.floor(Math.random() * 69) + 1;
       const suffixIndex = Math.floor(Math.random() * 18) + 1;
-      
+
       const prefix = BEAST_NAME_PREFIXES[prefixIndex] || '';
       const suffix = BEAST_NAME_SUFFIXES[suffixIndex] || '';
       const baseName = BEAST_NAMES[i];
-      
+
       // Create special name (only for beasts level 19+)
       const specialName = `"${prefix} ${suffix}" ${baseName}`;
-      
+
       // Calculate power based on tier (T1 = highest power, T5 = lowest)
       let power;
       if (i <= 5 || (i >= 26 && i <= 30) || (i >= 51 && i <= 55)) {
@@ -37,7 +37,7 @@ const generateAllBeasts = () => {
       } else {
         power = 120 + Math.floor(Math.random() * 40); // T5: 120-160
       }
-      
+
       beasts.push({
         id: i,
         name: specialName,
@@ -47,7 +47,7 @@ const generateAllBeasts = () => {
       });
     }
   }
-  
+
   // Sort by power (highest first)
   return beasts.sort((a, b) => b.power - a.power);
 };
@@ -75,7 +75,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     // Get the data point using the payload index
     const dataIndex = payload[0].payload.index;
     const dataPoint = payload[0].payload;
-    
+
     return (
       <Box sx={{
         background: 'rgba(26, 26, 26, 0.95)',
@@ -100,14 +100,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // Enhanced chart with Recharts
 function PriceChart() {
   const { gamePriceHistory } = useStatistics();
-  
+
   // Handle case where data is not available
   if (!gamePriceHistory || gamePriceHistory.length === 0) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         height: '100%',
         color: '#888',
         fontStyle: 'italic'
@@ -118,15 +118,16 @@ function PriceChart() {
   }
 
   // Transform data for Recharts with actual dates
+  console.log(gamePriceHistory);
   const chartData = gamePriceHistory.map((item, index) => {
     const date = new Date(item.start);
-    
+
     return {
       index: index, // Add index for tooltip identification
       time: index, // Use index as the key for X-axis
-      displayTime: date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
+      displayTime: date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
       }), // For display purposes
       exactTime: date.toLocaleString('en-US', {
         month: 'short',
@@ -136,21 +137,21 @@ function PriceChart() {
         hour12: false
       }),
       date: date,
-      price: parseFloat(item.vwap.toFixed(2)),
-      min: parseFloat(item.min.toFixed(2)),
-      max: parseFloat(item.max.toFixed(2))
+      price: item.vwap ? parseFloat(item.vwap.toFixed(2)) : null,
+      min: item.min ? parseFloat(item.min.toFixed(2)) : null,
+      max: item.max ? parseFloat(item.max.toFixed(2)) : null,
     };
   });
 
   // Calculate Y-axis range with padding
-  const allPrices = chartData.flatMap(d => [d.price, d.min, d.max]);
+  const allPrices = chartData.flatMap(d => [d.price, d.min, d.max]).filter((price): price is number => price !== null);
   const minPrice = Math.min(...allPrices);
   const maxPrice = Math.max(...allPrices);
   const priceRange = maxPrice - minPrice;
   const padding = priceRange * 0.1; // 10% padding
 
   // Find indices where the day changes (first occurrence of each day)
-  const dayChangeIndices = [];
+  const dayChangeIndices: number[] = [];
   let lastDay = '';
   chartData.forEach((item, index) => {
     if (item.displayTime !== lastDay) {
@@ -163,7 +164,7 @@ function PriceChart() {
   const customTickFormatter = (value: number) => {
     const dataPoint = chartData[value];
     if (!dataPoint) return '';
-    
+
     // Check if this is the first occurrence of this day
     const isFirstOccurrence = dayChangeIndices.includes(value);
     return isFirstOccurrence ? dataPoint.displayTime : '';
@@ -171,26 +172,26 @@ function PriceChart() {
 
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <LineChart 
-        data={chartData} 
+      <LineChart
+        data={chartData}
         margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
       >
         <defs>
           <linearGradient id="colorLine" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#ffd54f"/>
-            <stop offset="50%" stopColor="#ffe082"/>
-            <stop offset="100%" stopColor="#ffb74d"/>
+            <stop offset="0%" stopColor="#ffd54f" />
+            <stop offset="50%" stopColor="#ffe082" />
+            <stop offset="100%" stopColor="#ffb74d" />
           </linearGradient>
         </defs>
-        
-        <CartesianGrid 
-          strokeDasharray="3 3" 
-          stroke="#333" 
+
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke="#333"
           opacity={0.3}
         />
-        
-        <XAxis 
-          dataKey="time" 
+
+        <XAxis
+          dataKey="time"
           stroke="#888"
           fontSize={12}
           fontWeight={500}
@@ -200,8 +201,8 @@ function PriceChart() {
           tickFormatter={customTickFormatter}
           ticks={dayChangeIndices}
         />
-        
-        <YAxis 
+
+        <YAxis
           stroke="#888"
           fontSize={12}
           fontWeight={500}
@@ -211,12 +212,12 @@ function PriceChart() {
           tickFormatter={(value) => `$${value.toFixed(2)}`}
           domain={[minPrice - padding, maxPrice + padding]}
         />
-        
+
         <Tooltip content={<CustomTooltip />} />
-        
-        <Line 
-          type="monotone" 
-          dataKey="price" 
+
+        <Line
+          type="monotone"
+          dataKey="price"
           stroke="url(#colorLine)"
           strokeWidth={3}
           dot={false}
@@ -250,9 +251,9 @@ export default function StatisticsModal({ open, onClose }: { open: boolean, onCl
           <Box sx={styles.headerDot} />
           Game Statistics
         </Box>
-        <IconButton 
-          onClick={onClose} 
-          size="small" 
+        <IconButton
+          onClick={onClose}
+          size="small"
           sx={styles.closeButton}
         >
           <CloseIcon sx={{ fontSize: 24 }} />
@@ -274,7 +275,7 @@ export default function StatisticsModal({ open, onClose }: { open: boolean, onCl
                 <PriceChart />
               </Box>
             </Box>
-            
+
             {/* Table Section */}
             <Box sx={styles.sectionContainer}>
               <Box sx={styles.sectionHeader}>

@@ -3,7 +3,9 @@ use death_mountain::models::beast::Beast;
 
 #[starknet::interface]
 pub trait IBeastSystems<T> {
-    fn add_collectable(ref self: T, beast_id: u8, level: u16, health: u16, prefix: u8, suffix: u8, adventurer_id: u64);
+    fn add_collectable(
+        ref self: T, seed: u64, beast_id: u8, level: u16, health: u16, prefix: u8, suffix: u8, adventurer_id: u64,
+    );
     fn add_kill(ref self: T, id: felt252, adventurer_id: u64);
 
     fn get_starter_beast(self: @T, starter_weapon_type: Type) -> Beast;
@@ -26,7 +28,7 @@ mod beast_systems {
     use death_mountain::constants::combat::CombatEnums::Type;
     use death_mountain::constants::world::{DEFAULT_NS};
     use death_mountain::models::beast::{Beast, ImplBeast};
-    use death_mountain::models::collectable::{BeastKill, BeastStats, CollectableBeast};
+    use death_mountain::models::game_data::{AdventurerKilled, BeastKillCount, BeastStats, CollectableEntity};
     use dojo::model::ModelStorage;
     use dojo::world::WorldStorage;
     use super::IBeastSystems;
@@ -34,24 +36,34 @@ mod beast_systems {
     #[abi(embed_v0)]
     impl BeastSystemsImpl of IBeastSystems<ContractState> {
         fn add_collectable(
-            ref self: ContractState, beast_id: u8, level: u16, health: u16, prefix: u8, suffix: u8, adventurer_id: u64,
+            ref self: ContractState,
+            seed: u64,
+            beast_id: u8,
+            level: u16,
+            health: u16,
+            prefix: u8,
+            suffix: u8,
+            adventurer_id: u64,
         ) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
+            let mut beast_kill_count: BeastKillCount = world.read_model(beast_id);
 
-            let id = ImplBeast::get_beast_hash(beast_id, prefix, suffix);
-            let mut collectable_beast: CollectableBeast = world.read_model(id);
+            world
+                .write_model(
+                    @CollectableEntity {
+                        beast_id,
+                        seed,
+                        index: beast_kill_count.count,
+                        level,
+                        health,
+                        prefix,
+                        suffix,
+                        killed_by: adventurer_id,
+                    },
+                );
 
-            if collectable_beast.id == 0 {
-                collectable_beast.id = id;
-                collectable_beast.beast_id = beast_id;
-                collectable_beast.level = level;
-                collectable_beast.health = health;
-                collectable_beast.prefix = prefix;
-                collectable_beast.suffix = suffix;
-                collectable_beast.collected = false;
-                collectable_beast.killed_by = adventurer_id;
-                world.write_model(@collectable_beast);
-            }
+            beast_kill_count.count += 1;
+            world.write_model(@beast_kill_count);
         }
 
         fn add_kill(ref self: ContractState, id: felt252, adventurer_id: u64) {
@@ -59,7 +71,7 @@ mod beast_systems {
             let mut beast_stats: BeastStats = world.read_model(id);
             beast_stats.adventurers_killed += 1;
             world.write_model(@beast_stats);
-            world.write_model(@BeastKill { id, kill_index: beast_stats.adventurers_killed, adventurer_id });
+            world.write_model(@AdventurerKilled { id, kill_index: beast_stats.adventurers_killed, adventurer_id });
         }
 
         fn get_starter_beast(self: @ContractState, starter_weapon_type: Type) -> Beast {

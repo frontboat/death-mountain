@@ -9,8 +9,9 @@ export interface StatisticsContext {
 // Create a context
 const StatisticsContext = createContext<StatisticsContext>({} as StatisticsContext);
 
-const EKUBO = '0x075afe6402ad5a5c20dd25e10ec3b3986acaa647b77e4ae24b0cbc9a54a27a87'
-const USDC = '0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8'
+const DungeonTicket = '0x0468ce7715f7aea17b1632736877c36371c3b1354eb9611e8bb9035c0563963f'
+const STRK = '0x04718f5a0Fc34cC1AF16A1cdee98fFB20C31f5cD61D6Ab07201858f4287c938D'
+const USDC = '0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080'
 
 // Create a provider component
 export const StatisticsProvider = ({ children }: PropsWithChildren) => {
@@ -18,12 +19,12 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   const [gamePriceHistory, setGamePriceHistory] = useState<any[]>([]);
 
   const fetchPriceHistory = async () => {
-    const priceHistory = await getPriceChart(EKUBO, USDC);
-    setGamePriceHistory(priceHistory.data);
+    const strkPrice = await getPriceChart(DungeonTicket, STRK);
+    setGamePriceHistory(strkPrice.data);
   }
 
   const fetchGamePrice = async () => {
-    const swap = await getSwapQuote(-1e18, EKUBO, USDC);
+    const swap = await getSwapQuote(-1e18, DungeonTicket, USDC);
     setGamePrice((swap.total * -1 / 1e6).toFixed(2));
   }
 

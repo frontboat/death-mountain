@@ -31,9 +31,9 @@ pub mod models {
         pub mod stats;
     }
     pub mod beast;
-    pub mod collectable;
     pub mod combat;
     pub mod game;
+    pub mod game_data;
     pub mod loot;
     pub mod market;
     pub mod obstacle;
