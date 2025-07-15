@@ -23,6 +23,7 @@ import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatisticsModal from './StatisticsModal';
+import Network from '../components/Network';
 
 export default function MainMenu() {
   const navigate = useNavigate();
@@ -173,6 +174,7 @@ export default function MainMenu() {
                   />
                 </Box>
               </Stack>
+              <Network />
               <WalletConnect />
 
               <Box sx={styles.bottomRow}>
