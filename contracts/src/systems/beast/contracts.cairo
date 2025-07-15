@@ -1,13 +1,23 @@
 use death_mountain::constants::combat::CombatEnums::Type;
 use death_mountain::models::beast::Beast;
+use death_mountain::models::game_data::{AdventurerKilled, CollectableEntity, CollectableResult, EntityStats};
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IBeastSystems<T> {
     fn add_collectable(
-        ref self: T, seed: u64, beast_id: u8, level: u16, health: u16, prefix: u8, suffix: u8, adventurer_id: u64,
+        ref self: T, seed: u64, entity_id: u8, level: u16, health: u16, prefix: u8, suffix: u8, adventurer_id: u64,
     );
-    fn add_kill(ref self: T, id: felt252, adventurer_id: u64);
-
+    fn add_kill(ref self: T, entity_hash: felt252, adventurer_id: u64);
+    fn get_valid_collectable(
+        self: @T, adventurer_id: u64, entity_id: u8, prefix: u8, suffix: u8,
+    ) -> CollectableResult<(u16, u16)>;
+    fn get_collectable(self: @T, dungeon: ContractAddress, entity_id: u8, index: u64) -> CollectableEntity;
+    fn get_collectable_count(self: @T, dungeon: ContractAddress, entity_id: u8) -> u64;
+    fn get_entity_stats(self: @T, dungeon: ContractAddress, entity_id: u8, prefix: u8, suffix: u8) -> EntityStats;
+    fn get_adventurer_killed(
+        self: @T, dungeon: ContractAddress, entity_id: u8, prefix: u8, suffix: u8, kill_index: u64,
+    ) -> AdventurerKilled;
     fn get_starter_beast(self: @T, starter_weapon_type: Type) -> Beast;
     fn get_beast(
         self: @T,
@@ -28,17 +38,21 @@ mod beast_systems {
     use death_mountain::constants::combat::CombatEnums::Type;
     use death_mountain::constants::world::{DEFAULT_NS};
     use death_mountain::models::beast::{Beast, ImplBeast};
-    use death_mountain::models::game_data::{AdventurerKilled, BeastKillCount, BeastStats, CollectableEntity};
+    use death_mountain::models::game_data::{
+        AdventurerKilled, CollectableCount, CollectableEntity, CollectableResult, EntityStats,
+    };
     use dojo::model::ModelStorage;
     use dojo::world::WorldStorage;
+    use starknet::ContractAddress;
     use super::IBeastSystems;
+    use tournaments::components::models::game::TokenMetadata;
 
     #[abi(embed_v0)]
     impl BeastSystemsImpl of IBeastSystems<ContractState> {
         fn add_collectable(
             ref self: ContractState,
             seed: u64,
-            beast_id: u8,
+            entity_id: u8,
             level: u16,
             health: u16,
             prefix: u8,
@@ -46,14 +60,16 @@ mod beast_systems {
             adventurer_id: u64,
         ) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let mut beast_kill_count: BeastKillCount = world.read_model(beast_id);
+            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
+            let mut collectable_count: CollectableCount = world.read_model((token_metadata.minted_by, entity_id));
 
             world
                 .write_model(
                     @CollectableEntity {
-                        beast_id,
+                        dungeon: token_metadata.minted_by,
+                        entity_id,
                         seed,
-                        index: beast_kill_count.count,
+                        index: collectable_count.count,
                         level,
                         health,
                         prefix,
@@ -62,16 +78,69 @@ mod beast_systems {
                     },
                 );
 
-            beast_kill_count.count += 1;
-            world.write_model(@beast_kill_count);
+            collectable_count.count += 1;
+            world.write_model(@collectable_count);
         }
 
-        fn add_kill(ref self: ContractState, id: felt252, adventurer_id: u64) {
+        fn add_kill(ref self: ContractState, entity_hash: felt252, adventurer_id: u64) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let mut beast_stats: BeastStats = world.read_model(id);
-            beast_stats.adventurers_killed += 1;
-            world.write_model(@beast_stats);
-            world.write_model(@AdventurerKilled { id, kill_index: beast_stats.adventurers_killed, adventurer_id });
+            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
+            let mut entity_stats: EntityStats = world.read_model((token_metadata.minted_by, entity_hash));
+
+            entity_stats.adventurers_killed += 1;
+            world.write_model(@entity_stats);
+            world
+                .write_model(
+                    @AdventurerKilled {
+                        dungeon: token_metadata.minted_by,
+                        entity_hash,
+                        kill_index: entity_stats.adventurers_killed,
+                        adventurer_id,
+                    },
+                );
+        }
+
+        fn get_valid_collectable(
+            self: @ContractState, adventurer_id: u64, entity_id: u8, prefix: u8, suffix: u8,
+        ) -> CollectableResult<(u16, u16)> {
+            let mut world: WorldStorage = self.world(@DEFAULT_NS());
+            let collectable_entity: CollectableEntity = world
+                .read_model((starknet::get_caller_address(), entity_id, 0));
+
+            if collectable_entity.prefix == prefix
+                && collectable_entity.suffix == suffix
+                && collectable_entity.killed_by == adventurer_id {
+                CollectableResult::Ok((collectable_entity.level, collectable_entity.health))
+            } else {
+                CollectableResult::Err('Not Valid'.into())
+            }
+        }
+
+        fn get_collectable(
+            self: @ContractState, dungeon: ContractAddress, entity_id: u8, index: u64,
+        ) -> CollectableEntity {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            world.read_model((dungeon, entity_id, index))
+        }
+
+        fn get_collectable_count(self: @ContractState, dungeon: ContractAddress, entity_id: u8) -> u64 {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let collectable_count: CollectableCount = world.read_model((dungeon, entity_id));
+            collectable_count.count
+        }
+
+        fn get_entity_stats(
+            self: @ContractState, dungeon: ContractAddress, entity_id: u8, prefix: u8, suffix: u8,
+        ) -> EntityStats {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            world.read_model((dungeon, ImplBeast::get_beast_hash(entity_id, prefix, suffix)))
+        }
+
+        fn get_adventurer_killed(
+            self: @ContractState, dungeon: ContractAddress, entity_id: u8, prefix: u8, suffix: u8, kill_index: u64,
+        ) -> AdventurerKilled {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            world.read_model((dungeon, ImplBeast::get_beast_hash(entity_id, prefix, suffix), kill_index))
         }
 
         fn get_starter_beast(self: @ContractState, starter_weapon_type: Type) -> Beast {

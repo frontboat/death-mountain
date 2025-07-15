@@ -1409,7 +1409,7 @@ mod game_systems {
                 }
             }
 
-            game_libs.adventurer.save_dropped_item(adventurer_id, item);
+            game_libs.adventurer.record_item_drop(adventurer_id, item);
 
             i += 1;
         };

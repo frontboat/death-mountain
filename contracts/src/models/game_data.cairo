@@ -1,10 +1,20 @@
 use death_mountain::models::adventurer::item::Item;
+use starknet::ContractAddress;
+
+/// Result type for collectable operations
+#[derive(Drop, Copy, Serde, PartialEq)]
+pub enum CollectableResult<T> {
+    Ok: T,
+    Err: felt252,
+}
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]
 #[dojo::model]
 pub struct CollectableEntity {
     #[key]
-    pub beast_id: u8,
+    pub dungeon: ContractAddress,
+    #[key]
+    pub entity_id: u8,
     #[key]
     pub index: u64,
     pub seed: u64,
@@ -17,17 +27,21 @@ pub struct CollectableEntity {
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]
 #[dojo::model]
-pub struct BeastKillCount {
+pub struct CollectableCount {
     #[key]
-    pub beast_id: u8,
+    pub dungeon: ContractAddress,
+    #[key]
+    pub entity_id: u8,
     pub count: u64,
 }
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]
 #[dojo::model]
-pub struct BeastStats {
+pub struct EntityStats {
     #[key]
-    pub id: felt252,
+    pub dungeon: ContractAddress,
+    #[key]
+    pub entity_hash: felt252,
     pub adventurers_killed: u64,
 }
 
@@ -35,18 +49,12 @@ pub struct BeastStats {
 #[dojo::model]
 pub struct AdventurerKilled {
     #[key]
-    pub id: felt252,
+    pub dungeon: ContractAddress,
+    #[key]
+    pub entity_hash: felt252,
     #[key]
     pub kill_index: u64,
     pub adventurer_id: u64,
-}
-
-#[derive(IntrospectPacked, Copy, Drop, Serde)]
-#[dojo::model]
-pub struct AdventurerStats {
-    #[key]
-    pub id: u64,
-    pub items_dropped: u16,
 }
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]
@@ -55,6 +63,6 @@ pub struct DroppedItem {
     #[key]
     pub adventurer_id: u64,
     #[key]
-    pub index: u16,
+    pub item_id: u8,
     pub item: Item,
 }
