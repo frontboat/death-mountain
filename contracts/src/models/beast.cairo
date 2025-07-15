@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use core::panic_with_felt252;
 use core::poseidon::poseidon_hash_span;
 use death_mountain::constants::beast::BeastId::{Bear, Fairy, Gnome, MAX_ID, Troll};
