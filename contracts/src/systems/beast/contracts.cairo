@@ -70,8 +70,9 @@ mod beast_systems {
                     @CollectableEntity {
                         dungeon: token_metadata.minted_by,
                         entity_hash: ImplBeast::get_beast_hash(entity_id, prefix, suffix),
-                        seed,
                         index: collectable_count.count,
+                        seed,
+                        id: entity_id,
                         level,
                         health,
                         prefix,
@@ -103,11 +104,11 @@ mod beast_systems {
         }
 
         fn get_valid_collectable(
-            self: @ContractState, adventurer_id: u64, entity_hash: felt252,
+            self: @ContractState, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
         ) -> CollectableResult<(u16, u16)> {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
             let collectable_entity: CollectableEntity = world
-                .read_model((starknet::get_caller_address(), entity_hash, 0));
+                .read_model((dungeon, entity_hash, 0));
 
             if collectable_entity.killed_by == adventurer_id {
                 CollectableResult::Ok((collectable_entity.level, collectable_entity.health))

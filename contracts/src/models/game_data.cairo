@@ -18,6 +18,7 @@ pub struct CollectableEntity {
     #[key]
     pub index: u64,
     pub seed: u64,
+    pub id: u8,
     pub level: u16,
     pub health: u16,
     pub prefix: u8,
