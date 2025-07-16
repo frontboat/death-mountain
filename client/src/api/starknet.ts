@@ -120,7 +120,8 @@ export const useStarknetApi = () => {
     const receipt = await account.waitForTransaction(transaction_hash, { retryInterval: 100 });
 
     if (receipt) {
-      localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey, version: "1" }))
+      localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey }))
+      localStorage.setItem('burner_version', "1")
       return account
     }
   };
