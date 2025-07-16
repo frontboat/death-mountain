@@ -14,7 +14,7 @@ pub struct CollectableEntity {
     #[key]
     pub dungeon: ContractAddress,
     #[key]
-    pub entity_id: u8,
+    pub entity_hash: felt252,
     #[key]
     pub index: u64,
     pub seed: u64,
@@ -31,7 +31,7 @@ pub struct CollectableCount {
     #[key]
     pub dungeon: ContractAddress,
     #[key]
-    pub entity_id: u8,
+    pub entity_hash: felt252,
     pub count: u64,
 }
 
