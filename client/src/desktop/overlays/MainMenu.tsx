@@ -88,7 +88,7 @@ export default function MainMenu() {
               <Network />
               <WalletConnect />
 
-              {!address && (
+              {/* {!address && (
                 <>
                   <Box sx={styles.orDivider}>
                     <Divider sx={{ flex: 1 }} />
@@ -107,7 +107,7 @@ export default function MainMenu() {
                     <Typography sx={{ fontSize: '0.8rem' }}>Play as Guest</Typography>
                   </Button>
                 </>
-              )}
+              )} */}
 
               <Box sx={styles.bottomRow}>
                 <Typography sx={styles.alphaVersion}>
