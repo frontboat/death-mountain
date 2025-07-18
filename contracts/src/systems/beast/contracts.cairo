@@ -12,7 +12,7 @@ pub trait IBeastSystems<T> {
     );
     fn add_kill(ref self: T, entity_hash: felt252, adventurer_id: u64);
     fn get_valid_collectable(
-        self: @T, adventurer_id: u64, entity_hash: felt252,
+        self: @T, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
     ) -> CollectableResult<(u16, u16)>;
     fn get_collectable(self: @T, dungeon: ContractAddress, entity_hash: felt252, index: u64) -> CollectableEntity;
     fn get_collectable_count(self: @T, dungeon: ContractAddress, entity_hash: felt252) -> u64;
