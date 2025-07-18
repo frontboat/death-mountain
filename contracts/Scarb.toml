@@ -10,16 +10,16 @@ edition = "2024_07"
 sierra-replace-ids = true
 
 [dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.1" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.0-alpha.2" }
 openzeppelin_token = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v1.0.0" }
 openzeppelin_introspection = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v1.0.0" }
-tournaments = { git = "https://github.com/Provable-Games/tournaments.git" }
+tournaments = { git = "https://github.com/Provable-Games/tournaments.git", tag = "1.6.0-alpha.2" }
 alexandria_encoding = { git = "https://github.com/keep-starknet-strange/alexandria.git", tag = "v0.3.0" }
 graffiti = { git = "https://github.com/rsodre/graffiti", rev = "url" }
 
 [dev-dependencies]
 cairo_test = "=2.10.1"
-dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.1" }
+dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.0-alpha.2" }
 
 [[target.starknet-contract]]
 sierra = true

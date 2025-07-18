@@ -46,14 +46,14 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     }
   }, [account]);
 
-  useEffect(() => {
-    if (localStorage.getItem('burner')) {
-      let burner = JSON.parse(localStorage.getItem('burner') as string)
-      setBurner(new Account(demoRpcProvider, burner.address, burner.privateKey, "1"))
-    } else {
-      createBurner()
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (localStorage.getItem('burner') && localStorage.getItem('burner_version') === '1') {
+  //     let burner = JSON.parse(localStorage.getItem('burner') as string)
+  //     setBurner(new Account(demoRpcProvider, burner.address, burner.privateKey, "1"))
+  //   } else {
+  //     createBurner()
+  //   }
+  // }, []);
 
   // Get username when connector changes
   useEffect(() => {
