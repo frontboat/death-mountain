@@ -1,6 +1,7 @@
 import { getContractByName } from "@dojoengine/core";
 import manifest_sepolia from "../../manifest_sepolia.json";
 import manifest_slot from "../../manifest_slot.json";
+import { Tokens } from "@cartridge/controller";
 
 export interface NetworkConfig {
   chainId: ChainId;
@@ -17,9 +18,7 @@ export interface NetworkConfig {
   chains: Array<{
     rpcUrl: string;
   }>;
-  tokens?: {
-    erc20: Array<string>;
-  };
+  tokens: Tokens;
 }
 
 export enum ChainId {
