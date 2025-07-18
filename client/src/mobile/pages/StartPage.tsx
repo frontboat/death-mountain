@@ -36,7 +36,7 @@ export default function LandingPage() {
             </Typography>
           </Button>
 
-          {/* {!address && (
+          {!address && (
             <>
               <Box sx={styles.orDivider}>
                 <Box sx={{ flex: 1, height: '1px', bgcolor: 'rgba(255,255,255,0.3)' }} />
@@ -55,7 +55,7 @@ export default function LandingPage() {
                 <Typography sx={{ fontSize: '0.8rem' }}>Play Practice</Typography>
               </Button>
             </>
-          )} */}
+          )}
 
           {address && <>
             <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
