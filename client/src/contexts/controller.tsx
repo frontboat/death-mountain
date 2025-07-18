@@ -49,7 +49,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (localStorage.getItem('burner') && localStorage.getItem('burner_version') === '2') {
       let burner = JSON.parse(localStorage.getItem('burner') as string)
-      setBurner(new Account(demoRpcProvider, burner.address, burner.privateKey, "3"))
+      setBurner(new Account(demoRpcProvider, burner.address, burner.privateKey))
     } else {
       createBurner()
     }

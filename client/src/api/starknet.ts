@@ -110,14 +110,12 @@ export const useStarknetApi = () => {
       0
     );
 
-    const account = new Account(rpcProvider, contractAddress, privateKey, "1");
+    const account = new Account(rpcProvider, contractAddress, privateKey);
     const { transaction_hash } = await account.deployAccount({
       classHash: accountClassHash,
       constructorCalldata: constructorCalldata,
       addressSalt: publicKey,
     }, {
-      version: "3",
-      nonce: num.toHex(0),
       maxFee: num.toHex(0),
     });
 
@@ -125,7 +123,7 @@ export const useStarknetApi = () => {
 
     if (receipt) {
       localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey }))
-      localStorage.setItem('burner_version', "1")
+      localStorage.setItem('burner_version', "2")
       return account
     }
   };
