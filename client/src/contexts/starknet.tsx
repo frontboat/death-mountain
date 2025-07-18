@@ -6,6 +6,7 @@ import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
 
 interface DynamicConnectorContext {
+  setCurrentNetworkConfig: (network: NetworkConfig) => void;
   currentNetworkConfig: NetworkConfig;
   dojoConfig: {
     manifest: any;
@@ -66,6 +67,7 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
 
   return (
     <DynamicConnectorContext.Provider value={{
+      setCurrentNetworkConfig,
       currentNetworkConfig,
       dojoConfig
     }}>

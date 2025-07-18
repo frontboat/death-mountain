@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import GameTokensList from '../components/GameTokensList';
 
 export default function LandingPage() {
-  const { address, playAsGuest, login } = useController();
+  const { address, playPractice, login } = useController();
   const navigate = useNavigate();
 
   const handleStartGame = async () => {
@@ -49,10 +49,10 @@ export default function LandingPage() {
                 size="small"
                 sx={{ textAlign: 'center', justifyContent: 'center', height: '36px' }}
                 onClick={() => {
-                  playAsGuest()
+                  playPractice()
                 }}
               >
-                <Typography sx={{ fontSize: '0.8rem' }}>Play as Guest</Typography>
+                <Typography sx={{ fontSize: '0.8rem' }}>Play Practice</Typography>
               </Button>
             </>
           )}

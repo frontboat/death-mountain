@@ -9,7 +9,7 @@ import LoadingOverlay from '@/desktop/overlays/Loading';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { useGameStore } from '@/stores/gameStore';
 import { streamIds } from '@/utils/cloudflare';
-import { ChainId } from '@/utils/networkConfig';
+import { ChainId, getNetworkConfig, NetworkConfig } from '@/utils/networkConfig';
 import { getMenuLeftOffset } from '@/utils/utils';
 import { useDojoSDK } from '@dojoengine/sdk/react';
 import { Box } from '@mui/material';
@@ -39,7 +39,7 @@ export default function GamePage() {
   const { sdk } = useDojoSDK();
   const { mintGame } = useSystemCalls();
   const { account, address, playerName, login, isPending } = useController();
-  const { currentNetworkConfig, switchToNetwork } = useDynamicConnector();
+  const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
   const { gameId, adventurer, exitGame, setGameId, beast, showOverlay, setShowOverlay } = useGameStore();
   const { subscription, setVideoQueue, actionFailed } = useGameDirector();
 
@@ -49,7 +49,7 @@ export default function GamePage() {
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
   const settings_id = Number(searchParams.get('settingsId'));
-  const guest = searchParams.get('guest');
+  const mode = searchParams.get('mode');
 
   useEffect(() => {
     setShowOverlay(true);
@@ -73,10 +73,10 @@ export default function GamePage() {
   useEffect(() => {
     if (!sdk || isPending) return;
 
-    if (!address && guest !== 'true') return login();
+    if (!address && mode !== 'practice') return login();
 
-    if (guest === 'true' && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      switchToNetwork(ChainId.WP_PG_SLOT);
+    if (mode === 'practice' && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
     }
 
@@ -107,7 +107,7 @@ export default function GamePage() {
   async function mint() {
     setVideoQueue([streamIds.start]);
     let tokenId = await mintGame(account, playerName, settings_id);
-    navigate(`/survivor/play?id=${tokenId}${guest === 'true' ? '&guest=true' : ''}`, { replace: true });
+    navigate(`/survivor/play?id=${tokenId}${mode === 'practice' ? '&mode=practice' : ''}`, { replace: true });
     setShowOverlay(false);
   }
 

@@ -1,5 +1,5 @@
 import { useStarknetApi } from "@/api/starknet";
-import { ChainId, NETWORKS } from "@/utils/networkConfig";
+import { ChainId, getNetworkConfig, NetworkConfig, NETWORKS } from "@/utils/networkConfig";
 import { useAccount, useConnect, useDisconnect } from '@starknet-react/core';
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from "react-router-dom";
@@ -11,12 +11,12 @@ export interface ControllerContext {
   address: string | undefined;
   playerName: string;
   isPending: boolean;
-  isGuest: boolean;
+  isPractice: boolean;
 
   openProfile: () => void;
   login: () => void;
   logout: () => void;
-  playAsGuest: () => void;
+  playPractice: () => void;
 }
 
 // Create a context
@@ -27,7 +27,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { account, address, isConnecting } = useAccount();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
-  const { currentNetworkConfig, switchToNetwork } = useDynamicConnector();
+  const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
   const { createBurnerAccount } = useStarknetApi();
   const navigate = useNavigate();
 
@@ -79,12 +79,12 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     setCreatingBurner(false);
   }
 
-  const playAsGuest = () => {
+  const playPractice = () => {
     if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      switchToNetwork(ChainId.WP_PG_SLOT);
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
     }
 
-    navigate('/survivor/play?guest=true');
+    navigate('/survivor/play?mode=practice');
   }
 
   return (
@@ -93,11 +93,11 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       address,
       playerName: userName || "Adventurer",
       isPending: isConnecting || isPending || creatingBurner,
-      isGuest: !account,
+      isPractice: !account,
       openProfile: () => (connector as any)?.controller?.openProfile(),
       login: () => connect({ connector: connectors.find(conn => conn.id === "controller") }),
       logout: () => disconnect(),
-      playAsGuest
+      playPractice
     }}>
       {children}
     </ControllerContext.Provider>

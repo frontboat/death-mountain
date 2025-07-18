@@ -26,7 +26,7 @@ import StatisticsModal from './StatisticsModal';
 
 export default function MainMenu() {
   const navigate = useNavigate();
-  const { address, isPending, playAsGuest } = useController();
+  const { address, isPending, playPractice } = useController();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -98,7 +98,7 @@ export default function MainMenu() {
               variant="outlined"
               fullWidth
               size="large"
-              onClick={() => playAsGuest()}
+              onClick={() => playPractice()}
               sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px' }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -177,7 +177,7 @@ export default function MainMenu() {
 
               <Box sx={styles.bottomRow}>
                 <Typography sx={styles.alphaVersion}>
-                  ALPHA VERSION 0.0.1
+                  TEST VERSION 0.0.1
                 </Typography>
                 <Box sx={styles.socialButtons}>
                   <IconButton size="small" sx={styles.socialButton} onClick={() => window.open('https://x.com/lootsurvivor', '_blank')}>
