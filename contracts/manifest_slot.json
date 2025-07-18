@@ -1329,7 +1329,7 @@
   "contracts": [
     {
       "address": "0x6655ea5858b8d1cbbe65bf2feb65c8a0c5ffd745cc9535534e90c3bce467829",
-      "class_hash": "0x726e2dd0e55b7628006e5b90906d4ceaa0337e3f36171bb0a58efb3646e03e4",
+      "class_hash": "0x4c2c2fa3f61b20fa08e1ec5579cd2a14c9248e0b43355c04aaeb4d1bf804e86",
       "abi": [
         {
           "type": "impl",
@@ -1388,6 +1388,20 @@
         },
         {
           "type": "struct",
+          "name": "death_mountain::models::adventurer::item::Item",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
           "name": "death_mountain::models::adventurer::stats::Stats",
           "members": [
             {
@@ -1417,20 +1431,6 @@
             {
               "name": "luck",
               "type": "core::integer::u8"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "death_mountain::models::adventurer::item::Item",
-          "members": [
-            {
-              "name": "id",
-              "type": "core::integer::u8"
-            },
-            {
-              "name": "xp",
-              "type": "core::integer::u16"
             }
           ]
         },
@@ -1620,6 +1620,22 @@
           "type": "interface",
           "name": "death_mountain::systems::adventurer::contracts::IAdventurerSystems",
           "items": [
+            {
+              "type": "function",
+              "name": "record_item_drop",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "item",
+                  "type": "death_mountain::models::adventurer::item::Item"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
             {
               "type": "function",
               "name": "generate_starting_stats",
@@ -2077,12 +2093,13 @@
       "tag": "ls_0_0_2-adventurer_systems",
       "selector": "0x78676c3e1c5a96cbf2bcc1daf217b0b551bd72b8c0d25a8aa998b67a160ffd9",
       "systems": [
+        "record_item_drop",
         "upgrade"
       ]
     },
     {
       "address": "0x6c886642d2c7e6d391d543e780fc84a63910c7f1755b131967f10cf8f3d74fa",
-      "class_hash": "0x2799c404e9680943795bf82cd0b3fc71f8089bac659fb05e9da504c798280e8",
+      "class_hash": "0x3550ac32288bd72088262ea55ed6e7915f0d8e248776cd23fa97e3fb3385146",
       "abi": [
         {
           "type": "impl",
@@ -2138,6 +2155,106 @@
           "type": "impl",
           "name": "BeastSystemsImpl",
           "interface_name": "death_mountain::systems::beast::contracts::IBeastSystems"
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::models::game_data::CollectableResult::<(core::integer::u16, core::integer::u16)>",
+          "variants": [
+            {
+              "name": "Ok",
+              "type": "(core::integer::u16, core::integer::u16)"
+            },
+            {
+              "name": "Err",
+              "type": "core::felt252"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game_data::CollectableEntity",
+          "members": [
+            {
+              "name": "dungeon",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "entity_hash",
+              "type": "core::felt252"
+            },
+            {
+              "name": "index",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "seed",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "level",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "prefix",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "suffix",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "killed_by",
+              "type": "core::integer::u64"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game_data::EntityStats",
+          "members": [
+            {
+              "name": "dungeon",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "entity_hash",
+              "type": "core::felt252"
+            },
+            {
+              "name": "adventurers_killed",
+              "type": "core::integer::u64"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game_data::AdventurerKilled",
+          "members": [
+            {
+              "name": "dungeon",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "entity_hash",
+              "type": "core::felt252"
+            },
+            {
+              "name": "kill_index",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "adventurer_id",
+              "type": "core::integer::u64"
+            }
+          ]
         },
         {
           "type": "enum",
@@ -2275,6 +2392,170 @@
           "type": "interface",
           "name": "death_mountain::systems::beast::contracts::IBeastSystems",
           "items": [
+            {
+              "type": "function",
+              "name": "add_collectable",
+              "inputs": [
+                {
+                  "name": "seed",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "entity_id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "level",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "health",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "prefix",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "suffix",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "add_kill",
+              "inputs": [
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "get_valid_collectable",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::CollectableResult::<(core::integer::u16, core::integer::u16)>"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_collectable",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "index",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::CollectableEntity"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_collectable_count",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u64"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_entity_stats",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::EntityStats"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_killed",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "kill_index",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::AdventurerKilled"
+                }
+              ],
+              "state_mutability": "view"
+            },
             {
               "type": "function",
               "name": "get_starter_beast",
@@ -2496,12 +2777,14 @@
       "tag": "ls_0_0_2-beast_systems",
       "selector": "0x2dcd213de01781d68f50f7ef54c43424308fdd2883ae8481226589564c32b2f",
       "systems": [
+        "add_collectable",
+        "add_kill",
         "upgrade"
       ]
     },
     {
       "address": "0x782009bb46e100a8e3fd5afaa9d98933e7aeff7957dc8f098deabc39bccd02",
-      "class_hash": "0x4f8f7fad51f5ac5fe3e5078474f3c82a79137d8348575a042850fa5ea1cd7fb",
+      "class_hash": "0x484db12417ab9bea0320c184150d91ed1f43cd20ce5c838c8a8f3d8294069dc",
       "abi": [
         {
           "type": "impl",
@@ -5177,6 +5460,12 @@
     },
     {
       "members": [],
+      "class_hash": "0x7271344d76037ef2c0e6e8156b7dfa7c7b40dfc566b99f9770c99b14cb70e5b",
+      "tag": "ls_0_0_2-AdventurerKilled",
+      "selector": "0x4e93dfa60dccda5ebe41a70613d71b362af08f51ecde6665d2b5cae7f67b2de"
+    },
+    {
+      "members": [],
       "class_hash": "0x33b8218ffef53844194e5bc510edfa023441c8284a0254b002742509af88449",
       "tag": "ls_0_0_2-AdventurerPacked",
       "selector": "0x47e2b33eea4818020cc52ae74deaf29b8b1f6290e739a09aa291f37f16b75de"
@@ -5186,6 +5475,30 @@
       "class_hash": "0x283ab5cc1ee44d8476f367faf47184901b144bfbc36740491a5a96dbb950599",
       "tag": "ls_0_0_2-BagPacked",
       "selector": "0x501e1dc2dee32175769bf315565f8b2aa58d22bc20288e933c623d333ea1996"
+    },
+    {
+      "members": [],
+      "class_hash": "0x3f58ca824d6b406472a58004a59fedc42889bb3b46220766b10e4e2f004e5b6",
+      "tag": "ls_0_0_2-CollectableCount",
+      "selector": "0x50f61c4ac2200bc016b2fb2a4b50b99ee1ce359a441ed7b4b70bb4e37bfcaf9"
+    },
+    {
+      "members": [],
+      "class_hash": "0x6f72223ce0d9079f149abbe4f512cef0718c37129167cb3dbd5835841784b3a",
+      "tag": "ls_0_0_2-CollectableEntity",
+      "selector": "0x26fae41f0ae4a95848d13958decd619ab87577b67d1c58427c27320c5f32367"
+    },
+    {
+      "members": [],
+      "class_hash": "0x25523d7d4be4ed754e100edb2f4f1d640914cfc67cc3f776dc1fcadbc3c5235",
+      "tag": "ls_0_0_2-DroppedItem",
+      "selector": "0x5b7b8411df5d2c35303dee5afb330599e1ba7864a426d4961ac44b6925db404"
+    },
+    {
+      "members": [],
+      "class_hash": "0x654e3dcfe40ee0d8a3e2d17a448f8208a2515316b9573629ef9ebb038ae2fda",
+      "tag": "ls_0_0_2-EntityStats",
+      "selector": "0x76dc78b5abad404a8408400283c69bfa7d6cdeac3773b18c47abe493732b29f"
     },
     {
       "members": [],
