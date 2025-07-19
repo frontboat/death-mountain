@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import GameTokensList from '../components/GameTokensList';
 
 export default function LandingPage() {
-  const { address, playPractice, login } = useController();
+  const { address, login } = useController();
   const navigate = useNavigate();
 
   const handleStartGame = async () => {
@@ -48,9 +48,7 @@ export default function LandingPage() {
                 variant="outlined"
                 size="small"
                 sx={{ textAlign: 'center', justifyContent: 'center', height: '36px' }}
-                onClick={() => {
-                  playPractice()
-                }}
+                onClick={() => navigate('/survivor/play?mode=practice')}
               >
                 <Typography sx={{ fontSize: '0.8rem' }}>Play Practice</Typography>
               </Button>

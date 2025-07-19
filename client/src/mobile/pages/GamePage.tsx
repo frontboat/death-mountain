@@ -1,9 +1,7 @@
 import { useController } from '@/contexts/controller';
-import { useDynamicConnector } from '@/contexts/starknet';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
-import { ChainId, getNetworkConfig, NetworkConfig } from '@/utils/networkConfig';
 import { useDojoSDK } from '@dojoengine/sdk/react';
 import { Box } from '@mui/material';
 import { useEffect, useReducer, useState } from 'react';
@@ -25,8 +23,7 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { sdk } = useDojoSDK();
   const { mintGame } = useSystemCalls();
-  const { account, address, playerName, login, isPending } = useController();
-  const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
+  const { account, address, playerName, login, isPending, practiceMode, startPractice, endPractice } = useController();
   const { gameId, adventurer, exitGame, setGameId, beast, showBeastRewards, quest } = useGameStore();
   const { subscription } = useGameDirector();
 
@@ -57,8 +54,8 @@ export default function GamePage() {
 
     if (!address && mode !== 'practice') return login();
 
-    if (mode === 'practice' && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+    if (mode === 'practice' && !practiceMode) {
+      startPractice();
       return;
     }
 
@@ -73,7 +70,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, address, isPending, sdk, update, currentNetworkConfig.chainId]);
+  }, [game_id, address, isPending, sdk, update, practiceMode]);
 
   useEffect(() => {
     setActiveNavItem('GAME');
@@ -85,6 +82,10 @@ export default function GamePage() {
         try {
           subscription.cancel();
         } catch (error) { }
+      }
+
+      if (practiceMode) {
+        endPractice();
       }
 
       exitGame();

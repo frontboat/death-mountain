@@ -26,7 +26,7 @@ import StatisticsModal from './StatisticsModal';
 
 export default function MainMenu() {
   const navigate = useNavigate();
-  const { address, isPending, playPractice } = useController();
+  const { address } = useController();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -98,7 +98,7 @@ export default function MainMenu() {
               variant="outlined"
               fullWidth
               size="large"
-              onClick={() => playPractice()}
+              onClick={() => navigate('/survivor/play?mode=practice')}
               sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px' }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>

@@ -1,5 +1,4 @@
 import { useController } from '@/contexts/controller';
-import { useDynamicConnector } from '@/contexts/starknet';
 import VideoPlayer from '@/desktop/components/VideoPlayer';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import CombatOverlay from '@/desktop/overlays/Combat';
@@ -9,7 +8,6 @@ import LoadingOverlay from '@/desktop/overlays/Loading';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { useGameStore } from '@/stores/gameStore';
 import { streamIds } from '@/utils/cloudflare';
-import { ChainId, getNetworkConfig, NetworkConfig } from '@/utils/networkConfig';
 import { getMenuLeftOffset } from '@/utils/utils';
 import { useDojoSDK } from '@dojoengine/sdk/react';
 import { Box } from '@mui/material';
@@ -38,8 +36,7 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { sdk } = useDojoSDK();
   const { mintGame } = useSystemCalls();
-  const { account, address, playerName, login, isPending } = useController();
-  const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
+  const { account, address, playerName, login, isPending, practiceMode, startPractice, endPractice } = useController();
   const { gameId, adventurer, exitGame, setGameId, beast, showOverlay, setShowOverlay } = useGameStore();
   const { subscription, setVideoQueue, actionFailed } = useGameDirector();
 
@@ -75,8 +72,8 @@ export default function GamePage() {
 
     if (!address && mode !== 'practice') return login();
 
-    if (mode === 'practice' && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+    if (mode === 'practice' && !practiceMode) {
+      startPractice();
       return;
     }
 
@@ -90,7 +87,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, address, isPending, sdk, update, currentNetworkConfig.chainId]);
+  }, [game_id, address, isPending, sdk, update, practiceMode]);
 
   useEffect(() => {
     return () => {
@@ -98,6 +95,10 @@ export default function GamePage() {
         try {
           subscription.cancel();
         } catch (error) { }
+      }
+
+      if (practiceMode) {
+        endPractice();
       }
 
       exitGame();

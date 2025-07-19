@@ -2,7 +2,6 @@ import { useStarknetApi } from "@/api/starknet";
 import { ChainId, getNetworkConfig, NetworkConfig, NETWORKS } from "@/utils/networkConfig";
 import { useAccount, useConnect, useDisconnect } from '@starknet-react/core';
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from 'starknet';
 import { useDynamicConnector } from './starknet';
 
@@ -11,12 +10,12 @@ export interface ControllerContext {
   address: string | undefined;
   playerName: string;
   isPending: boolean;
-  isPractice: boolean;
-
+  practiceMode: boolean;
   openProfile: () => void;
   login: () => void;
   logout: () => void;
-  playPractice: () => void;
+  startPractice: () => void;
+  endPractice: () => void;
 }
 
 // Create a context
@@ -29,11 +28,11 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
   const { createBurnerAccount } = useStarknetApi();
-  const navigate = useNavigate();
 
   const [creatingBurner, setCreatingBurner] = useState(false);
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
+  const [practiceMode, setPracticeMode] = useState(false);
 
   const demoRpcProvider = useMemo(() => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl, }), []);
 
@@ -79,25 +78,32 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     setCreatingBurner(false);
   }
 
-  const playPractice = () => {
+  const startPractice = () => {
     if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
     }
 
-    navigate('/survivor/play?mode=practice');
+    setPracticeMode(true);
+  }
+
+  const endPractice = () => {
+    setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN as ChainId) as NetworkConfig);
+    setPracticeMode(false);
   }
 
   return (
     <ControllerContext.Provider value={{
-      account: account || burner,
+      account: practiceMode ? burner : account,
       address,
       playerName: userName || "Adventurer",
       isPending: isConnecting || isPending || creatingBurner,
-      isPractice: !account,
+      practiceMode,
+
       openProfile: () => (connector as any)?.controller?.openProfile(),
       login: () => connect({ connector: connectors.find(conn => conn.id === "controller") }),
       logout: () => disconnect(),
-      playPractice
+      startPractice,
+      endPractice
     }}>
       {children}
     </ControllerContext.Provider>
