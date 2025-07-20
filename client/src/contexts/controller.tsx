@@ -29,7 +29,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
   const { createBurnerAccount } = useStarknetApi();
 
-  const [creatingBurner, setCreatingBurner] = useState(false);
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
   const [practiceMode, setPracticeMode] = useState(false);
@@ -40,18 +39,14 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (account) {
       // Handle mixed networks
       if ((account as any).walletProvider?.account?.channel?.nodeUrl && (account as any).walletProvider.account.channel.nodeUrl !== currentNetworkConfig.chains[0].rpcUrl) {
+        console.log('Disconnecting from network')
         return disconnect()
       }
     }
   }, [account]);
 
   useEffect(() => {
-    if (localStorage.getItem('burner') && localStorage.getItem('burner_version') === '2') {
-      let burner = JSON.parse(localStorage.getItem('burner') as string)
-      setBurner(new Account(demoRpcProvider, burner.address, burner.privateKey))
-    } else {
-      createBurner()
-    }
+    setBurner(createBurnerAccount(demoRpcProvider))
   }, []);
 
   // Get username when connector changes
@@ -67,16 +62,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
     if (connector) getUsername();
   }, [connector]);
-
-  const createBurner = async () => {
-    setCreatingBurner(true);
-    let account = await createBurnerAccount(demoRpcProvider)
-
-    if (account) {
-      setBurner(account)
-    }
-    setCreatingBurner(false);
-  }
 
   const startPractice = () => {
     if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
@@ -96,7 +81,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       account: practiceMode ? burner : account,
       address,
       playerName: userName || "Adventurer",
-      isPending: isConnecting || isPending || creatingBurner,
+      isPending: isConnecting || isPending,
       practiceMode,
 
       openProfile: () => (connector as any)?.controller?.openProfile(),

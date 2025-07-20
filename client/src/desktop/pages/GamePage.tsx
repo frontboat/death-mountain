@@ -97,10 +97,7 @@ export default function GamePage() {
         } catch (error) { }
       }
 
-      if (practiceMode) {
-        endPractice();
-      }
-
+      endPractice();
       exitGame();
     };
   }, []);

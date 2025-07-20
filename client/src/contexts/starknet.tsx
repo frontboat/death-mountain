@@ -1,6 +1,6 @@
 import { ChainId, getNetworkConfig, NetworkConfig, NETWORKS } from "@/utils/networkConfig";
 import { stringToFelt } from "@/utils/utils";
-import { ControllerConnector } from "@cartridge/connector";
+import ControllerConnector from "@cartridge/connector/controller";
 import { mainnet, sepolia } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
@@ -20,13 +20,23 @@ interface DynamicConnectorContext {
 
 const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(null);
 
-export function DynamicConnectorProvider({ children }: PropsWithChildren) {
-  const initialNetworkKey = import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN || ChainId.SN_MAIN;
-  const initialConfig = getNetworkConfig(initialNetworkKey);
+const initialNetworkKey = import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN || ChainId.SN_MAIN;
+const initialConfig = getNetworkConfig(initialNetworkKey);
+const allChains = Object.values(NETWORKS).map(network => ({
+  rpcUrl: network.rpcUrl
+}));
 
-  if (!initialConfig) {
-    throw new Error(`No configuration found for network: ${initialNetworkKey}`);
-  }
+const cartridgeController = typeof window !== "undefined" ? new ControllerConnector({
+  policies: initialConfig.policies,
+  namespace: initialConfig.namespace,
+  slot: initialConfig.slot,
+  preset: initialConfig.preset,
+  chains: allChains,
+  defaultChainId: stringToFelt(initialConfig.chainId).toString(),
+  tokens: initialConfig.tokens,
+}) : null;
+
+export function DynamicConnectorProvider({ children }: PropsWithChildren) {
 
   const [currentNetworkConfig, setCurrentNetworkConfig] = useState<NetworkConfig>(initialConfig);
 
@@ -47,19 +57,6 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
     };
   }, [currentNetworkConfig.chainId]);
 
-  const allChains = Object.values(NETWORKS).map(network => ({
-    rpcUrl: network.rpcUrl
-  }));
-  
-  const connector = new ControllerConnector({
-    policies: initialConfig.policies,
-    namespace: initialConfig.namespace,
-    slot: initialConfig.slot,
-    preset: initialConfig.preset,
-    chains: allChains,
-    defaultChainId: stringToFelt(initialConfig.chainId).toString(),
-    tokens: initialConfig.tokens,
-  });
 
   const rpc = useCallback(() => {
     return { nodeUrl: currentNetworkConfig.chains[0].rpcUrl };
@@ -74,7 +71,7 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
       <StarknetConfig
         chains={[mainnet, sepolia]}
         provider={jsonRpcProvider({ rpc })}
-        connectors={[connector]}
+        connectors={[cartridgeController as any]}
         explorer={voyager}
         autoConnect={true}
       >

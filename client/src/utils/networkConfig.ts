@@ -73,9 +73,9 @@ export const NETWORKS = {
 }
 
 
-export function getNetworkConfig(networkKey: ChainId): NetworkConfig | null {
+export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const network = NETWORKS[networkKey as keyof typeof NETWORKS];
-  if (!network) return null;
+  if (!network) throw new Error(`Network ${networkKey} not found`);
 
   const namespace = network.namespace;
   const manifest = network.manifest;
