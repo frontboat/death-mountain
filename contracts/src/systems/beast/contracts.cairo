@@ -13,7 +13,7 @@ pub trait IBeastSystems<T> {
     fn add_kill(ref self: T, entity_hash: felt252, adventurer_id: u64);
     fn get_valid_collectable(
         self: @T, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
-    ) -> CollectableResult<(u16, u16)>;
+    ) -> CollectableResult<(u64, u16, u16)>;
     fn get_collectable(self: @T, dungeon: ContractAddress, entity_hash: felt252, index: u64) -> CollectableEntity;
     fn get_collectable_count(self: @T, dungeon: ContractAddress, entity_hash: felt252) -> u64;
     fn get_entity_stats(self: @T, dungeon: ContractAddress, entity_hash: felt252) -> EntityStats;
@@ -105,13 +105,13 @@ mod beast_systems {
 
         fn get_valid_collectable(
             self: @ContractState, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
-        ) -> CollectableResult<(u16, u16)> {
+        ) -> CollectableResult<(u64, u16, u16)> {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
             let collectable_entity: CollectableEntity = world
                 .read_model((dungeon, entity_hash, 0));
 
             if collectable_entity.killed_by == adventurer_id {
-                CollectableResult::Ok((collectable_entity.level, collectable_entity.health))
+                CollectableResult::Ok((collectable_entity.seed, collectable_entity.level, collectable_entity.health))
             } else {
                 CollectableResult::Err('Not Valid'.into())
             }
