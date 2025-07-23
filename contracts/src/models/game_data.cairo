@@ -58,7 +58,7 @@ pub struct AdventurerKilled {
     pub adventurer_id: u64,
 }
 
-#[derive(IntrospectPacked, Copy, Drop, Serde)]
+#[derive(Introspect, Copy, Drop, Serde)]
 #[dojo::model]
 pub struct DroppedItem {
     #[key]

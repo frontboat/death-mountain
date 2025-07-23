@@ -1,3 +1,4 @@
+import { useDojoConfig } from '@/contexts/starknet';
 import { useController } from '@/contexts/controller';
 import VideoPlayer from '@/desktop/components/VideoPlayer';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
@@ -8,6 +9,7 @@ import LoadingOverlay from '@/desktop/overlays/Loading';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { useGameStore } from '@/stores/gameStore';
 import { streamIds } from '@/utils/cloudflare';
+import { ChainId } from '@/utils/networkConfig';
 import { getMenuLeftOffset } from '@/utils/utils';
 import { useDojoSDK } from '@dojoengine/sdk/react';
 import { Box } from '@mui/material';
@@ -35,11 +37,11 @@ const AnimatedOverlay = ({ children, overlayKey }: AnimatedOverlayProps) => (
 export default function GamePage() {
   const navigate = useNavigate();
   const { sdk } = useDojoSDK();
+  const dojoConfig = useDojoConfig();
   const { mintGame } = useSystemCalls();
-  const { account, address, playerName, login, isPending, practiceMode, startPractice, endPractice } = useController();
+  const { account, address, playerName, login, isPending, startPractice, endPractice } = useController();
   const { gameId, adventurer, exitGame, setGameId, beast, showOverlay, setShowOverlay } = useGameStore();
   const { subscription, setVideoQueue, actionFailed } = useGameDirector();
-
   const [padding, setPadding] = useState(getMenuLeftOffset());
   const [update, forceUpdate] = useReducer(x => x + 1, 0);
 
@@ -72,7 +74,7 @@ export default function GamePage() {
 
     if (!address && mode !== 'practice') return login();
 
-    if (mode === 'practice' && !practiceMode) {
+    if (mode === 'practice' && dojoConfig.chainId !== ChainId.WP_PG_SLOT) {
       startPractice();
       return;
     }
@@ -87,7 +89,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, address, isPending, sdk, update, practiceMode]);
+  }, [game_id, address, isPending, sdk, update, dojoConfig.chainId]);
 
   useEffect(() => {
     return () => {

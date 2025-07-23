@@ -10,7 +10,6 @@ export interface ControllerContext {
   address: string | undefined;
   playerName: string;
   isPending: boolean;
-  practiceMode: boolean;
   openProfile: () => void;
   login: () => void;
   logout: () => void;
@@ -31,7 +30,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
-  const [practiceMode, setPracticeMode] = useState(false);
 
   const demoRpcProvider = useMemo(() => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl, }), []);
 
@@ -67,22 +65,18 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
     }
-
-    setPracticeMode(true);
   }
 
   const endPractice = () => {
     setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN as ChainId) as NetworkConfig);
-    setPracticeMode(false);
   }
 
   return (
     <ControllerContext.Provider value={{
-      account: practiceMode ? burner : account,
+      account: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? burner : account,
       address,
       playerName: userName || "Adventurer",
       isPending: isConnecting || isPending,
-      practiceMode,
 
       openProfile: () => (connector as any)?.controller?.openProfile(),
       login: () => connect({ connector: connectors.find(conn => conn.id === "controller") }),

@@ -44,7 +44,7 @@ mod beast_systems {
         AdventurerKilled, CollectableCount, CollectableEntity, CollectableResult, EntityStats,
     };
     use dojo::model::ModelStorage;
-    use dojo::world::WorldStorage;
+    use dojo::world::{WorldStorage, WorldStorageTrait};
     use starknet::ContractAddress;
     use tournaments::components::models::game::TokenMetadata;
     use super::IBeastSystems;
@@ -62,6 +62,10 @@ mod beast_systems {
             adventurer_id: u64,
         ) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
+            
+            let (contract_address, _) = world.dns(@"game_systems").unwrap();
+            assert!(contract_address == starknet::get_caller_address(), "Only game_systems can add collectables");
+
             let token_metadata: TokenMetadata = world.read_model(adventurer_id);
             let mut collectable_count: CollectableCount = world.read_model((token_metadata.minted_by, entity_id));
 
@@ -87,6 +91,10 @@ mod beast_systems {
 
         fn add_kill(ref self: ContractState, entity_hash: felt252, adventurer_id: u64) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
+
+            let (contract_address, _) = world.dns(@"game_systems").unwrap();
+            assert!(contract_address == starknet::get_caller_address(), "Only game_systems can add kills");
+
             let token_metadata: TokenMetadata = world.read_model(adventurer_id);
             let mut entity_stats: EntityStats = world.read_model((token_metadata.minted_by, entity_hash));
 

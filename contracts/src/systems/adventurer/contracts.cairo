@@ -46,7 +46,7 @@ mod adventurer_systems {
     use death_mountain::models::game_data::{DroppedItem};
     use death_mountain::models::market::ImplMarket;
     use dojo::model::ModelStorage;
-    use dojo::world::WorldStorage;
+    use dojo::world::{WorldStorage, WorldStorageTrait};
     use super::IAdventurerSystems;
 
     use tournaments::components::models::game::TokenMetadata;
@@ -55,6 +55,8 @@ mod adventurer_systems {
     impl AdventurerSystemsImpl of IAdventurerSystems<ContractState> {
         fn record_item_drop(ref self: ContractState, adventurer_id: u64, item: Item) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
+            let (contract_address, _) = world.dns(@"game_systems").unwrap();
+            assert!(contract_address == starknet::get_caller_address(), "Only game_systems can record item drops");
             world.write_model(@DroppedItem { adventurer_id, item_id: item.id, item });
         }
 
