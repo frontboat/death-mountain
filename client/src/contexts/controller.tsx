@@ -30,6 +30,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
+  const [creatingBurner, setCreatingBurner] = useState(false);
 
   const demoRpcProvider = useMemo(() => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl, }), []);
 
@@ -44,7 +45,12 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   }, [account]);
 
   useEffect(() => {
-    setBurner(createBurnerAccount(demoRpcProvider))
+    if (localStorage.getItem('burner') && localStorage.getItem('burner_version') === '2') {
+      let burner = JSON.parse(localStorage.getItem('burner') as string)
+      setBurner(new Account(demoRpcProvider, burner.address, burner.privateKey))
+    } else {
+      createBurner()
+    }
   }, []);
 
   // Get username when connector changes
@@ -61,6 +67,16 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (connector) getUsername();
   }, [connector]);
 
+  const createBurner = async () => {
+    setCreatingBurner(true);
+    let account = await createBurnerAccount(demoRpcProvider)
+
+    if (account) {
+      setBurner(account)
+    }
+    setCreatingBurner(false);
+  }
+
   const startPractice = () => {
     if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
@@ -76,7 +92,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       account: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? burner : account,
       address,
       playerName: userName || "Adventurer",
-      isPending: isConnecting || isPending,
+      isPending: isConnecting || isPending || creatingBurner,
 
       openProfile: () => (connector as any)?.controller?.openProfile(),
       login: () => connect({ connector: connectors.find(conn => conn.id === "controller") }),

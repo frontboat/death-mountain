@@ -1,7 +1,7 @@
 import { useDojoConfig } from "@/contexts/starknet";
 import { Adventurer } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
-import { Account, RpcProvider } from "starknet";
+import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
 export const useStarknetApi = () => {
   const dojoConfig = useDojoConfig();
@@ -96,12 +96,36 @@ export const useStarknetApi = () => {
     return true;
   }
 
-  const createBurnerAccount = (rpcProvider: RpcProvider) => {
-    // Prefunded account details (the account that will pay for burner deployment)
-    const prefundedAccountAddress = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec";
-    const prefundedPrivateKey = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912";
-    const prefundedAccount = new Account(rpcProvider, prefundedAccountAddress, prefundedPrivateKey, "1", "0x3");
-    return prefundedAccount;
+  const createBurnerAccount = async (rpcProvider: RpcProvider) => {
+    const privateKey = stark.randomAddress();
+    const publicKey = ec.starkCurve.getStarkKey(privateKey);
+
+    const accountClassHash = "0x07dc7899aa655b0aae51eadff6d801a58e97dd99cf4666ee59e704249e51adf2"
+    // Calculate future address of the account
+    const constructorCalldata = CallData.compile({ publicKey });
+    const contractAddress = hash.calculateContractAddressFromHash(
+      publicKey,
+      accountClassHash,
+      constructorCalldata,
+      0
+    );
+
+    const account = new Account(rpcProvider, contractAddress, privateKey);
+    const { transaction_hash } = await account.deployAccount({
+      classHash: accountClassHash,
+      constructorCalldata: constructorCalldata,
+      addressSalt: publicKey,
+    }, {
+      maxFee: num.toHex(0),
+    });
+
+    const receipt = await account.waitForTransaction(transaction_hash, { retryInterval: 100 });
+
+    if (receipt) {
+      localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey }))
+      localStorage.setItem('burner_version', "2")
+      return account
+    }
   };
 
   return { getAdventurer, createBurnerAccount, isBeastCollectable };
