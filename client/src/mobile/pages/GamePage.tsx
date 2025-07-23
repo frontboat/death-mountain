@@ -1,9 +1,7 @@
 import { useController } from '@/contexts/controller';
-import { useDynamicConnector } from '@/contexts/starknet';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
-import { ChainId } from '@/utils/networkConfig';
 import { useDojoSDK } from '@dojoengine/sdk/react';
 import { Box } from '@mui/material';
 import { useEffect, useReducer, useState } from 'react';
@@ -25,8 +23,7 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { sdk } = useDojoSDK();
   const { mintGame } = useSystemCalls();
-  const { account, address, playerName, login, isPending } = useController();
-  const { currentNetworkConfig, switchToNetwork } = useDynamicConnector();
+  const { account, address, playerName, login, isPending, practiceMode, startPractice, endPractice } = useController();
   const { gameId, adventurer, exitGame, setGameId, beast, showBeastRewards, quest } = useGameStore();
   const { subscription } = useGameDirector();
 
@@ -38,12 +35,12 @@ export default function GamePage() {
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
   const settings_id = Number(searchParams.get('settingsId'));
-  const guest = searchParams.get('guest');
+  const mode = searchParams.get('mode');
 
   async function mint() {
     setLoadingProgress(45)
     let tokenId = await mintGame(account, playerName, settings_id);
-    navigate(`/survivor/play?id=${tokenId}${guest === 'true' ? '&guest=true' : ''}`, { replace: true });
+    navigate(`/survivor/play?id=${tokenId}${mode === 'practice' ? '&mode=practice' : ''}`, { replace: true });
   }
 
   useEffect(() => {
@@ -55,10 +52,10 @@ export default function GamePage() {
   useEffect(() => {
     if (!sdk || isPending) return;
 
-    if (!address && guest !== 'true') return login();
+    if (!address && mode !== 'practice') return login();
 
-    if (guest === 'true' && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      switchToNetwork(ChainId.WP_PG_SLOT);
+    if (mode === 'practice' && !practiceMode) {
+      startPractice();
       return;
     }
 
@@ -73,7 +70,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, address, isPending, sdk, update, currentNetworkConfig.chainId]);
+  }, [game_id, address, isPending, sdk, update, practiceMode]);
 
   useEffect(() => {
     setActiveNavItem('GAME');
@@ -87,6 +84,7 @@ export default function GamePage() {
         } catch (error) { }
       }
 
+      endPractice();
       exitGame();
     };
   }, []);
