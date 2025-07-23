@@ -96,14 +96,14 @@ export default function CombatOverlay() {
   return (
     <Box sx={styles.container}>
       {/* Test Button for BeastCollectedPopup */}
-      <Button
+      {/* <Button
         size="small"
         variant="outlined"
         sx={{ position: 'absolute', bottom: 12, right: 12, zIndex: 3000, minWidth: 0, px: 1, py: 0.5, fontSize: 12 }}
         onClick={() => setShowBeastPopup(true)}
       >
         Test Beast Popup
-      </Button>
+      </Button> */}
       {showBeastPopup && beast && (
         <BeastCollectedPopup
           onClose={() => setShowBeastPopup(false)}

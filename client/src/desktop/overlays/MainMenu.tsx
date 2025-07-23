@@ -1,10 +1,7 @@
 import { useController } from '@/contexts/controller';
 import discordIcon from '@/desktop/assets/images/discord.png';
-import practiceIcon from '@/desktop/assets/images/practice.png';
 import AdventurersList from '@/desktop/components/AdventurersList';
-import PriceIndicator from '@/desktop/components/PriceIndicator';
 import Settings from '@/desktop/components/Settings';
-import WalletConnect from '@/desktop/components/WalletConnect';
 import { getMenuLeftOffset } from '@/utils/utils';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import GitHubIcon from '@mui/icons-material/GitHub';
@@ -61,7 +58,7 @@ export default function MainMenu() {
               </Typography>
             </Box>
 
-            <PriceIndicator />
+            {/* <PriceIndicator /> */}
 
 
             <Button
@@ -70,7 +67,7 @@ export default function MainMenu() {
               fullWidth
               size="large"
               onClick={handleStartGame}
-              sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px' }}
+              sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px', mt: 2 }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <TokenIcon sx={{ fontSize: 20, mr: 1 }} />
@@ -94,7 +91,7 @@ export default function MainMenu() {
               </Typography>
             </Button>
 
-            <Button
+            {/* <Button
               variant="outlined"
               fullWidth
               size="large"
@@ -107,7 +104,7 @@ export default function MainMenu() {
                   Practice
                 </Typography>
               </Box>
-            </Button>
+            </Button> */}
 
             <Divider sx={{ width: '100%', my: 0.5 }} />
 
@@ -130,9 +127,10 @@ export default function MainMenu() {
               size="large"
               onClick={() => setShowStats(true)}
               sx={{ px: 1, height: '36px' }}
+              disabled={true}
             >
               <BarChartIcon sx={{ fontSize: 20, mr: 1 }} />
-              <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 500, letterSpacing: 0.5 }}>
+              <Typography sx={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.3)', fontWeight: 500, letterSpacing: 0.5 }}>
                 Statistics
               </Typography>
             </Button>
@@ -145,7 +143,7 @@ export default function MainMenu() {
                     Beasts Collected
                   </Typography>
                   <Typography sx={{ fontSize: '0.8rem', color: '#d0c98d', fontVariantNumeric: 'tabular-nums' }}>
-                    4,500 / 93,500
+                    4,686 / 93,150
                   </Typography>
                 </Box>
                 <Box sx={{
@@ -160,7 +158,7 @@ export default function MainMenu() {
                 }}>
                   <LinearProgress
                     variant="determinate"
-                    value={4500 / 93500 * 100}
+                    value={4686 / 93150 * 100}
                     sx={{
                       width: '100%',
                       height: '100%',
@@ -173,7 +171,7 @@ export default function MainMenu() {
                   />
                 </Box>
               </Stack>
-              <WalletConnect />
+              {/* <WalletConnect /> */}
 
               <Box sx={styles.bottomRow}>
                 <Typography sx={styles.alphaVersion}>

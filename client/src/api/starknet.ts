@@ -93,7 +93,7 @@ export const useStarknetApi = () => {
   };
 
   const isBeastCollectable = (beastId: number): boolean => {
-    return true;
+    return false;
   }
 
   const createBurnerAccount = async (rpcProvider: RpcProvider) => {

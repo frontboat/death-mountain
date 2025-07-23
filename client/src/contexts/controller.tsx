@@ -90,7 +90,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   return (
     <ControllerContext.Provider value={{
       account: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? burner : account,
-      address,
+      address: burner?.address || address,
       playerName: userName || "Adventurer",
       isPending: isConnecting || isPending || creatingBurner,
 
