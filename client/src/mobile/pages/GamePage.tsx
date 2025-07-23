@@ -1,4 +1,5 @@
 import { useController } from '@/contexts/controller';
+import { useDojoConfig } from '@/contexts/starknet';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
@@ -18,12 +19,14 @@ import MarketScreen from '../containers/MarketScreen';
 import QuestCompletedScreen from '../containers/QuestCompletedScreen';
 import SettingsScreen from '../containers/SettingsScreen';
 import StatSelectionScreen from '../containers/StatSelectionScreen';
+import { ChainId } from '@/utils/networkConfig';
 
 export default function GamePage() {
   const navigate = useNavigate();
   const { sdk } = useDojoSDK();
+  const dojoConfig = useDojoConfig();
   const { mintGame } = useSystemCalls();
-  const { account, address, playerName, login, isPending, practiceMode, startPractice, endPractice } = useController();
+  const { account, address, playerName, login, isPending, startPractice, endPractice } = useController();
   const { gameId, adventurer, exitGame, setGameId, beast, showBeastRewards, quest } = useGameStore();
   const { subscription } = useGameDirector();
 
@@ -54,7 +57,7 @@ export default function GamePage() {
 
     if (!address && mode !== 'practice') return login();
 
-    if (mode === 'practice' && !practiceMode) {
+    if (mode === 'practice' && dojoConfig.chainId !== ChainId.WP_PG_SLOT) {
       startPractice();
       return;
     }
@@ -70,7 +73,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, address, isPending, sdk, update, practiceMode]);
+  }, [game_id, address, isPending, sdk, update, dojoConfig.chainId]);
 
   useEffect(() => {
     setActiveNavItem('GAME');
