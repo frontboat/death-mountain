@@ -11,11 +11,13 @@ pub trait IBeastSystems<T> {
         ref self: T, seed: u64, entity_id: u8, level: u16, health: u16, prefix: u8, suffix: u8, adventurer_id: u64,
     );
     fn add_kill(ref self: T, entity_hash: felt252, adventurer_id: u64);
+    fn premint_collectable(ref self: T, entity_id: u8, prefix: u8, suffix: u8, level: u16, health: u16) -> u64;
     fn get_valid_collectable(
         self: @T, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
     ) -> CollectableResult<(u64, u16, u16)>;
     fn get_collectable(self: @T, dungeon: ContractAddress, entity_hash: felt252, index: u64) -> CollectableEntity;
     fn get_collectable_count(self: @T, dungeon: ContractAddress, entity_hash: felt252) -> u64;
+    fn is_beast_collectable(self: @T, dungeon: ContractAddress, beast_id: u8, prefix: u8, suffix: u8) -> bool;
     fn get_entity_stats(self: @T, dungeon: ContractAddress, entity_hash: felt252) -> EntityStats;
     fn get_adventurer_killed(
         self: @T, dungeon: ContractAddress, entity_hash: felt252, kill_index: u64,
@@ -39,10 +41,12 @@ pub trait IBeastSystems<T> {
 mod beast_systems {
     use death_mountain::constants::combat::CombatEnums::Type;
     use death_mountain::constants::world::DEFAULT_NS;
+    use death_mountain::models::adventurer::adventurer::ImplAdventurer;
     use death_mountain::models::beast::{Beast, ImplBeast};
     use death_mountain::models::game_data::{
         AdventurerKilled, CollectableCount, CollectableEntity, CollectableResult, EntityStats,
     };
+    use death_mountain::utils::vrf::VRFImpl;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use starknet::ContractAddress;
@@ -62,18 +66,19 @@ mod beast_systems {
             adventurer_id: u64,
         ) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            
+
             let (contract_address, _) = world.dns(@"game_systems").unwrap();
             assert!(contract_address == starknet::get_caller_address(), "Only game_systems can add collectables");
 
+            let entity_hash = ImplBeast::get_beast_hash(entity_id, prefix, suffix);
             let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            let mut collectable_count: CollectableCount = world.read_model((token_metadata.minted_by, entity_id));
+            let mut collectable_count: CollectableCount = world.read_model((token_metadata.minted_by, entity_hash));
 
             world
                 .write_model(
                     @CollectableEntity {
                         dungeon: token_metadata.minted_by,
-                        entity_hash: ImplBeast::get_beast_hash(entity_id, prefix, suffix),
+                        entity_hash,
                         index: collectable_count.count,
                         seed,
                         id: entity_id,
@@ -111,12 +116,44 @@ mod beast_systems {
                 );
         }
 
+        fn premint_collectable(
+            ref self: ContractState, entity_id: u8, prefix: u8, suffix: u8, level: u16, health: u16,
+        ) -> u64 {
+            let mut world: WorldStorage = self.world(@DEFAULT_NS());
+            let caller = starknet::get_caller_address();
+
+            let entity_hash = ImplBeast::get_beast_hash(entity_id, prefix, suffix);
+            let mut collectable_count: CollectableCount = world.read_model((caller, entity_hash));
+
+            let vrf_seed = VRFImpl::seed(VRFImpl::cartridge_vrf_address());
+            let (seed, _) = ImplAdventurer::felt_to_two_u64(vrf_seed);
+
+            world
+                .write_model(
+                    @CollectableEntity {
+                        dungeon: caller,
+                        entity_hash,
+                        index: collectable_count.count,
+                        seed,
+                        id: entity_id,
+                        level,
+                        health,
+                        prefix,
+                        suffix,
+                        killed_by: 0,
+                    },
+                );
+
+            collectable_count.count += 1;
+            world.write_model(@collectable_count);
+            seed
+        }
+
         fn get_valid_collectable(
             self: @ContractState, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
         ) -> CollectableResult<(u64, u16, u16)> {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let collectable_entity: CollectableEntity = world
-                .read_model((dungeon, entity_hash, 0));
+            let collectable_entity: CollectableEntity = world.read_model((dungeon, entity_hash, 0));
 
             if collectable_entity.killed_by == adventurer_id {
                 CollectableResult::Ok((collectable_entity.seed, collectable_entity.level, collectable_entity.health))
@@ -136,6 +173,15 @@ mod beast_systems {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let collectable_count: CollectableCount = world.read_model((dungeon, entity_hash));
             collectable_count.count
+        }
+
+        fn is_beast_collectable(
+            self: @ContractState, dungeon: ContractAddress, beast_id: u8, prefix: u8, suffix: u8,
+        ) -> bool {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let entity_hash = ImplBeast::get_beast_hash(beast_id, prefix, suffix);
+            let collectable_entity: CollectableEntity = world.read_model((dungeon, entity_hash, 0));
+            collectable_entity.id == 0
         }
 
         fn get_entity_stats(self: @ContractState, dungeon: ContractAddress, entity_hash: felt252) -> EntityStats {
