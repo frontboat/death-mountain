@@ -30,39 +30,35 @@ mod game_systems {
     use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
     use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
     use death_mountain::constants::game::{MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID, STARTER_BEAST_ATTACK_DAMAGE, messages};
-    use death_mountain::constants::loot::{SUFFIX_UNLOCK_GREATNESS};
-    use death_mountain::constants::world::{DEFAULT_NS};
-
+    use death_mountain::constants::loot::SUFFIX_UNLOCK_GREATNESS;
+    use death_mountain::constants::world::DEFAULT_NS;
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
     use death_mountain::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
-    use death_mountain::models::adventurer::bag::{Bag};
-    use death_mountain::models::adventurer::equipment::{ImplEquipment};
+    use death_mountain::models::adventurer::bag::Bag;
+    use death_mountain::models::adventurer::equipment::ImplEquipment;
     use death_mountain::models::adventurer::item::{ImplItem, Item};
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::models::beast::{Beast, IBeast, ImplBeast};
     use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
-    use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked, GameSettings, StatsMode};
     use death_mountain::models::game::{
-        AttackEvent, BeastEvent, BuyItemsEvent, DefeatedBeastEvent, DiscoveryEvent, FledBeastEvent, GameEvent,
-        GameEventDetails, ItemEvent, LevelUpEvent, MarketItemsEvent, ObstacleEvent, StatUpgradeEvent,
+        AdventurerEntropy, AdventurerPacked, AttackEvent, BagPacked, BeastEvent, BuyItemsEvent, DefeatedBeastEvent,
+        DiscoveryEvent, FledBeastEvent, GameEvent, GameEventDetails, GameSettings, ItemEvent, LevelUpEvent,
+        MarketItemsEvent, ObstacleEvent, StatUpgradeEvent, StatsMode,
     };
     use death_mountain::models::market::{ImplMarket, ItemPurchase};
     use death_mountain::models::obstacle::{IObstacle, ImplObstacle};
-    use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
-    use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait};
+    use death_mountain::systems::adventurer::contracts::IAdventurerSystemsDispatcherTrait;
+    use death_mountain::systems::beast::contracts::IBeastSystemsDispatcherTrait;
+    use death_mountain::systems::loot::contracts::ILootSystemsDispatcherTrait;
     use death_mountain::utils::vrf::VRFImpl;
-
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-
     use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
-    use starknet::ContractAddress;
-    use starknet::{get_tx_info};
-    use super::VRF_ENABLED;
+    use starknet::{ContractAddress, get_tx_info};
     use tournaments::components::libs::lifecycle::{LifecycleAssertionsImpl, LifecycleAssertionsTrait};
     use tournaments::components::models::game::TokenMetadata;
+    use super::VRF_ENABLED;
 
     // ------------------------------------------ //
     // ------------ Helper Functions ------------ //
@@ -591,9 +587,6 @@ mod game_systems {
         ref adventurer: Adventurer,
         ref game_events: Array<GameEventDetails>,
         beast: Beast,
-        beast_seed: u32,
-        damage_dealt: u16,
-        critical_hit: bool,
         item_specials_rnd: u16,
         level_seed: u64,
         game_libs: GameLibs,
@@ -632,10 +625,11 @@ mod game_systems {
 
         // if beast beast level is above collectible threshold
         if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+            let adventurer_entropy: AdventurerEntropy = game_libs.adventurer.get_adventurer_entropy(adventurer_id);
             game_libs
                 .beast
                 .add_collectable(
-                    level_seed,
+                    adventurer_entropy.beast_seed,
                     beast.id,
                     beast.combat_spec.level,
                     beast.starting_health,
@@ -1102,16 +1096,7 @@ mod game_systems {
         if (combat_result.total_damage >= adventurer.beast_health) {
             // process beast death
             _process_beast_death(
-                ref adventurer,
-                ref game_events,
-                beast,
-                beast_seed,
-                combat_result.total_damage,
-                is_critical_hit,
-                item_specials_seed,
-                level_seed,
-                game_libs,
-                adventurer_id,
+                ref adventurer, ref game_events, beast, item_specials_seed, level_seed, game_libs, adventurer_id,
             );
         } else {
             // if beast survived the attack, deduct damage dealt
@@ -1637,33 +1622,29 @@ mod tests {
     use death_mountain::constants::adventurer::{BASE_POTION_PRICE, POTION_HEALTH_AMOUNT};
     use death_mountain::constants::beast::BeastSettings;
     use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
-    use death_mountain::constants::loot::{ItemId};
-
+    use death_mountain::constants::loot::ItemId;
     use death_mountain::constants::world::DEFAULT_NS;
-
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
     use death_mountain::models::adventurer::adventurer::{IAdventurer, ImplAdventurer};
     use death_mountain::models::adventurer::stats::{IStat, Stats};
-    use death_mountain::models::game::{AdventurerEntropy};
     use death_mountain::models::game::{
-        e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings, m_GameSettingsMetadata,
-        m_SettingsCounter,
+        AdventurerEntropy, e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings,
+        m_GameSettingsMetadata, m_SettingsCounter,
     };
-    use death_mountain::models::market::{ItemPurchase};
+    use death_mountain::models::market::ItemPurchase;
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
-    use death_mountain::systems::beast::contracts::{beast_systems};
+    use death_mountain::systems::beast::contracts::beast_systems;
     use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
-    use death_mountain::systems::game_token::contracts::{game_token_systems};
+    use death_mountain::systems::game_token::contracts::game_token_systems;
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
-    use death_mountain::systems::renderer::contracts::{renderer_systems};
-    use dojo::model::{ModelStorage};
+    use death_mountain::systems::renderer::contracts::renderer_systems;
+    use dojo::model::ModelStorage;
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
     };
-    use starknet::{contract_address_const};
+    use starknet::contract_address_const;
     use tournaments::components::interfaces::{IGameTokenDispatcher, IGameTokenDispatcherTrait};
-
     use tournaments::components::models::game::{
         m_GameCounter, m_GameMetadata, m_Score, m_Settings, m_SettingsDetails, m_TokenMetadata,
     };

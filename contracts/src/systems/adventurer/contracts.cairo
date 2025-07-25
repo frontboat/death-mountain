@@ -5,6 +5,7 @@ use death_mountain::models::adventurer::adventurer::Adventurer;
 use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::adventurer::item::Item;
 use death_mountain::models::adventurer::stats::Stats;
+use death_mountain::models::game::AdventurerEntropy;
 
 
 #[starknet::interface]
@@ -13,6 +14,7 @@ pub trait IAdventurerSystems<T> {
     fn generate_starting_stats(self: @T, seed: u64) -> Stats;
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
+    fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
     fn get_adventurer_name(self: @T, adventurer_id: u64) -> felt252;
     fn remove_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
@@ -34,22 +36,20 @@ pub trait IAdventurerSystems<T> {
 
 #[dojo::contract]
 mod adventurer_systems {
-    use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType};
-
-    use death_mountain::constants::world::{DEFAULT_NS};
+    use death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType;
+    use death_mountain::constants::world::DEFAULT_NS;
     use death_mountain::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
     use death_mountain::models::adventurer::bag::{Bag, IBag, ImplBag};
     use death_mountain::models::adventurer::equipment::IEquipment;
     use death_mountain::models::adventurer::item::Item;
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
-    use death_mountain::models::game::{AdventurerPacked, BagPacked};
-    use death_mountain::models::game_data::{DroppedItem};
+    use death_mountain::models::game::{AdventurerPacked, BagPacked, AdventurerEntropy};
+    use death_mountain::models::game_data::DroppedItem;
     use death_mountain::models::market::ImplMarket;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-    use super::IAdventurerSystems;
-
     use tournaments::components::models::game::TokenMetadata;
+    use super::IAdventurerSystems;
 
     #[abi(embed_v0)]
     impl AdventurerSystemsImpl of IAdventurerSystems<ContractState> {
@@ -85,6 +85,11 @@ mod adventurer_systems {
 
         fn get_adventurer(self: @ContractState, adventurer_id: u64) -> Adventurer {
             _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id)
+        }
+
+        fn get_adventurer_entropy(self: @ContractState, adventurer_id: u64) -> AdventurerEntropy {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            world.read_model(adventurer_id)
         }
 
         fn get_bag(self: @ContractState, adventurer_id: u64) -> Bag {
