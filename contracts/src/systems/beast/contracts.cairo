@@ -50,8 +50,8 @@ mod beast_systems {
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use starknet::ContractAddress;
-    use tournaments::components::models::game::TokenMetadata;
     use super::IBeastSystems;
+    use tournaments::components::models::game::TokenMetadata;
 
     #[abi(embed_v0)]
     impl BeastSystemsImpl of IBeastSystems<ContractState> {

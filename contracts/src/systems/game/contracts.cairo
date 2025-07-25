@@ -56,9 +56,9 @@ mod game_systems {
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
     use starknet::{ContractAddress, get_tx_info};
+    use super::VRF_ENABLED;
     use tournaments::components::libs::lifecycle::{LifecycleAssertionsImpl, LifecycleAssertionsTrait};
     use tournaments::components::models::game::TokenMetadata;
-    use super::VRF_ENABLED;
 
     // ------------------------------------------ //
     // ------------ Helper Functions ------------ //

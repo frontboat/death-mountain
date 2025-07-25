@@ -43,13 +43,13 @@ mod adventurer_systems {
     use death_mountain::models::adventurer::equipment::IEquipment;
     use death_mountain::models::adventurer::item::Item;
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
-    use death_mountain::models::game::{AdventurerPacked, BagPacked, AdventurerEntropy};
+    use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked};
     use death_mountain::models::game_data::DroppedItem;
     use death_mountain::models::market::ImplMarket;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-    use tournaments::components::models::game::TokenMetadata;
     use super::IAdventurerSystems;
+    use tournaments::components::models::game::TokenMetadata;
 
     #[abi(embed_v0)]
     impl AdventurerSystemsImpl of IAdventurerSystems<ContractState> {
