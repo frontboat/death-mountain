@@ -23,11 +23,9 @@ pub trait IAdventurerSystems<T> {
         self: @T, adventurer_level: u8, discovery_type_rnd: u8, amount_rnd1: u8, amount_rnd2: u8,
     ) -> DiscoveryType;
     fn pack_bag(self: @T, bag: Bag) -> felt252;
-    fn get_bag_item(self: @T, bag: Bag, item_id: u8) -> Item;
     fn add_item_to_bag(self: @T, bag: Bag, item: Item) -> Bag;
     fn remove_item_from_bag(self: @T, bag: Bag, item_id: u8) -> (Bag, Item);
     fn add_new_item_to_bag(self: @T, bag: Bag, item_id: u8) -> Bag;
-    fn is_bag_full(self: @T, bag: Bag) -> bool;
     fn bag_contains(self: @T, bag: Bag, item_id: u8) -> (bool, Item);
     fn get_randomness(self: @T, adventurer_xp: u16, seed: u64) -> (u32, u32, u16, u16, u8, u8, u8, u8);
     fn get_battle_randomness(self: @T, xp: u16, action_count: u16, seed: u64) -> (u8, u8, u8, u8);
@@ -128,10 +126,6 @@ mod adventurer_systems {
             ImplBag::pack(bag)
         }
 
-        fn get_bag_item(self: @ContractState, bag: Bag, item_id: u8) -> Item {
-            ImplBag::get_item(bag, item_id)
-        }
-
         fn add_item_to_bag(self: @ContractState, mut bag: Bag, item: Item) -> Bag {
             ImplBag::add_item(ref bag, item);
             bag
@@ -145,10 +139,6 @@ mod adventurer_systems {
         fn add_new_item_to_bag(self: @ContractState, mut bag: Bag, item_id: u8) -> Bag {
             ImplBag::add_new_item(ref bag, item_id);
             bag
-        }
-
-        fn is_bag_full(self: @ContractState, bag: Bag) -> bool {
-            ImplBag::is_full(bag)
         }
 
         fn bag_contains(self: @ContractState, bag: Bag, item_id: u8) -> (bool, Item) {

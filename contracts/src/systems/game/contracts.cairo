@@ -34,7 +34,7 @@ mod game_systems {
     use death_mountain::constants::world::DEFAULT_NS;
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
     use death_mountain::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
-    use death_mountain::models::adventurer::bag::Bag;
+    use death_mountain::models::adventurer::bag::{Bag, ImplBag};
     use death_mountain::models::adventurer::equipment::ImplEquipment;
     use death_mountain::models::adventurer::item::{ImplItem, Item};
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
@@ -779,7 +779,7 @@ mod game_systems {
                 let slot_free = adventurer.equipment.is_slot_free_item_id(item_id, slot);
 
                 // if the bag is full and the slot is not free
-                let inventory_full = game_libs.adventurer.is_bag_full(bag) && slot_free == false;
+                let inventory_full = ImplBag::is_full(bag) && slot_free == false;
 
                 // if item is in adventurers bag, is equipped or inventory is full
                 if item_in_bag || adventurer.equipment.is_equipped(item_id) || inventory_full {
@@ -1167,7 +1167,7 @@ mod game_systems {
         let armor_details = game_libs.loot.get_item(armor.id);
 
         // get critical hit chance
-        let critical_hit_chance = game_libs.beast.get_critical_hit_chance(adventurer.get_level(), is_ambush);
+        let critical_hit_chance = ImplBeast::get_critical_hit_chance(adventurer.get_level(), is_ambush);
 
         // process beast attack
         let (combat_result, _jewlery_armor_bonus) = adventurer
@@ -1225,7 +1225,7 @@ mod game_systems {
             .get_battle_randomness(adventurer.xp, battle_count, flee_seed);
 
         // attempt to flee
-        let fled = game_libs.beast.attempt_flee(adventurer.get_level(), adventurer.stats.dexterity, flee_rnd);
+        let fled = ImplBeast::attempt_flee(adventurer.get_level(), adventurer.stats.dexterity, flee_rnd);
 
         // if adventurer fled
         if (fled) {
@@ -1386,7 +1386,7 @@ mod game_systems {
                 let (item_in_bag, _) = game_libs.adventurer.bag_contains(bag, item_id);
                 if item_in_bag {
                     // get item from the bag
-                    item = game_libs.adventurer.get_bag_item(bag, item_id);
+                    item = ImplBag::get_item(bag, item_id);
 
                     // remove item from the bag (sets mutated to true)
                     let (new_bag, _) = game_libs.adventurer.remove_item_from_bag(bag, item_id);
