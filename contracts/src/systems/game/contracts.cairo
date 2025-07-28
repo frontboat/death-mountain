@@ -1631,6 +1631,7 @@ mod tests {
         AdventurerEntropy, e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings,
         m_GameSettingsMetadata, m_SettingsCounter,
     };
+    use death_mountain::models::game_data::m_DroppedItem;
     use death_mountain::models::market::ItemPurchase;
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
     use death_mountain::systems::beast::contracts::beast_systems;
@@ -1665,6 +1666,7 @@ mod tests {
                 TestResource::Model(m_SettingsCounter::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_GameSettings::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_GameSettingsMetadata::TEST_CLASS_HASH.try_into().unwrap()),
+                TestResource::Model(m_DroppedItem::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Contract(game_systems::TEST_CLASS_HASH),
                 TestResource::Contract(loot_systems::TEST_CLASS_HASH),
                 TestResource::Contract(renderer_systems::TEST_CLASS_HASH),
@@ -2436,10 +2438,11 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected: ('Cant drop during starter beast', 'ENTRYPOINT_FAILED'))]
-    fn drop_on_starter_beast() {
+    #[should_panic(expected: ('Item not owned by adventurer', 'ENTRYPOINT_FAILED'))]
+    fn drop_item_not_owned() {
         let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
+        game.attack(adventurer_id, false);
 
         let mut drop_list = ArrayTrait::<u8>::new();
         drop_list.append(255);
@@ -2547,7 +2550,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected: ('Cant drop during starter beast', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED'))]
     fn no_dropping_starter_weapon_during_starter_beast() {
         let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);

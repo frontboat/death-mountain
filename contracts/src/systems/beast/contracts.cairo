@@ -11,7 +11,9 @@ pub trait IBeastSystems<T> {
         ref self: T, seed: u64, entity_id: u8, level: u16, health: u16, prefix: u8, suffix: u8, adventurer_id: u64,
     );
     fn add_kill(ref self: T, entity_hash: felt252, adventurer_id: u64);
-    fn premint_collectable(ref self: T, entity_id: u8, prefix: u8, suffix: u8, level: u16, health: u16) -> u64;
+    fn premint_collectable(
+        ref self: T, seed: u64, entity_id: u8, prefix: u8, suffix: u8, level: u16, health: u16,
+    ) -> u64;
     fn get_valid_collectable(
         self: @T, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
     ) -> CollectableResult<(u64, u16, u16)>;
@@ -115,16 +117,13 @@ mod beast_systems {
         }
 
         fn premint_collectable(
-            ref self: ContractState, entity_id: u8, prefix: u8, suffix: u8, level: u16, health: u16,
+            ref self: ContractState, seed: u64, entity_id: u8, prefix: u8, suffix: u8, level: u16, health: u16,
         ) -> u64 {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
             let caller = starknet::get_caller_address();
 
             let entity_hash = ImplBeast::get_beast_hash(entity_id, prefix, suffix);
             let mut collectable_count: CollectableCount = world.read_model((caller, entity_hash));
-
-            let vrf_seed = VRFImpl::seed(VRFImpl::cartridge_vrf_address());
-            let (seed, _) = ImplAdventurer::felt_to_two_u64(vrf_seed);
 
             world
                 .write_model(
