@@ -15,7 +15,8 @@ pub trait IAdventurerSystems<T> {
     fn generate_starting_stats(self: @T, seed: u64) -> Stats;
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
-    fn get_adventurer_level(self: @T, dungeon: ContractAddress, adventurer_id: u64) -> DataResult<u8>;
+    fn get_adventurer_level(self: @T, adventurer_id: u64) -> u8;
+    fn get_adventurer_dungeon(self: @T, adventurer_id: u64) -> ContractAddress;
     fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
     fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
@@ -93,7 +94,12 @@ mod adventurer_systems {
             _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
-        fn get_adventurer_level(self: @ContractState, dungeon: ContractAddress, adventurer_id: u64) -> DataResult<u8> {
+        fn get_adventurer_level(self: @ContractState, adventurer_id: u64) -> u8 {
+            let adventurer: Adventurer = _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id);
+            adventurer.get_level()
+        }
+
+        fn get_adventurer_dungeon(self: @ContractState, adventurer_id: u64) -> ContractAddress {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
             let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
@@ -102,13 +108,7 @@ mod adventurer_systems {
                 .token_metadata(adventurer_id);
             let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }
                 .get_minter_address(token_metadata.minted_by);
-
-            if minted_by_address == dungeon {
-                let adventurer: Adventurer = _load_adventurer(world, adventurer_id);
-                DataResult::Ok(adventurer.get_level())
-            } else {
-                DataResult::Err('Not Valid'.into())
-            }
+            minted_by_address
         }
 
         fn get_adventurer_entropy(self: @ContractState, adventurer_id: u64) -> AdventurerEntropy {
