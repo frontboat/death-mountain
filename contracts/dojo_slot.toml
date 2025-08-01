@@ -25,5 +25,5 @@ default = "ls_0_0_3"
 [init_call_args]
 "ls_0_0_3-game_token_systems" = [
     "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-    "0x01e7aa02faf2d63179c8efd47e6502b215a1f0448a7aa4b17ad2c70160a4b33a" # denshokan_address
+    "0x01577ca1fb06c82066c78ff9088fe3d5ef639a7658bfe7edffec76df03afeedb" # denshokan_address
 ]
