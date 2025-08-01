@@ -912,6 +912,7 @@ mod game_systems {
             let damage_reduction = ImplCombat::ability_based_damage_reduction(
                 adventurer_level, adventurer.stats.intelligence,
             );
+            damage_taken = ImplCombat::apply_damage_reduction(damage_taken, damage_reduction);
         }
 
         // create obstacle details for event
@@ -1174,6 +1175,7 @@ mod game_systems {
             let damage_reduction = ImplCombat::ability_based_damage_reduction(
                 adventurer.get_level(), adventurer.stats.wisdom,
             );
+            damage_taken = ImplCombat::apply_damage_reduction(damage_taken, damage_reduction);
         }
 
         // deduct damage taken from adventurer's health
