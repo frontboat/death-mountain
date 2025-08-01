@@ -893,7 +893,7 @@ mod game_systems {
 
         // pull damage taken out of combat result for easy access
         let mut damage_taken = combat_result.total_damage;
-        damage_taken = damage_taken * (100 - game_settings.base_damage_reduction).into() / 100;
+        damage_taken = ImplCombat::apply_damage_reduction(damage_taken, game_settings.base_damage_reduction);
 
         // get base xp reward for obstacle
         let base_reward = obstacle.get_xp_reward(adventurer_level);
@@ -912,7 +912,6 @@ mod game_systems {
             let damage_reduction = ImplCombat::ability_based_damage_reduction(
                 adventurer_level, adventurer.stats.intelligence,
             );
-            damage_taken = damage_taken * (100 - damage_reduction).into() / 100;
         }
 
         // create obstacle details for event
@@ -1168,14 +1167,13 @@ mod game_systems {
 
         // apply base damage reduction to ambush attacks
         if is_ambush {
-            damage_taken = damage_taken * (100 - game_settings.base_damage_reduction).into() / 100;
+            damage_taken = ImplCombat::apply_damage_reduction(damage_taken, game_settings.base_damage_reduction);
         }
 
         if is_ambush && game_settings.stats_mode == StatsMode::Reduction {
             let damage_reduction = ImplCombat::ability_based_damage_reduction(
                 adventurer.get_level(), adventurer.stats.wisdom,
             );
-            damage_taken = damage_taken * (100 - damage_reduction).into() / 100;
         }
 
         // deduct damage taken from adventurer's health

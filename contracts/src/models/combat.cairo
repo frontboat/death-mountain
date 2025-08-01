@@ -494,6 +494,11 @@ pub impl ImplCombat of ICombat {
 
         (100 * smooth / SCALE).try_into().unwrap()
     }
+
+    fn apply_damage_reduction(damage: u16, damage_reduction: u8) -> u16 {
+        let updated_damage: u32 = damage.into() * (100 - damage_reduction).into() / 100;
+        updated_damage.try_into().unwrap()
+    }
 }
 
 // ---------------------------

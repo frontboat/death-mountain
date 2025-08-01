@@ -6,7 +6,6 @@ use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::adventurer::item::Item;
 use death_mountain::models::adventurer::stats::Stats;
 use death_mountain::models::game::AdventurerEntropy;
-use death_mountain::models::game_data::DataResult;
 use starknet::ContractAddress;
 
 #[starknet::interface]
@@ -45,7 +44,7 @@ mod adventurer_systems {
     use death_mountain::models::adventurer::item::Item;
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked};
-    use death_mountain::models::game_data::{DataResult, DroppedItem};
+    use death_mountain::models::game_data::{DroppedItem};
     use death_mountain::models::market::ImplMarket;
     use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
     use dojo::model::ModelStorage;
