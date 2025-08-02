@@ -127,7 +127,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [videoQueue, setVideoQueue] = useState<string[]>([]);
 
   const gameTokensKey = useMemo(() => {
-    return gameTokens.map((token) => token.token_id).join(",");
+    return gameTokens.map((token: any) => token.token_id).join(",");
   }, [gameTokens]);
 
   useEffect(() => {

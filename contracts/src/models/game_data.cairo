@@ -24,6 +24,7 @@ pub struct CollectableEntity {
     pub prefix: u8,
     pub suffix: u8,
     pub killed_by: u64,
+    pub timestamp: u64,
 }
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]

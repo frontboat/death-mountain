@@ -97,6 +97,7 @@ mod beast_systems {
                         prefix,
                         suffix,
                         killed_by: adventurer_id,
+                        timestamp: starknet::get_block_timestamp(),
                     },
                 );
 
@@ -154,6 +155,7 @@ mod beast_systems {
                         prefix,
                         suffix,
                         killed_by: 0,
+                        timestamp: starknet::get_block_timestamp(),
                     },
                 );
 

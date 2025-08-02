@@ -6,7 +6,6 @@ use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::adventurer::item::Item;
 use death_mountain::models::adventurer::stats::Stats;
 use death_mountain::models::game::AdventurerEntropy;
-use death_mountain::models::game_data::DataResult;
 use starknet::ContractAddress;
 
 #[starknet::interface]
@@ -15,8 +14,9 @@ pub trait IAdventurerSystems<T> {
     fn generate_starting_stats(self: @T, seed: u64) -> Stats;
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
+    fn get_adventurer_level(self: @T, adventurer_id: u64) -> u8;
+    fn get_adventurer_dungeon(self: @T, adventurer_id: u64) -> ContractAddress;
     fn get_adventurer_verbose(self: @T, adventurer_id: u64) -> AdventurerVerbose;
-    fn get_adventurer_level(self: @T, dungeon: ContractAddress, adventurer_id: u64) -> DataResult<u8>;
     fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
     fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
@@ -32,7 +32,7 @@ pub trait IAdventurerSystems<T> {
     fn bag_contains(self: @T, bag: Bag, item_id: u8) -> (bool, Item);
     fn get_randomness(self: @T, adventurer_xp: u16, seed: u64) -> (u32, u32, u16, u16, u8, u8, u8, u8);
     fn get_battle_randomness(self: @T, xp: u16, action_count: u16, seed: u64) -> (u8, u8, u8, u8);
-    fn get_market(self: @T, seed: u64) -> Array<u8>;
+    fn get_market(self: @T, adventurer_id: u64, seed: u64) -> Array<u8>;
 }
 
 #[dojo::contract]
@@ -45,7 +45,7 @@ mod adventurer_systems {
     use death_mountain::models::adventurer::item::Item;
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked};
-    use death_mountain::models::game_data::{DataResult, DroppedItem};
+    use death_mountain::models::game_data::{DroppedItem};
     use death_mountain::models::market::ImplMarket;
     use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
     use dojo::model::ModelStorage;
@@ -94,6 +94,11 @@ mod adventurer_systems {
             _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
+        fn get_adventurer_level(self: @ContractState, adventurer_id: u64) -> u8 {
+            let adventurer: Adventurer = _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id);
+            adventurer.get_level()
+        }
+
         fn get_adventurer_verbose(self: @ContractState, adventurer_id: u64) -> AdventurerVerbose {
             let world_storage = self.world(@DEFAULT_NS());
             let adventurer = _load_adventurer(world_storage, adventurer_id);
@@ -120,7 +125,7 @@ mod adventurer_systems {
             }
         }
 
-        fn get_adventurer_level(self: @ContractState, dungeon: ContractAddress, adventurer_id: u64) -> DataResult<u8> {
+        fn get_adventurer_dungeon(self: @ContractState, adventurer_id: u64) -> ContractAddress {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
             let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
@@ -129,13 +134,7 @@ mod adventurer_systems {
                 .token_metadata(adventurer_id);
             let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }
                 .get_minter_address(token_metadata.minted_by);
-
-            if minted_by_address == dungeon {
-                let adventurer: Adventurer = _load_adventurer(world, adventurer_id);
-                DataResult::Ok(adventurer.get_level())
-            } else {
-                DataResult::Err('Not Valid')
-            }
+            minted_by_address
         }
 
         fn get_adventurer_entropy(self: @ContractState, adventurer_id: u64) -> AdventurerEntropy {
@@ -204,9 +203,9 @@ mod adventurer_systems {
             ImplAdventurer::get_battle_randomness(xp, action_count, seed)
         }
 
-        fn get_market(self: @ContractState, seed: u64) -> Array<u8> {
+        fn get_market(self: @ContractState, adventurer_id: u64, seed: u64) -> Array<u8> {
             let market_size = ImplMarket::get_market_size();
-            ImplMarket::get_available_items(seed, market_size)
+            ImplMarket::get_available_items(adventurer_id, seed, market_size)
         }
     }
 

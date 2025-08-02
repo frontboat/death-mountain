@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
 // a randomised deterministic marketplace
-use core::integer::u64_safe_divmod;
+use core::poseidon::poseidon_hash_span;
 use death_mountain::constants::combat::CombatEnums::Tier;
-use death_mountain::constants::loot::{NUM_ITEMS, NUM_ITEMS_NZ_MINUS_ONE};
+use death_mountain::constants::loot::{NUM_ITEMS};
 use death_mountain::constants::market::{NUMBER_OF_ITEMS_PER_LEVEL, TIER_PRICE};
 
 #[derive(Introspect, Copy, Drop, Serde)]
@@ -38,26 +38,33 @@ pub impl ImplMarket of IMarket {
     /// @param seed The seed to be divided.
     /// @param market_size The size of the market.
     /// @return An array of items that are available on the market.
-    fn get_available_items(seed: u64, market_size: u8) -> Array<u8> {
-        if market_size >= NUM_ITEMS {
-            return Self::get_all_items();
-        }
+    fn get_available_items(adventurer_id: u64, seed: u64, market_size: u8) -> Array<u8> {
+        let mut hash_span = ArrayTrait::<felt252>::new();
+        hash_span.append(adventurer_id.into());
+        hash_span.append(seed.into());
+        let hash: felt252 = poseidon_hash_span(hash_span.span()).into();
 
-        let (seed, offset) = Self::get_market_seed_and_offset(seed);
+        let mut results: Array<u8> = ArrayTrait::new();
+        let hash_u256: u256 = hash.into();
+        let mut remaining = hash_u256;
+        let mut passes: u8 = 0_u8;
 
-        let mut all_items = ArrayTrait::<u8>::new();
-        let mut item_count: u16 = 0;
-        loop {
-            if item_count == market_size.into() {
-                break;
-            } else {
-                let item_id = Self::get_id(seed + (offset.into() * item_count).into());
-                all_items.append(item_id);
-                item_count += 1;
+        while passes < 31_u8 && results.len() < market_size.into() {
+            // Low byte
+            let byte_u256 = remaining % 256_u256;
+            let byte: u8 = byte_u256.try_into().unwrap();
+
+            // Prepare for the next pass
+            remaining = remaining / 256_u256; // right-shift by 8 via division
+            passes += 1_u8;
+
+            // Rejection sampling gives perfectly uniform 1-101
+            if byte < 202_u8 {
+                results.append((byte % 101_u8) + 1_u8);
             }
         };
 
-        all_items
+        results
     }
 
     /// @notice Returns the size of the market.
@@ -91,123 +98,6 @@ pub impl ImplMarket of IMarket {
             true
         }
     }
-
-    fn get_all_items() -> Array<u8> {
-        let mut all_items = ArrayTrait::<u8>::new();
-        all_items.append(1);
-        all_items.append(2);
-        all_items.append(3);
-        all_items.append(4);
-        all_items.append(5);
-        all_items.append(6);
-        all_items.append(7);
-        all_items.append(8);
-        all_items.append(9);
-        all_items.append(10);
-        all_items.append(11);
-        all_items.append(12);
-        all_items.append(13);
-        all_items.append(14);
-        all_items.append(15);
-        all_items.append(16);
-        all_items.append(17);
-        all_items.append(18);
-        all_items.append(19);
-        all_items.append(20);
-        all_items.append(21);
-        all_items.append(22);
-        all_items.append(23);
-        all_items.append(24);
-        all_items.append(25);
-        all_items.append(26);
-        all_items.append(27);
-        all_items.append(28);
-        all_items.append(29);
-        all_items.append(30);
-        all_items.append(31);
-        all_items.append(32);
-        all_items.append(33);
-        all_items.append(34);
-        all_items.append(35);
-        all_items.append(36);
-        all_items.append(37);
-        all_items.append(38);
-        all_items.append(39);
-        all_items.append(40);
-        all_items.append(41);
-        all_items.append(42);
-        all_items.append(43);
-        all_items.append(44);
-        all_items.append(45);
-        all_items.append(46);
-        all_items.append(47);
-        all_items.append(48);
-        all_items.append(49);
-        all_items.append(50);
-        all_items.append(51);
-        all_items.append(52);
-        all_items.append(53);
-        all_items.append(54);
-        all_items.append(55);
-        all_items.append(56);
-        all_items.append(57);
-        all_items.append(58);
-        all_items.append(59);
-        all_items.append(60);
-        all_items.append(61);
-        all_items.append(62);
-        all_items.append(63);
-        all_items.append(64);
-        all_items.append(65);
-        all_items.append(66);
-        all_items.append(67);
-        all_items.append(68);
-        all_items.append(69);
-        all_items.append(70);
-        all_items.append(71);
-        all_items.append(72);
-        all_items.append(73);
-        all_items.append(74);
-        all_items.append(75);
-        all_items.append(76);
-        all_items.append(77);
-        all_items.append(78);
-        all_items.append(79);
-        all_items.append(80);
-        all_items.append(81);
-        all_items.append(82);
-        all_items.append(83);
-        all_items.append(84);
-        all_items.append(85);
-        all_items.append(86);
-        all_items.append(87);
-        all_items.append(88);
-        all_items.append(89);
-        all_items.append(90);
-        all_items.append(91);
-        all_items.append(92);
-        all_items.append(93);
-        all_items.append(94);
-        all_items.append(95);
-        all_items.append(96);
-        all_items.append(97);
-        all_items.append(98);
-        all_items.append(99);
-        all_items.append(100);
-        all_items.append(101);
-        all_items
-    }
-
-    /// @notice This function takes in a seed and returns a market seed and offset.
-    /// @dev The seed is divided by the number of items to get the market seed and the remainder is
-    /// the offset.
-    /// @param seed The seed to be divided.
-    /// @return A tuple where the first element is a u64 representing the market seed and the second
-    /// element is a u8 representing the market offset.1
-    fn get_market_seed_and_offset(seed: u64) -> (u64, u8) {
-        let (seed, offset) = u64_safe_divmod(seed, NUM_ITEMS_NZ_MINUS_ONE);
-        (seed, 1 + offset.try_into().unwrap())
-    }
 }
 
 // ---------------------------
@@ -219,8 +109,6 @@ mod tests {
     use death_mountain::constants::loot::{ItemId, NUM_ITEMS};
     use death_mountain::constants::market::{TIER_PRICE};
     use death_mountain::models::market::ImplMarket;
-    const TEST_MARKET_SEED: u256 = 515;
-    const TEST_OFFSET: u8 = 3;
 
     #[test]
     fn is_item_available() {
@@ -289,76 +177,17 @@ mod tests {
     }
 
     #[test]
-    fn get_available_items_check_duplicates() {
-        let market_seed = 12345;
-        let market_size = 100;
-
-        // get items from the market
-        let market_items = ImplMarket::get_available_items(market_seed, market_size);
-
-        // iterate over the items
-        let mut item_index = 0;
-        loop {
-            if item_index == market_items.len() {
-                break;
-            }
-            let item = *market_items.at(item_index);
-            let market_items_clone = market_items.clone();
-
-            // and verify the item is not a duplicate
-            let mut duplicate_check_index = item_index + 1;
-            loop {
-                if duplicate_check_index == market_items_clone.len() {
-                    break;
-                }
-                assert(item != *market_items_clone.at(duplicate_check_index), 'duplicate item id');
-                duplicate_check_index += 1;
-            };
-            item_index += 1;
-        };
-    }
-
-    #[test]
-    #[available_gas(4500000)]
-    fn get_available_items_count() {
-        let market_seed = 12345;
-        let mut market_size = 1;
-
-        let inventory = ImplMarket::get_available_items(market_seed, market_size);
-        assert(inventory.len() == market_size.into(), 'inventory size should be 1');
-
-        market_size = 2;
-        let inventory = ImplMarket::get_available_items(market_seed, market_size);
-        assert(inventory.len() == market_size.into(), 'inventory size should be 2');
-
-        market_size = 10;
-        let inventory = ImplMarket::get_available_items(market_seed, market_size);
-        assert(inventory.len() == market_size.into(), 'inventory size should be 10');
-
-        market_size = 100;
-        let inventory = ImplMarket::get_available_items(market_seed, market_size);
-        assert(inventory.len() == market_size.into(), 'inventory size should be 100');
-
-        // test max u8 market size
-        // should return all items which is 101 (NUM_ITEMS)
-        market_size = 255;
-        let inventory = ImplMarket::get_available_items(market_seed, market_size);
-        assert(inventory.len() == NUM_ITEMS.into(), 'inventory size should be 101');
-    }
-
-    #[test]
     #[available_gas(15500000)]
     fn get_available_items_ownership() {
         let market_seed = 12345;
         let market_size = 21;
 
-        let inventory = @ImplMarket::get_available_items(market_seed, market_size);
-        assert(inventory.len() == market_size.into(), 'incorrect number of items');
+        let inventory = @ImplMarket::get_available_items(1, market_seed, market_size);
 
         // iterate over the items on the market
         let mut item_count: u32 = 0;
         loop {
-            if item_count == market_size.into() {
+            if item_count == inventory.len() {
                 break ();
             }
 
@@ -376,93 +205,228 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(8000000)]
-    fn get_available_items_ownership_multi_level8() {
-        let market_seed = 12345;
-        let market_size = 255;
+    #[available_gas(100000000)]
+    fn test_get_available_items_deterministic() {
+        let adventurer_id = 42;
+        let seed = 98765;
+        let market_size = 15;
 
-        let inventory = @ImplMarket::get_available_items(market_seed, market_size);
-        println!("inventory len: {}", inventory.len());
-        assert(inventory.len() == NUM_ITEMS.into(), 'incorrect number of items');
+        let items1 = ImplMarket::get_available_items(adventurer_id, seed, market_size);
+        let items2 = ImplMarket::get_available_items(adventurer_id, seed, market_size);
 
-        // iterate over the items on the market
-        let mut item_count: u32 = 0;
+        assert(items1.len() == items2.len(), 'lengths should match');
+
+        let mut i = 0;
         loop {
-            if item_count == inventory.len() {
-                break ();
-            }
-
-            // get item id and assert it's within range
-            let item_id = *inventory.at(item_count);
-            assert(item_id != 0 && item_id <= NUM_ITEMS, 'item id out of range');
-
-            let mut inventory_span = inventory.span();
-
-            // assert item is available on the market
-            assert(ImplMarket::is_item_available(ref inventory_span, item_id), 'item should be available');
-
-            item_count += 1;
-        };
-    }
-
-    #[test]
-    fn get_market_seed_and_offset() {
-        let mut i: u8 = 1;
-        loop {
-            if (i == 255) {
+            if i == items1.len() {
                 break;
             }
-            let adventurer_entropy = 1;
-
-            let (_, market_offset) = ImplMarket::get_market_seed_and_offset(adventurer_entropy);
-
-            // assert market offset is within range of items
-            assert(market_offset != 0 && market_offset < NUM_ITEMS, 'offset out of bounds');
+            assert(*items1.at(i) == *items2.at(i), 'items should match');
             i += 1;
         };
     }
 
     #[test]
-    fn get_all_items() {
-        let items = ImplMarket::get_all_items();
-        assert(items.len() == NUM_ITEMS.into(), 'incorrect number of items');
-        // verify item array contains numbers 1 through 101
-        let mut item_count: u32 = 0;
+    #[available_gas(100000000)]
+    fn test_get_available_items_different_seeds() {
+        let adventurer_id = 1;
+        let seed1 = 11111;
+        let seed2 = 22222;
+        let market_size = 20;
+
+        let items1 = ImplMarket::get_available_items(adventurer_id, seed1, market_size);
+        let items2 = ImplMarket::get_available_items(adventurer_id, seed2, market_size);
+
+        // Count differences
+        let mut differences = 0;
+        let mut i = 0;
         loop {
-            if item_count == NUM_ITEMS.into() {
+            if i == items1.len() {
                 break;
             }
-            let item_id = *items.at(item_count);
-            assert(item_id.into() == item_count + 1, 'item id out of range');
-            item_count += 1;
+            if *items1.at(i) != *items2.at(i) {
+                differences += 1;
+            }
+            i += 1;
+        };
+
+        assert(differences != 0, 'should have differences');
+    }
+
+    #[test]
+    #[available_gas(5000000000)]
+    fn test_all_items_can_appear() {
+        // Save all generated item IDs to an array
+        let mut all_items: Array<u8> = ArrayTrait::new();
+        let mut total_items_generated = 0_u32;
+        let mut seed = 1_u64;
+        let max_seeds = 100_u64;
+
+        loop {
+            if seed > max_seeds {
+                break;
+            }
+
+            // Generate market with maximum size to increase chances of seeing all items
+            let items = ImplMarket::get_available_items(seed, seed * 7919, 31);
+
+            let mut j = 0;
+            loop {
+                if j == items.len() {
+                    break;
+                }
+                let item_id = *items.at(j);
+                assert!(item_id >= 1 && item_id <= NUM_ITEMS, "valid item id");
+
+                all_items.append(item_id);
+                total_items_generated += 1;
+
+                j += 1;
+            };
+
+            seed += 1;
+        };
+
+        // Convert array to span for iteration
+        let items_span = all_items.span();
+
+        // Check that each item ID from 1 to 101 exists in the array
+        let mut item_id = 1_u8;
+        loop {
+            if item_id > NUM_ITEMS {
+                break;
+            }
+
+            let mut found = false;
+            let mut i = 0;
+            loop {
+                if i == items_span.len() {
+                    break;
+                }
+                if *items_span[i] == item_id {
+                    found = true;
+                    break;
+                }
+                i += 1;
+            };
+
+            assert!(found, "should see all item IDs");
+            item_id += 1;
         };
     }
 
     #[test]
-    fn unique_market() {
-        // loop from 0 to 255 and get the market seed and offset
-        let mut i: u64 = 0;
+    #[available_gas(30000000000)]
+    fn test_uniform_distribution() {
+        let market_size = 21_u8;
+
+        let mut total_items_generated = 0_u32;
+
+        // Count items in different ranges
+        let mut low_range_count = 0_u32; // 1-25
+        let mut mid_range_count = 0_u32; // 26-75
+        let mut high_range_count = 0_u32; // 76-101
+
+        let mut seed = 1_u32;
+        let statistical_trials = 1000_u32;
+
         loop {
-            if (i > 101) {
+            if seed > statistical_trials {
                 break;
             }
-            let seed: u64 = i;
-            let (market_seed, offset) = ImplMarket::get_market_seed_and_offset(seed);
-            let item1 = ImplMarket::get_id(market_seed);
-            let item2 = ImplMarket::get_id(market_seed + offset.into());
-            let item3 = ImplMarket::get_id(market_seed + (offset.into() * 2));
-            let item4 = ImplMarket::get_id(market_seed + (offset.into() * 3));
 
-            // assert items are different
-            assert(item1 != item2, 'item1 and item2 are same');
-            assert(item1 != item3, 'item1 and item3 are same');
-            assert(item1 != item4, 'item1 and item4 are same');
-            assert(item2 != item3, 'item2 and item3 are same');
-            assert(item2 != item4, 'item2 and item4 are same');
-            assert(item3 != item4, 'item3 and item4 are same');
+            let items = ImplMarket::get_available_items(seed.into(), (seed * 17).into(), market_size);
 
-            // increment i
-            i += 1;
+            let mut j = 0;
+            loop {
+                if j == items.len() {
+                    break;
+                }
+                let item_id = *items.at(j);
+                total_items_generated += 1;
+
+                // Count by range
+                if item_id <= 25 {
+                    low_range_count += 1;
+                } else if item_id <= 75 {
+                    mid_range_count += 1;
+                } else {
+                    high_range_count += 1;
+                }
+
+                j += 1;
+            };
+
+            seed += 1;
         };
+
+        // Check distribution across ranges
+        // Expected: low=25%, mid=50%, high=25% (approximately)
+        let expected_low = total_items_generated / 4; // 25%
+        let expected_mid = total_items_generated / 2; // 50%
+        let expected_high = total_items_generated / 4; // 25%
+
+        // Allow 5% deviation
+        let tolerance_low = expected_low * 5 / 100;
+        let tolerance_mid = expected_mid * 5 / 100;
+        let tolerance_high = expected_high * 5 / 100;
+
+        // Verify ranges are within tolerance
+        assert(low_range_count >= expected_low - tolerance_low, 'low range too few');
+        assert(low_range_count <= expected_low + tolerance_low, 'low range too many');
+        assert(mid_range_count >= expected_mid - tolerance_mid, 'mid range too few');
+        assert(mid_range_count <= expected_mid + tolerance_mid, 'mid range too many');
+        assert(high_range_count >= expected_high - tolerance_high, 'high range too few');
+        assert(high_range_count <= expected_high + tolerance_high, 'high range too many');
+
+        // Verify total adds up
+        assert(low_range_count + mid_range_count + high_range_count == total_items_generated, 'counts dont add up');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_market_size_consistency() {
+        // Test: Generate 100 markets with 21 items each and verify majority have exactly 21 items
+        let market_size = 21_u8;
+        let num_markets = 100_u32;
+        let mut markets_with_correct_size = 0_u32;
+        let mut markets_above_10 = 0_u32;
+
+        let mut seed = 1_u64;
+        loop {
+            if seed > num_markets.into() {
+                break;
+            }
+
+            let adventurer_id = seed * 13;
+            let market_seed = seed * 7919;
+
+            let items = ImplMarket::get_available_items(adventurer_id, market_seed, market_size);
+
+            // Check if this market has exactly the requested size
+            if items.len() == market_size.into() {
+                markets_with_correct_size += 1;
+            }
+            if items.len() > 10 {
+                markets_above_10 += 1;
+            }
+
+            // Verify all items are valid (1-101)
+            let mut i = 0;
+            loop {
+                if i == items.len() {
+                    break;
+                }
+                let item = *items.at(i);
+                assert(item >= 1 && item <= NUM_ITEMS, 'item out of range');
+                i += 1;
+            };
+
+            seed += 1;
+        };
+
+        // A reasonable threshold would be at least 80% (80 out of 100)
+        assert!(markets_with_correct_size >= 80, "majority should have correct size");
+        assert!(markets_above_10 == 100, "All markets should be above 10");
     }
 }
