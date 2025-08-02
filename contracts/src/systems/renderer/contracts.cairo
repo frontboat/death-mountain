@@ -20,6 +20,41 @@ mod renderer_systems {
 
     use game_components_minigame::structs::GameDetail;
     use super::IRendererSystems;
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait, IMinigameDetails, IMinigameDetailsSVG};
+    use game_components_minigame::libs::require_owned_token;
+    use dojo::world::{WorldStorage, WorldStorageTrait};
+
+    #[abi(embed_v0)]
+    impl GameDetailsImpl of IMinigameDetails<ContractState> {
+        fn token_description(self: @ContractState, token_id: u64) -> ByteArray {
+            let mut world = self.world(@DEFAULT_NS());
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let token_address = minigame_dispatcher.token_address();
+            require_owned_token(token_address, token_id);
+            format!("Test Token Description for token {}", token_id)
+        }
+        fn game_details(self: @ContractState, token_id: u64) -> Span<GameDetail> {
+            let mut world = self.world(@DEFAULT_NS());
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let token_address = minigame_dispatcher.token_address();
+            require_owned_token(token_address, token_id);
+            self.generate_details(token_id.try_into().unwrap())
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl GameDetailsSVGImpl of IMinigameDetailsSVG<ContractState> {
+        fn game_details_svg(self: @ContractState, token_id: u64) -> ByteArray {
+            let mut world = self.world(@DEFAULT_NS());
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let token_address = minigame_dispatcher.token_address();
+            require_owned_token(token_address, token_id);
+            self.generate_svg(token_id.try_into().unwrap())
+        }
+    }
 
     #[abi(embed_v0)]
     impl RendererSystemsImpl of IRendererSystems<ContractState> {

@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
-    "address": "0x3fcff8ebdff3a82dfb72246cecbffabbd22ecfe47d34ad7cb809f982ffda206",
-    "seed": "pg-slot",
+    "address": "0x38f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d",
+    "seed": "pg-slot-10",
     "name": "Provable Games",
     "entrypoints": [
       "uuid",
@@ -1328,7 +1328,7 @@
   },
   "contracts": [
     {
-      "address": "0x3a038d7d5356206b49eb571301b01b714a96b8457e742ec9e1ba251fb14c61c",
+      "address": "0x6b780adc955bf5152d77712db58ca0ee0241183c9bf4d0dcf3b7e28b12a7bb0",
       "class_hash": "0x3cd7a83178ff9439e3901a32550ff866076974270c4377061e4c2747da7a11a",
       "abi": [
         {
@@ -2130,7 +2130,7 @@
       ]
     },
     {
-      "address": "0x31db65b212199fe18279b4b78d96ce44aa7eb98d505d8e3ab42cd4ef05492b3",
+      "address": "0x4b7bebdc0d2417c4a54274b4220e9ae96d697a69b04c1fb282af231759088d4",
       "class_hash": "0x7858ae933c1e86700460ea53f1b94ccf024040bb17e1093a17bb2b83a016867",
       "abi": [
         {
@@ -2836,7 +2836,7 @@
       ]
     },
     {
-      "address": "0x7d3267f41c36a5330c82deea71244b64d3541499873a4e76622853f6031c570",
+      "address": "0x5b283c0108fdaa842bd5543fc67f540cce022180311eca67139d4fb5d3780a5",
       "class_hash": "0xec64a7ecf09e11d6dacb87b30a1f84935f42faa44d9835180503ec95dbdf35",
       "abi": [
         {
@@ -3225,8 +3225,8 @@
       ]
     },
     {
-      "address": "0x4e2bd51c0389ee09bade9da864742fc36a0e1f3458e6cd381f75d799d09a620",
-      "class_hash": "0x632cecc3c4b68f08651f0187a9b16183d331ecab0b40b30e0adf23fbfc08a10",
+      "address": "0x4dc9a55b49fea275851b31df48af9fadcc6512b486f04a4034cfdc5afbea02f",
+      "class_hash": "0x2456c3c56620a8abf78601c3dd619f7c288ed1f795357a4fdcaf9f9d873f99c",
       "abi": [
         {
           "type": "impl",
@@ -3345,100 +3345,6 @@
               "outputs": [
                 {
                   "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
-          "type": "impl",
-          "name": "GameDetailsImpl",
-          "interface_name": "game_components_minigame::interface::IMinigameDetails"
-        },
-        {
-          "type": "struct",
-          "name": "game_components_minigame::structs::GameDetail",
-          "members": [
-            {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "value",
-              "type": "core::byte_array::ByteArray"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "core::array::Span::<game_components_minigame::structs::GameDetail>",
-          "members": [
-            {
-              "name": "snapshot",
-              "type": "@core::array::Array::<game_components_minigame::structs::GameDetail>"
-            }
-          ]
-        },
-        {
-          "type": "interface",
-          "name": "game_components_minigame::interface::IMinigameDetails",
-          "items": [
-            {
-              "type": "function",
-              "name": "token_description",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "game_details",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::array::Span::<game_components_minigame::structs::GameDetail>"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
-          "type": "impl",
-          "name": "GameDetailsSVGImpl",
-          "interface_name": "game_components_minigame::interface::IMinigameDetailsSVG"
-        },
-        {
-          "type": "interface",
-          "name": "game_components_minigame::interface::IMinigameDetailsSVG",
-          "items": [
-            {
-              "type": "function",
-              "name": "game_details_svg",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
                 }
               ],
               "state_mutability": "view"
@@ -4157,7 +4063,7 @@
       ],
       "init_calldata": [
         "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-        "0x01577ca1fb06c82066c78ff9088fe3d5ef639a7658bfe7edffec76df03afeedb"
+        "0x004311c2b0845051fc5c703ec1792a36f99272e3400953632d62b3dac68f8598"
       ],
       "tag": "ls_0_0_3-game_token_systems",
       "selector": "0x4cc8e289ab4f6b9bdea32ac2b3428c84c3ae431519428363cc12341b1e4a188",
@@ -4177,7 +4083,7 @@
       ]
     },
     {
-      "address": "0x49c62192cdc74018a310fefb04f39b5200e5bb476892902ecec23c2f817c176",
+      "address": "0x217b739b2ddf3c485b4ba83761c0be73eb8ce13ee689c72685501939aadd27c",
       "class_hash": "0x23cdb494302994de197966707c72df5708f2516f5205ed398dacb4c16fc4bcc",
       "abi": [
         {
@@ -4684,8 +4590,8 @@
       ]
     },
     {
-      "address": "0x35f02eac8f762749b7cfd433fe421acca994705d35ef3b0341a1deabea9c322",
-      "class_hash": "0x6316f94c1c7e7372e59ab541aff2820bea90276f6210ae4651cc2192996ed17",
+      "address": "0x4528a0b81efeb6b5badedb2f00713d5dc883918183c5797ae3b88650d8105e7",
+      "class_hash": "0x2706de1bd3ecbd81bea176d7215c9161393e2f0ea2db2319651d3a3a1b2522",
       "abi": [
         {
           "type": "impl",
@@ -4739,8 +4645,8 @@
         },
         {
           "type": "impl",
-          "name": "RendererSystemsImpl",
-          "interface_name": "death_mountain::systems::renderer::contracts::IRendererSystems"
+          "name": "GameDetailsImpl",
+          "interface_name": "game_components_minigame::interface::IMinigameDetails"
         },
         {
           "type": "struct",
@@ -4765,6 +4671,76 @@
               "type": "@core::array::Array::<game_components_minigame::structs::GameDetail>"
             }
           ]
+        },
+        {
+          "type": "interface",
+          "name": "game_components_minigame::interface::IMinigameDetails",
+          "items": [
+            {
+              "type": "function",
+              "name": "token_description",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "game_details",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Span::<game_components_minigame::structs::GameDetail>"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "GameDetailsSVGImpl",
+          "interface_name": "game_components_minigame::interface::IMinigameDetailsSVG"
+        },
+        {
+          "type": "interface",
+          "name": "game_components_minigame::interface::IMinigameDetailsSVG",
+          "items": [
+            {
+              "type": "function",
+              "name": "game_details_svg",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "RendererSystemsImpl",
+          "interface_name": "death_mountain::systems::renderer::contracts::IRendererSystems"
         },
         {
           "type": "interface",
@@ -4943,7 +4919,7 @@
       ]
     },
     {
-      "address": "0x4cb09f45d5c087d8b16e4f0bea92df0a5e33155e3f52aabd7fa8b4676734d21",
+      "address": "0x60c1e9d21c5c056e9f1e2dfafff1e9d6bf62ae6c4b34176534334a1650645d1",
       "class_hash": "0x4c76ddc85c17af3195c9e385e8360fe07c79dd4530ffc49fec4df9b469a2968",
       "abi": [
         {
