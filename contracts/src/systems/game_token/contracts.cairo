@@ -34,10 +34,9 @@ mod game_token_systems {
     use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives};
     use game_components_minigame::extensions::objectives::objectives::ObjectivesComponent;
     use game_components_minigame::extensions::objectives::structs::{GameObjective};
-    use game_components_minigame::interface::{IMinigameDetails, IMinigameTokenData};
+    use game_components_minigame::interface::IMinigameTokenData;
 
     use game_components_minigame::minigame::MinigameComponent;
-    use game_components_minigame::structs::{GameDetail};
 
     use openzeppelin_introspection::src5::SRC5Component;
     use starknet::ContractAddress;
@@ -85,6 +84,7 @@ mod game_token_systems {
     fn dojo_init(ref self: ContractState, creator_address: ContractAddress, denshokan_address: ContractAddress) {
         let mut world: WorldStorage = self.world(@DEFAULT_NS());
         let (settings_systems_address, _) = world.dns(@"settings_systems").unwrap();
+        let (renderer_address, _) = world.dns(@"renderer_systems").unwrap();
 
         self
             .minigame
@@ -98,7 +98,7 @@ mod game_token_systems {
                 "https://deathmountain.gg/favicon-32x32.png",
                 Option::None, // color
                 Option::None, // client_url
-                Option::None, // renderer address
+                Option::Some(renderer_address), // renderer address
                 Option::Some(settings_systems_address), // settings_address
                 Option::None, // objectives_address
                 denshokan_address,
@@ -147,16 +147,6 @@ mod game_token_systems {
             let game_libs = ImplGameLibs::new(self.world(@DEFAULT_NS()));
             let adventurer = game_libs.adventurer.get_adventurer(token_id);
             adventurer.health == 0
-        }
-    }
-
-    #[abi(embed_v0)]
-    impl GameDetailsImpl of IMinigameDetails<ContractState> {
-        fn token_description(self: @ContractState, token_id: u64) -> ByteArray {
-            format!("Test Token Description for token {}", token_id)
-        }
-        fn game_details(self: @ContractState, token_id: u64) -> Span<GameDetail> {
-            array![GameDetail { name: "Test Game Detail", value: format!("Test Value for token {}", token_id) }].span()
         }
     }
 
