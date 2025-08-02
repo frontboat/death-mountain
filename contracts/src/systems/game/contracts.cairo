@@ -81,7 +81,7 @@ mod game_systems {
             adventurer_id,
             action_count,
             GameEventDetails::market_items(
-                MarketItemsEvent { items: game_libs.adventurer.get_market(market_seed).span() },
+                MarketItemsEvent { items: game_libs.adventurer.get_market(adventurer_id, market_seed).span() },
             ),
         );
     }
@@ -479,7 +479,7 @@ mod game_systems {
             // if the player is buying items, process purchases
             let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
             if (items.len() != 0) {
-                _buy_items(adventurer_entropy.market_seed, ref adventurer, ref bag, items.clone(), game_libs);
+                _buy_items(adventurer_id, adventurer_entropy.market_seed, ref adventurer, ref bag, items.clone(), game_libs);
             }
 
             // if the player is buying potions as part of the upgrade, process purchase
@@ -1395,6 +1395,7 @@ mod game_systems {
     }
 
     fn _buy_items(
+        adventurer_id: u64,
         market_seed: u64,
         ref adventurer: Adventurer,
         ref bag: Bag,
@@ -1402,7 +1403,7 @@ mod game_systems {
         game_libs: GameLibs,
     ) {
         // get adventurer entropy
-        let market_inventory = game_libs.adventurer.get_market(market_seed);
+        let market_inventory = game_libs.adventurer.get_market(adventurer_id, market_seed);
 
         // mutable array for returning items that need to be equipped as part of this purchase
         let mut items_to_equip = ArrayTrait::<u8>::new();
@@ -1888,7 +1889,7 @@ mod tests {
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
         // get valid item from market
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
         let item_id = *market_items.at(0);
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
 
@@ -1915,7 +1916,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
 
         // get first item on the market
         let item_id = *market_items.at(3);
@@ -1944,7 +1945,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
 
         // try to buy same item but equip one and put one in bag
         let item_id = *market_items.at(0);
@@ -1994,7 +1995,7 @@ mod tests {
         game.select_stat_upgrades(adventurer_id, stat_upgrades);
 
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
 
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
         shopping_cart.append(ItemPurchase { item_id: *market_items.at(0), equip: false });
@@ -2021,7 +2022,7 @@ mod tests {
         game.select_stat_upgrades(adventurer_id, stat_upgrades);
 
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
 
         let mut purchased_weapon: u8 = 0;
         let mut purchased_chest: u8 = 0;
@@ -2155,7 +2156,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
 
         let mut purchased_weapon: u8 = 0;
         let mut purchased_chest: u8 = 0;
@@ -2404,7 +2405,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
 
         // get first item on the market
         let purchased_item_id = *market_items.at(0);
@@ -2507,7 +2508,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
 
         // buy two items
         let mut items_to_purchase = ArrayTrait::<ItemPurchase>::new();
