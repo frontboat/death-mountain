@@ -48,22 +48,22 @@ pub impl ImplMarket of IMarket {
         let hash_u256: u256 = hash.into();
         let mut remaining = hash_u256;
         let mut passes: u8 = 0_u8;
-    
+
         while passes < 31_u8 && results.len() < market_size.into() {
             // Low byte
             let byte_u256 = remaining % 256_u256;
             let byte: u8 = byte_u256.try_into().unwrap();
-            
+
             // Prepare for the next pass
-            remaining = remaining / 256_u256;  // right-shift by 8 via division
+            remaining = remaining / 256_u256; // right-shift by 8 via division
             passes += 1_u8;
-    
+
             // Rejection sampling gives perfectly uniform 1-101
             if byte < 202_u8 {
                 results.append((byte % 101_u8) + 1_u8);
             }
         };
-    
+
         results
     }
 
@@ -210,12 +210,12 @@ mod tests {
         let adventurer_id = 42;
         let seed = 98765;
         let market_size = 15;
-        
+
         let items1 = ImplMarket::get_available_items(adventurer_id, seed, market_size);
         let items2 = ImplMarket::get_available_items(adventurer_id, seed, market_size);
-        
+
         assert(items1.len() == items2.len(), 'lengths should match');
-        
+
         let mut i = 0;
         loop {
             if i == items1.len() {
@@ -233,10 +233,10 @@ mod tests {
         let seed1 = 11111;
         let seed2 = 22222;
         let market_size = 20;
-        
+
         let items1 = ImplMarket::get_available_items(adventurer_id, seed1, market_size);
         let items2 = ImplMarket::get_available_items(adventurer_id, seed2, market_size);
-        
+
         // Count differences
         let mut differences = 0;
         let mut i = 0;
@@ -249,7 +249,7 @@ mod tests {
             }
             i += 1;
         };
-        
+
         assert(differences != 0, 'should have differences');
     }
 
@@ -261,15 +261,15 @@ mod tests {
         let mut total_items_generated = 0_u32;
         let mut seed = 1_u64;
         let max_seeds = 100_u64;
-        
+
         loop {
             if seed > max_seeds {
                 break;
             }
-            
+
             // Generate market with maximum size to increase chances of seeing all items
             let items = ImplMarket::get_available_items(seed, seed * 7919, 31);
-            
+
             let mut j = 0;
             loop {
                 if j == items.len() {
@@ -277,26 +277,26 @@ mod tests {
                 }
                 let item_id = *items.at(j);
                 assert!(item_id >= 1 && item_id <= NUM_ITEMS, "valid item id");
-                
+
                 all_items.append(item_id);
                 total_items_generated += 1;
-                
+
                 j += 1;
             };
-            
+
             seed += 1;
         };
-        
+
         // Convert array to span for iteration
         let items_span = all_items.span();
-        
+
         // Check that each item ID from 1 to 101 exists in the array
         let mut item_id = 1_u8;
         loop {
             if item_id > NUM_ITEMS {
                 break;
             }
-            
+
             let mut found = false;
             let mut i = 0;
             loop {
@@ -309,7 +309,7 @@ mod tests {
                 }
                 i += 1;
             };
-            
+
             assert!(found, "should see all item IDs");
             item_id += 1;
         };
@@ -317,26 +317,26 @@ mod tests {
 
     #[test]
     #[available_gas(30000000000)]
-    fn test_uniform_distribution() {       
+    fn test_uniform_distribution() {
         let market_size = 21_u8;
-        
+
         let mut total_items_generated = 0_u32;
-        
+
         // Count items in different ranges
-        let mut low_range_count = 0_u32;   // 1-25
-        let mut mid_range_count = 0_u32;   // 26-75
-        let mut high_range_count = 0_u32;  // 76-101
-        
+        let mut low_range_count = 0_u32; // 1-25
+        let mut mid_range_count = 0_u32; // 26-75
+        let mut high_range_count = 0_u32; // 76-101
+
         let mut seed = 1_u32;
         let statistical_trials = 1000_u32;
-        
+
         loop {
             if seed > statistical_trials {
                 break;
             }
-            
+
             let items = ImplMarket::get_available_items(seed.into(), (seed * 17).into(), market_size);
-            
+
             let mut j = 0;
             loop {
                 if j == items.len() {
@@ -344,7 +344,7 @@ mod tests {
                 }
                 let item_id = *items.at(j);
                 total_items_generated += 1;
-                
+
                 // Count by range
                 if item_id <= 25 {
                     low_range_count += 1;
@@ -353,24 +353,24 @@ mod tests {
                 } else {
                     high_range_count += 1;
                 }
-                
+
                 j += 1;
             };
-            
+
             seed += 1;
         };
-        
+
         // Check distribution across ranges
         // Expected: low=25%, mid=50%, high=25% (approximately)
-        let expected_low = total_items_generated / 4;  // 25%
-        let expected_mid = total_items_generated / 2;  // 50%
+        let expected_low = total_items_generated / 4; // 25%
+        let expected_mid = total_items_generated / 2; // 50%
         let expected_high = total_items_generated / 4; // 25%
-        
+
         // Allow 5% deviation
         let tolerance_low = expected_low * 5 / 100;
         let tolerance_mid = expected_mid * 5 / 100;
         let tolerance_high = expected_high * 5 / 100;
-        
+
         // Verify ranges are within tolerance
         assert(low_range_count >= expected_low - tolerance_low, 'low range too few');
         assert(low_range_count <= expected_low + tolerance_low, 'low range too many');
@@ -378,7 +378,7 @@ mod tests {
         assert(mid_range_count <= expected_mid + tolerance_mid, 'mid range too many');
         assert(high_range_count >= expected_high - tolerance_high, 'high range too few');
         assert(high_range_count <= expected_high + tolerance_high, 'high range too many');
-        
+
         // Verify total adds up
         assert(low_range_count + mid_range_count + high_range_count == total_items_generated, 'counts dont add up');
     }
@@ -391,18 +391,18 @@ mod tests {
         let num_markets = 100_u32;
         let mut markets_with_correct_size = 0_u32;
         let mut markets_above_10 = 0_u32;
-        
+
         let mut seed = 1_u64;
         loop {
             if seed > num_markets.into() {
                 break;
             }
-            
+
             let adventurer_id = seed * 13;
             let market_seed = seed * 7919;
-            
+
             let items = ImplMarket::get_available_items(adventurer_id, market_seed, market_size);
-            
+
             // Check if this market has exactly the requested size
             if items.len() == market_size.into() {
                 markets_with_correct_size += 1;
@@ -410,7 +410,7 @@ mod tests {
             if items.len() > 10 {
                 markets_above_10 += 1;
             }
-            
+
             // Verify all items are valid (1-101)
             let mut i = 0;
             loop {
@@ -421,10 +421,10 @@ mod tests {
                 assert(item >= 1 && item <= NUM_ITEMS, 'item out of range');
                 i += 1;
             };
-            
+
             seed += 1;
         };
-        
+
         // A reasonable threshold would be at least 80% (80 out of 100)
         assert!(markets_with_correct_size >= 80, "majority should have correct size");
         assert!(markets_above_10 == 100, "All markets should be above 10");

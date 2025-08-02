@@ -479,7 +479,9 @@ mod game_systems {
             // if the player is buying items, process purchases
             let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
             if (items.len() != 0) {
-                _buy_items(adventurer_id, adventurer_entropy.market_seed, ref adventurer, ref bag, items.clone(), game_libs);
+                _buy_items(
+                    adventurer_id, adventurer_entropy.market_seed, ref adventurer, ref bag, items.clone(), game_libs,
+                );
             }
 
             // if the player is buying potions as part of the upgrade, process purchase
