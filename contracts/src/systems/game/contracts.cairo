@@ -27,7 +27,7 @@ mod game_systems {
         POTION_HEALTH_AMOUNT, STARTING_HEALTH, XP_FOR_DISCOVERIES,
     };
     use death_mountain::constants::beast::BeastSettings::BEAST_SPECIAL_NAME_LEVEL_UNLOCK;
-    use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
     use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
     use death_mountain::constants::game::{MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID, STARTER_BEAST_ATTACK_DAMAGE, messages};
     use death_mountain::constants::loot::SUFFIX_UNLOCK_GREATNESS;

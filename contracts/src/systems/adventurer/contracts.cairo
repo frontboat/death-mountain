@@ -104,11 +104,11 @@ mod adventurer_systems {
             let adventurer = _load_adventurer(world_storage, adventurer_id);
             let bag: Bag = _load_bag(world_storage, adventurer_id);
             let name: ByteArray = _get_adventurer_name(world_storage, adventurer_id);
-            
+
             // proceed to create the verbose adventurer
             let equipment_verbose: EquipmentVerbose = adventurer.equipment.into();
             let bag_verbose: BagVerbose = bag.into();
-            
+
             AdventurerVerbose {
                 name,
                 health: adventurer.health,
@@ -124,7 +124,7 @@ mod adventurer_systems {
                 bag: bag_verbose,
             }
         }
-        
+
         fn get_adventurer_dungeon(self: @ContractState, adventurer_id: u64) -> ContractAddress {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();

@@ -17,12 +17,14 @@ mod renderer_systems {
     use death_mountain::models::adventurer::bag::Bag;
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::utils::renderer::renderer_utils::{create_metadata, generate_details, generate_svg};
+    use dojo::world::{WorldStorageTrait};
+    use game_components_minigame::interface::{
+        IMinigameDetails, IMinigameDetailsSVG, IMinigameDispatcher, IMinigameDispatcherTrait,
+    };
+    use game_components_minigame::libs::require_owned_token;
 
     use game_components_minigame::structs::GameDetail;
     use super::IRendererSystems;
-    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait, IMinigameDetails, IMinigameDetailsSVG};
-    use game_components_minigame::libs::require_owned_token;
-    use dojo::world::{WorldStorage, WorldStorageTrait};
 
     #[abi(embed_v0)]
     impl GameDetailsImpl of IMinigameDetails<ContractState> {
