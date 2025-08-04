@@ -109,7 +109,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   setBag: (data: Item[]) => set({ bag: data }),
   setBeast: (data: Beast | null) => set({ beast: data }),
   setShowBeastRewards: (data: boolean) => set({ showBeastRewards: data }),
-  setMarketItemIds: (data: number[]) => set({ marketItemIds: data }),
+  setMarketItemIds: (data: number[]) => set({ marketItemIds: Array.from(new Set(data)) }),
   setNewMarket: (data: boolean) => set({ newMarket: data }),
   setMetadata: (data: Metadata | null) => set({ metadata: data }),
   setNewInventoryItems: (data: number[]) => set({ newInventoryItems: data }),

@@ -117,7 +117,7 @@ mod game_token_systems {
                     game_seed_until_xp: 0,
                     in_battle: false,
                     stats_mode: StatsMode::Dodge,
-                    base_damage_reduction: 0,
+                    base_damage_reduction: 50,
                 },
             );
 
