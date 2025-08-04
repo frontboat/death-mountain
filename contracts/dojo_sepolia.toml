@@ -1,28 +1,26 @@
 [world]
 name = "Provable Games"
 description = "DNC"
-seed = "test_ls_0_4"
+seed = "test_ls_0_6"
 
 [env]
 rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
-account_address = "0x073a31c57e4245814761046D11cDaE819422E335D25240946030717112b1f3dA"
-private_key = "0x014d12b9315d0d5197c26b6734faed6a06e3d59f4e893526f91880a8ff7ea797"
-# world_address = "0x3fcff8ebdff3a82dfb72246cecbffabbd22ecfe47d34ad7cb809f982ffda206"
+world_address = "0x38f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d"
 
 [namespace]
-default = "ls_0_0_1"
+default = "ls_0_0_3"
 
 [writers]
-"ls_0_0_1" = [
-    "ls_0_0_1-game_systems", 
-    "ls_0_0_1-game_token_systems", 
-    "ls_0_0_1-settings_systems",
-    "ls_0_0_1-beast_systems",
-    "ls_0_0_1-adventurer_systems"
+"ls_0_0_3" = [
+    "ls_0_0_3-game_systems", 
+    "ls_0_0_3-game_token_systems", 
+    "ls_0_0_3-settings_systems",
+    "ls_0_0_3-beast_systems",
+    "ls_0_0_3-adventurer_systems"
 ]
 
 [init_call_args]
-"ls_0_0_1-game_token_systems" = [
-    "0x073a31c57e4245814761046D11cDaE819422E335D25240946030717112b1f3dA",
-    "0x0466f3c79b045ade0bd19a4dc2835c1cf9af7bea0166a6c1df9e9ad73dbf4cb6" # denshokan_address
+"ls_0_0_3-game_token_systems" = [
+    "0x065d2AB17338b5AffdEbAF95E2D79834B5f30Bac596fF55563c62C3c98700150",
+    "0x01fd7f186c0bb99f8d128f1eb40dbe3c7657df381957417f8c9a40804c005545" # denshokan_address
 ]
