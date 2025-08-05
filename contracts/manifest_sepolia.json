@@ -1,8 +1,8 @@
 {
   "world": {
-    "class_hash": "0x4c60dc46a8ca8bb47675b7b914053cef769afbf0e340523187336b72bd71d1f",
-    "address": "0x5246cbbe2bef7fd190adbf05e47bee876ab2ab0e272c3346e0e760cd26adaa7",
-    "seed": "test_ls_0_4",
+    "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
+    "address": "0x38f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d",
+    "seed": "test_ls_0_6",
     "name": "Provable Games",
     "entrypoints": [
       "uuid",
@@ -1328,8 +1328,8 @@
   },
   "contracts": [
     {
-      "address": "0x36a767f7e7f4be4598b81cb61b67b9545e49edd8f4fcb572096ed4b9d0450d3",
-      "class_hash": "0x113d778b7dd3c32f2f6d45ac0dc2c79ed39b29656eef91b92696f27fd3a6b8c",
+      "address": "0x6492209fe1a4e397c335fd7b9d6a6f2e5beae22e14443134c1aa4eb755f3fce",
+      "class_hash": "0x669e762330ce8a0f987d2297bdab88c2840bf4b518e41ea1afed834402125b5",
       "abi": [
         {
           "type": "impl",
@@ -1384,11 +1384,25 @@
         {
           "type": "impl",
           "name": "AdventurerSystemsImpl",
-          "interface_name": "lootsurvivor::systems::adventurer::contracts::IAdventurerSystems"
+          "interface_name": "death_mountain::systems::adventurer::contracts::IAdventurerSystems"
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::stats::Stats",
+          "name": "death_mountain::models::adventurer::item::Item",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::stats::Stats",
           "members": [
             {
               "name": "strength",
@@ -1422,59 +1436,45 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::item::Item",
-          "members": [
-            {
-              "name": "id",
-              "type": "core::integer::u8"
-            },
-            {
-              "name": "xp",
-              "type": "core::integer::u16"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "lootsurvivor::models::adventurer::equipment::Equipment",
+          "name": "death_mountain::models::adventurer::equipment::Equipment",
           "members": [
             {
               "name": "weapon",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "chest",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "head",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "waist",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "foot",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "hand",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "neck",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "ring",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             }
           ]
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::adventurer::Adventurer",
+          "name": "death_mountain::models::adventurer::adventurer::Adventurer",
           "members": [
             {
               "name": "health",
@@ -1498,11 +1498,11 @@
             },
             {
               "name": "stats",
-              "type": "lootsurvivor::models::adventurer::stats::Stats"
+              "type": "death_mountain::models::adventurer::stats::Stats"
             },
             {
               "name": "equipment",
-              "type": "lootsurvivor::models::adventurer::equipment::Equipment"
+              "type": "death_mountain::models::adventurer::equipment::Equipment"
             },
             {
               "name": "item_specials_seed",
@@ -1530,67 +1530,67 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::bag::Bag",
+          "name": "death_mountain::models::adventurer::bag::Bag",
           "members": [
             {
               "name": "item_1",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_2",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_3",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_4",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_5",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_6",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_7",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_8",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_9",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_10",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_11",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_12",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_13",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_14",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_15",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "mutated",
@@ -1600,7 +1600,329 @@
         },
         {
           "type": "enum",
-          "name": "lootsurvivor::constants::discovery::DiscoveryEnums::DiscoveryType",
+          "name": "death_mountain::constants::combat::CombatEnums::Tier",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "T1",
+              "type": "()"
+            },
+            {
+              "name": "T2",
+              "type": "()"
+            },
+            {
+              "name": "T3",
+              "type": "()"
+            },
+            {
+              "name": "T4",
+              "type": "()"
+            },
+            {
+              "name": "T5",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Type",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "Magic_or_Cloth",
+              "type": "()"
+            },
+            {
+              "name": "Blade_or_Hide",
+              "type": "()"
+            },
+            {
+              "name": "Bludgeon_or_Metal",
+              "type": "()"
+            },
+            {
+              "name": "Necklace",
+              "type": "()"
+            },
+            {
+              "name": "Ring",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Slot",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "Weapon",
+              "type": "()"
+            },
+            {
+              "name": "Chest",
+              "type": "()"
+            },
+            {
+              "name": "Head",
+              "type": "()"
+            },
+            {
+              "name": "Waist",
+              "type": "()"
+            },
+            {
+              "name": "Foot",
+              "type": "()"
+            },
+            {
+              "name": "Hand",
+              "type": "()"
+            },
+            {
+              "name": "Neck",
+              "type": "()"
+            },
+            {
+              "name": "Ring",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::item::ItemVerbose",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::felt252"
+            },
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "tier",
+              "type": "death_mountain::constants::combat::CombatEnums::Tier"
+            },
+            {
+              "name": "item_type",
+              "type": "death_mountain::constants::combat::CombatEnums::Type"
+            },
+            {
+              "name": "slot",
+              "type": "death_mountain::constants::combat::CombatEnums::Slot"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::equipment::EquipmentVerbose",
+          "members": [
+            {
+              "name": "weapon",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "chest",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "head",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "waist",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "foot",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "hand",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "neck",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "ring",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::bag::BagVerbose",
+          "members": [
+            {
+              "name": "item_1",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_2",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_3",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_4",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_5",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_6",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_7",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_8",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_9",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_10",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_11",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_12",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_13",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_14",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_15",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::adventurer::AdventurerVerbose",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "level",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "gold",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "beast_health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "stat_upgrades_available",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "stats",
+              "type": "death_mountain::models::adventurer::stats::Stats"
+            },
+            {
+              "name": "equipment",
+              "type": "death_mountain::models::adventurer::equipment::EquipmentVerbose"
+            },
+            {
+              "name": "item_specials_seed",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "action_count",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "bag",
+              "type": "death_mountain::models::adventurer::bag::BagVerbose"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::models::game_data::DataResult::<core::integer::u8>",
+          "variants": [
+            {
+              "name": "Ok",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "Err",
+              "type": "core::felt252"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game::AdventurerEntropy",
+          "members": [
+            {
+              "name": "adventurer_id",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "market_seed",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "beast_seed",
+              "type": "core::integer::u64"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType",
           "variants": [
             {
               "name": "Gold",
@@ -1618,8 +1940,24 @@
         },
         {
           "type": "interface",
-          "name": "lootsurvivor::systems::adventurer::contracts::IAdventurerSystems",
+          "name": "death_mountain::systems::adventurer::contracts::IAdventurerSystems",
           "items": [
+            {
+              "type": "function",
+              "name": "record_item_drop",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "item",
+                  "type": "death_mountain::models::adventurer::item::Item"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
             {
               "type": "function",
               "name": "generate_starting_stats",
@@ -1631,7 +1969,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::adventurer::stats::Stats"
+                  "type": "death_mountain::models::adventurer::stats::Stats"
                 }
               ],
               "state_mutability": "view"
@@ -1647,7 +1985,7 @@
               ],
               "outputs": [
                 {
-                  "type": "(lootsurvivor::models::adventurer::adventurer::Adventurer, lootsurvivor::models::adventurer::bag::Bag)"
+                  "type": "(death_mountain::models::adventurer::adventurer::Adventurer, death_mountain::models::adventurer::bag::Bag)"
                 }
               ],
               "state_mutability": "view"
@@ -1663,7 +2001,59 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::adventurer::adventurer::Adventurer"
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_verbose",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::adventurer::AdventurerVerbose"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_level",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::DataResult::<core::integer::u8>"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_entropy",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game::AdventurerEntropy"
                 }
               ],
               "state_mutability": "view"
@@ -1679,7 +2069,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 }
               ],
               "state_mutability": "view"
@@ -1695,7 +2085,7 @@
               ],
               "outputs": [
                 {
-                  "type": "core::felt252"
+                  "type": "core::byte_array::ByteArray"
                 }
               ],
               "state_mutability": "view"
@@ -1706,16 +2096,16 @@
               "inputs": [
                 {
                   "name": "adventurer",
-                  "type": "lootsurvivor::models::adventurer::adventurer::Adventurer"
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
                 },
                 {
                   "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 }
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::adventurer::adventurer::Adventurer"
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
                 }
               ],
               "state_mutability": "view"
@@ -1726,7 +2116,7 @@
               "inputs": [
                 {
                   "name": "adventurer",
-                  "type": "lootsurvivor::models::adventurer::adventurer::Adventurer"
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
                 }
               ],
               "outputs": [
@@ -1759,7 +2149,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::constants::discovery::DiscoveryEnums::DiscoveryType"
+                  "type": "death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType"
                 }
               ],
               "state_mutability": "view"
@@ -1770,7 +2160,7 @@
               "inputs": [
                 {
                   "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 }
               ],
               "outputs": [
@@ -1782,40 +2172,20 @@
             },
             {
               "type": "function",
-              "name": "get_bag_item",
-              "inputs": [
-                {
-                  "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
-                },
-                {
-                  "name": "item_id",
-                  "type": "core::integer::u8"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "lootsurvivor::models::adventurer::item::Item"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
               "name": "add_item_to_bag",
               "inputs": [
                 {
                   "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 },
                 {
                   "name": "item",
-                  "type": "lootsurvivor::models::adventurer::item::Item"
+                  "type": "death_mountain::models::adventurer::item::Item"
                 }
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 }
               ],
               "state_mutability": "view"
@@ -1826,7 +2196,7 @@
               "inputs": [
                 {
                   "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 },
                 {
                   "name": "item_id",
@@ -1835,7 +2205,7 @@
               ],
               "outputs": [
                 {
-                  "type": "(lootsurvivor::models::adventurer::bag::Bag, lootsurvivor::models::adventurer::item::Item)"
+                  "type": "(death_mountain::models::adventurer::bag::Bag, death_mountain::models::adventurer::item::Item)"
                 }
               ],
               "state_mutability": "view"
@@ -1846,7 +2216,7 @@
               "inputs": [
                 {
                   "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 },
                 {
                   "name": "item_id",
@@ -1855,23 +2225,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "is_bag_full",
-              "inputs": [
-                {
-                  "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 }
               ],
               "state_mutability": "view"
@@ -1882,7 +2236,7 @@
               "inputs": [
                 {
                   "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 },
                 {
                   "name": "item_id",
@@ -1891,7 +2245,7 @@
               ],
               "outputs": [
                 {
-                  "type": "(core::bool, lootsurvivor::models::adventurer::item::Item)"
+                  "type": "(core::bool, death_mountain::models::adventurer::item::Item)"
                 }
               ],
               "state_mutability": "view"
@@ -2057,7 +2411,7 @@
         },
         {
           "type": "event",
-          "name": "lootsurvivor::systems::adventurer::contracts::adventurer_systems::Event",
+          "name": "death_mountain::systems::adventurer::contracts::adventurer_systems::Event",
           "kind": "enum",
           "variants": [
             {
@@ -2074,15 +2428,16 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_1-adventurer_systems",
-      "selector": "0x32e206b848fbf2b2f37f0e6722d601a13e51ffc7df5a0aceb677507f8bd43c5",
+      "tag": "ls_0_0_3-adventurer_systems",
+      "selector": "0x1ca95f88072b2ffb7b4025757a14219e7fe8424918ae3bbb0515f980385054b",
       "systems": [
+        "record_item_drop",
         "upgrade"
       ]
     },
     {
-      "address": "0x68a1fa290d8dd5c054ab523cf9db412f6a3e105e3614ecdd332a28e60c5a6ef",
-      "class_hash": "0x583f95cd3dac90f31e127a4f57693254f4fa62a0a88b2487d607b60ad848f1b",
+      "address": "0x4b7bebdc0d2417c4a54274b4220e9ae96d697a69b04c1fb282af231759088d4",
+      "class_hash": "0x7858ae933c1e86700460ea53f1b94ccf024040bb17e1093a17bb2b83a016867",
       "abi": [
         {
           "type": "impl",
@@ -2137,11 +2492,125 @@
         {
           "type": "impl",
           "name": "BeastSystemsImpl",
-          "interface_name": "lootsurvivor::systems::beast::contracts::IBeastSystems"
+          "interface_name": "death_mountain::systems::beast::contracts::IBeastSystems"
         },
         {
           "type": "enum",
-          "name": "lootsurvivor::constants::combat::CombatEnums::Type",
+          "name": "death_mountain::models::game_data::DataResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>",
+          "variants": [
+            {
+              "name": "Ok",
+              "type": "(core::integer::u64, core::integer::u16, core::integer::u16)"
+            },
+            {
+              "name": "Err",
+              "type": "core::felt252"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game_data::CollectableEntity",
+          "members": [
+            {
+              "name": "dungeon",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "entity_hash",
+              "type": "core::felt252"
+            },
+            {
+              "name": "index",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "seed",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "level",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "prefix",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "suffix",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "killed_by",
+              "type": "core::integer::u64"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game_data::EntityStats",
+          "members": [
+            {
+              "name": "dungeon",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "entity_hash",
+              "type": "core::felt252"
+            },
+            {
+              "name": "adventurers_killed",
+              "type": "core::integer::u64"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game_data::AdventurerKilled",
+          "members": [
+            {
+              "name": "dungeon",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "entity_hash",
+              "type": "core::felt252"
+            },
+            {
+              "name": "kill_index",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "adventurer_id",
+              "type": "core::integer::u64"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Type",
           "variants": [
             {
               "name": "None",
@@ -2171,7 +2640,7 @@
         },
         {
           "type": "enum",
-          "name": "lootsurvivor::constants::combat::CombatEnums::Tier",
+          "name": "death_mountain::constants::combat::CombatEnums::Tier",
           "variants": [
             {
               "name": "None",
@@ -2201,7 +2670,7 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::combat::SpecialPowers",
+          "name": "death_mountain::models::combat::SpecialPowers",
           "members": [
             {
               "name": "special1",
@@ -2219,15 +2688,15 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::combat::CombatSpec",
+          "name": "death_mountain::models::combat::CombatSpec",
           "members": [
             {
               "name": "tier",
-              "type": "lootsurvivor::constants::combat::CombatEnums::Tier"
+              "type": "death_mountain::constants::combat::CombatEnums::Tier"
             },
             {
               "name": "item_type",
-              "type": "lootsurvivor::constants::combat::CombatEnums::Type"
+              "type": "death_mountain::constants::combat::CombatEnums::Type"
             },
             {
               "name": "level",
@@ -2235,13 +2704,13 @@
             },
             {
               "name": "specials",
-              "type": "lootsurvivor::models::combat::SpecialPowers"
+              "type": "death_mountain::models::combat::SpecialPowers"
             }
           ]
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::beast::Beast",
+          "name": "death_mountain::models::beast::Beast",
           "members": [
             {
               "name": "id",
@@ -2253,40 +2722,254 @@
             },
             {
               "name": "combat_spec",
-              "type": "lootsurvivor::models::combat::CombatSpec"
-            }
-          ]
-        },
-        {
-          "type": "enum",
-          "name": "core::bool",
-          "variants": [
-            {
-              "name": "False",
-              "type": "()"
-            },
-            {
-              "name": "True",
-              "type": "()"
+              "type": "death_mountain::models::combat::CombatSpec"
             }
           ]
         },
         {
           "type": "interface",
-          "name": "lootsurvivor::systems::beast::contracts::IBeastSystems",
+          "name": "death_mountain::systems::beast::contracts::IBeastSystems",
           "items": [
+            {
+              "type": "function",
+              "name": "add_collectable",
+              "inputs": [
+                {
+                  "name": "seed",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "entity_id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "level",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "health",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "prefix",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "suffix",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "add_kill",
+              "inputs": [
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "premint_collectable",
+              "inputs": [
+                {
+                  "name": "seed",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "entity_id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "prefix",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "suffix",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "level",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "health",
+                  "type": "core::integer::u16"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u64"
+                }
+              ],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "get_valid_collectable",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::DataResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_collectable",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "index",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::CollectableEntity"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_collectable_count",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u64"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "is_beast_collectable",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "beast_id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "prefix",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "suffix",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_entity_stats",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::EntityStats"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_killed",
+              "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "entity_hash",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "kill_index",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game_data::AdventurerKilled"
+                }
+              ],
+              "state_mutability": "view"
+            },
             {
               "type": "function",
               "name": "get_starter_beast",
               "inputs": [
                 {
                   "name": "starter_weapon_type",
-                  "type": "lootsurvivor::constants::combat::CombatEnums::Type"
+                  "type": "death_mountain::constants::combat::CombatEnums::Type"
                 }
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::beast::Beast"
+                  "type": "death_mountain::models::beast::Beast"
                 }
               ],
               "state_mutability": "view"
@@ -2301,7 +2984,7 @@
                 },
                 {
                   "name": "weapon_type",
-                  "type": "lootsurvivor::constants::combat::CombatEnums::Type"
+                  "type": "death_mountain::constants::combat::CombatEnums::Type"
                 },
                 {
                   "name": "seed",
@@ -2326,51 +3009,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::beast::Beast"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "get_critical_hit_chance",
-              "inputs": [
-                {
-                  "name": "adventurer_level",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "is_ambush",
-                  "type": "core::bool"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::integer::u8"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "attempt_flee",
-              "inputs": [
-                {
-                  "name": "adventurer_level",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "adventurer_dexterity",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "rnd",
-                  "type": "core::integer::u8"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
+                  "type": "death_mountain::models::beast::Beast"
                 }
               ],
               "state_mutability": "view"
@@ -2476,7 +3115,7 @@
         },
         {
           "type": "event",
-          "name": "lootsurvivor::systems::beast::contracts::beast_systems::Event",
+          "name": "death_mountain::systems::beast::contracts::beast_systems::Event",
           "kind": "enum",
           "variants": [
             {
@@ -2493,15 +3132,18 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_1-beast_systems",
-      "selector": "0x2684bca83d12f5bedb29b975f6e2dbca1350a43a0f98c2bcf272283d28ffefa",
+      "tag": "ls_0_0_3-beast_systems",
+      "selector": "0x109eca3273715c8b45ebc03ff4ebab910f5fd47787fe7a979eef82916712824",
       "systems": [
+        "add_collectable",
+        "add_kill",
+        "premint_collectable",
         "upgrade"
       ]
     },
     {
-      "address": "0x543fdf9d549d514dfe115363f090e67314f789daf1bdb33ca60710a8211f3e2",
-      "class_hash": "0x6a9270948419e6ec567454f7e99f963145a21e8f329ed4a81321290e6091dc2",
+      "address": "0x5b283c0108fdaa842bd5543fc67f540cce022180311eca67139d4fb5d3780a5",
+      "class_hash": "0xec64a7ecf09e11d6dacb87b30a1f84935f42faa44d9835180503ec95dbdf35",
       "abi": [
         {
           "type": "impl",
@@ -2556,7 +3198,7 @@
         {
           "type": "impl",
           "name": "GameSystemsImpl",
-          "interface_name": "lootsurvivor::systems::game::contracts::IGameSystems"
+          "interface_name": "death_mountain::systems::game::contracts::IGameSystems"
         },
         {
           "type": "enum",
@@ -2574,7 +3216,7 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::market::ItemPurchase",
+          "name": "death_mountain::models::market::ItemPurchase",
           "members": [
             {
               "name": "item_id",
@@ -2588,7 +3230,7 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::stats::Stats",
+          "name": "death_mountain::models::adventurer::stats::Stats",
           "members": [
             {
               "name": "strength",
@@ -2622,7 +3264,7 @@
         },
         {
           "type": "interface",
-          "name": "lootsurvivor::systems::game::contracts::IGameSystems",
+          "name": "death_mountain::systems::game::contracts::IGameSystems",
           "items": [
             {
               "type": "function",
@@ -2734,7 +3376,7 @@
                 },
                 {
                   "name": "items",
-                  "type": "core::array::Array::<lootsurvivor::models::market::ItemPurchase>"
+                  "type": "core::array::Array::<death_mountain::models::market::ItemPurchase>"
                 }
               ],
               "outputs": [],
@@ -2750,7 +3392,7 @@
                 },
                 {
                   "name": "stat_upgrades",
-                  "type": "lootsurvivor::models::adventurer::stats::Stats"
+                  "type": "death_mountain::models::adventurer::stats::Stats"
                 }
               ],
               "outputs": [],
@@ -2857,7 +3499,7 @@
         },
         {
           "type": "event",
-          "name": "lootsurvivor::systems::game::contracts::game_systems::Event",
+          "name": "death_mountain::systems::game::contracts::game_systems::Event",
           "kind": "enum",
           "variants": [
             {
@@ -2874,8 +3516,8 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_1-game_systems",
-      "selector": "0x480e2d16e9a394219b17309619ec764b9b85540b274ff636b668bb6585adf58",
+      "tag": "ls_0_0_3-game_systems",
+      "selector": "0x6e6d2c18e991b0dd44d9d7c4929f7f7ba616cc481020fa1cf37ce500b2af67b",
       "systems": [
         "start_game",
         "explore",
@@ -2889,8 +3531,8 @@
       ]
     },
     {
-      "address": "0x6f261eba018dda4f60bdc1d0874cb7e97bf424979dda63fcbdf8bdcba1fb644",
-      "class_hash": "0x4168f47735bf74c8c6fcbb5f79061aa2a6e138bef24e3af5a7de0c91ca5cdda",
+      "address": "0x4dc9a55b49fea275851b31df48af9fadcc6512b486f04a4034cfdc5afbea02f",
+      "class_hash": "0x2456c3c56620a8abf78601c3dd619f7c288ed1f795357a4fdcaf9f9d873f99c",
       "abi": [
         {
           "type": "impl",
@@ -2949,6 +3591,10 @@
             {
               "name": "creator_address",
               "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "denshokan_address",
+              "type": "core::starknet::contract_address::ContractAddress"
             }
           ],
           "outputs": [],
@@ -2956,8 +3602,8 @@
         },
         {
           "type": "impl",
-          "name": "SettingsImpl",
-          "interface_name": "tournaments::components::interfaces::ISettings"
+          "name": "GameTokenDataImpl",
+          "interface_name": "game_components_minigame::interface::IMinigameTokenData"
         },
         {
           "type": "enum",
@@ -2975,15 +3621,31 @@
         },
         {
           "type": "interface",
-          "name": "tournaments::components::interfaces::ISettings",
+          "name": "game_components_minigame::interface::IMinigameTokenData",
           "items": [
             {
               "type": "function",
-              "name": "setting_exists",
+              "name": "score",
               "inputs": [
                 {
-                  "name": "settings_id",
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
                   "type": "core::integer::u32"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "game_over",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
                 }
               ],
               "outputs": [
@@ -2997,25 +3659,85 @@
         },
         {
           "type": "impl",
-          "name": "GameDetailsImpl",
-          "interface_name": "tournaments::components::interfaces::IGameDetails"
+          "name": "ObjectivesImpl",
+          "interface_name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives"
+        },
+        {
+          "type": "struct",
+          "name": "game_components_minigame::extensions::objectives::structs::GameObjective",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "value",
+              "type": "core::byte_array::ByteArray"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<game_components_minigame::extensions::objectives::structs::GameObjective>"
+            }
+          ]
         },
         {
           "type": "interface",
-          "name": "tournaments::components::interfaces::IGameDetails",
+          "name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives",
           "items": [
             {
               "type": "function",
-              "name": "score",
+              "name": "objective_exists",
               "inputs": [
                 {
-                  "name": "game_id",
+                  "name": "objective_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "completed_objective",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "objective_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "objectives",
+              "inputs": [
+                {
+                  "name": "token_id",
                   "type": "core::integer::u64"
                 }
               ],
               "outputs": [
                 {
-                  "type": "core::integer::u32"
+                  "type": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>"
                 }
               ],
               "state_mutability": "view"
@@ -3024,56 +3746,212 @@
         },
         {
           "type": "impl",
-          "name": "ERC721Metadata",
-          "interface_name": "openzeppelin_token::erc721::interface::IERC721Metadata"
+          "name": "GameTokenSystemsImpl",
+          "interface_name": "death_mountain::systems::game_token::contracts::IGameTokenSystems"
         },
         {
           "type": "struct",
-          "name": "core::integer::u256",
+          "name": "death_mountain::models::market::ItemPurchase",
           "members": [
             {
-              "name": "low",
-              "type": "core::integer::u128"
+              "name": "item_id",
+              "type": "core::integer::u8"
             },
             {
-              "name": "high",
-              "type": "core::integer::u128"
+              "name": "equip",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::stats::Stats",
+          "members": [
+            {
+              "name": "strength",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "dexterity",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "vitality",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "intelligence",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "wisdom",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "charisma",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "luck",
+              "type": "core::integer::u8"
             }
           ]
         },
         {
           "type": "interface",
-          "name": "openzeppelin_token::erc721::interface::IERC721Metadata",
+          "name": "death_mountain::systems::game_token::contracts::IGameTokenSystems",
           "items": [
             {
               "type": "function",
-              "name": "name",
-              "inputs": [],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "symbol",
-              "inputs": [],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "token_uri",
+              "name": "start_game",
               "inputs": [
                 {
-                  "name": "token_id",
-                  "type": "core::integer::u256"
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "weapon",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "explore",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "till_beast",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "attack",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "to_the_death",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "flee",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "to_the_death",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "equip",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "items",
+                  "type": "core::array::Array::<core::integer::u8>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "drop",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "items",
+                  "type": "core::array::Array::<core::integer::u8>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "buy_items",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "potions",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "items",
+                  "type": "core::array::Array::<death_mountain::models::market::ItemPurchase>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "select_stat_upgrades",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "stat_upgrades",
+                  "type": "death_mountain::models::adventurer::stats::Stats"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "create_objective",
+              "inputs": [
+                {
+                  "name": "score",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "player_name",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
                 }
               ],
               "outputs": [
@@ -3081,7 +3959,7 @@
                   "type": "core::byte_array::ByteArray"
                 }
               ],
-              "state_mutability": "view"
+              "state_mutability": "external"
             }
           ]
         },
@@ -3142,8 +4020,36 @@
         },
         {
           "type": "impl",
-          "name": "GameImpl",
-          "interface_name": "tournaments::components::interfaces::IGameToken"
+          "name": "MinigameImpl",
+          "interface_name": "game_components_minigame::interface::IMinigame"
+        },
+        {
+          "type": "enum",
+          "name": "core::option::Option::<core::byte_array::ByteArray>",
+          "variants": [
+            {
+              "name": "Some",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "None",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "core::option::Option::<core::integer::u32>",
+          "variants": [
+            {
+              "name": "Some",
+              "type": "core::integer::u32"
+            },
+            {
+              "name": "None",
+              "type": "()"
+            }
+          ]
         },
         {
           "type": "enum",
@@ -3161,101 +4067,150 @@
         },
         {
           "type": "struct",
-          "name": "tournaments::components::models::game::GameMetadata",
+          "name": "core::array::Span::<core::integer::u32>",
           "members": [
             {
-              "name": "contract_address",
-              "type": "core::starknet::contract_address::ContractAddress"
+              "name": "snapshot",
+              "type": "@core::array::Array::<core::integer::u32>"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "core::option::Option::<core::array::Span::<core::integer::u32>>",
+          "variants": [
+            {
+              "name": "Some",
+              "type": "core::array::Span::<core::integer::u32>"
             },
             {
-              "name": "creator_address",
-              "type": "core::starknet::contract_address::ContractAddress"
-            },
+              "name": "None",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "game_components_metagame::extensions::context::structs::GameContext",
+          "members": [
             {
               "name": "name",
-              "type": "core::felt252"
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "value",
+              "type": "core::byte_array::ByteArray"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<game_components_metagame::extensions::context::structs::GameContext>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<game_components_metagame::extensions::context::structs::GameContext>"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "game_components_metagame::extensions::context::structs::GameContextDetails",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
             },
             {
               "name": "description",
               "type": "core::byte_array::ByteArray"
             },
             {
-              "name": "developer",
-              "type": "core::felt252"
+              "name": "id",
+              "type": "core::option::Option::<core::integer::u32>"
             },
             {
-              "name": "publisher",
-              "type": "core::felt252"
-            },
-            {
-              "name": "genre",
-              "type": "core::felt252"
-            },
-            {
-              "name": "image",
-              "type": "core::byte_array::ByteArray"
+              "name": "context",
+              "type": "core::array::Span::<game_components_metagame::extensions::context::structs::GameContext>"
             }
           ]
         },
         {
-          "type": "struct",
-          "name": "tournaments::components::models::lifecycle::Lifecycle",
-          "members": [
+          "type": "enum",
+          "name": "core::option::Option::<game_components_metagame::extensions::context::structs::GameContextDetails>",
+          "variants": [
             {
-              "name": "mint",
-              "type": "core::integer::u64"
+              "name": "Some",
+              "type": "game_components_metagame::extensions::context::structs::GameContextDetails"
             },
             {
-              "name": "start",
-              "type": "core::option::Option::<core::integer::u64>"
-            },
-            {
-              "name": "end",
-              "type": "core::option::Option::<core::integer::u64>"
+              "name": "None",
+              "type": "()"
             }
           ]
         },
         {
-          "type": "struct",
-          "name": "tournaments::components::models::game::TokenMetadata",
-          "members": [
+          "type": "enum",
+          "name": "core::option::Option::<core::starknet::contract_address::ContractAddress>",
+          "variants": [
             {
-              "name": "token_id",
-              "type": "core::integer::u64"
-            },
-            {
-              "name": "minted_by",
+              "name": "Some",
               "type": "core::starknet::contract_address::ContractAddress"
             },
             {
-              "name": "player_name",
-              "type": "core::felt252"
-            },
-            {
-              "name": "settings_id",
-              "type": "core::integer::u32"
-            },
-            {
-              "name": "lifecycle",
-              "type": "tournaments::components::models::lifecycle::Lifecycle"
+              "name": "None",
+              "type": "()"
             }
           ]
         },
         {
           "type": "interface",
-          "name": "tournaments::components::interfaces::IGameToken",
+          "name": "game_components_minigame::interface::IMinigame",
           "items": [
             {
               "type": "function",
-              "name": "mint",
+              "name": "token_address",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "settings_address",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "objectives_address",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "mint_game",
               "inputs": [
                 {
                   "name": "player_name",
-                  "type": "core::felt252"
+                  "type": "core::option::Option::<core::byte_array::ByteArray>"
                 },
                 {
                   "name": "settings_id",
-                  "type": "core::integer::u32"
+                  "type": "core::option::Option::<core::integer::u32>"
                 },
                 {
                   "name": "start",
@@ -3266,411 +4221,33 @@
                   "type": "core::option::Option::<core::integer::u64>"
                 },
                 {
+                  "name": "objective_ids",
+                  "type": "core::option::Option::<core::array::Span::<core::integer::u32>>"
+                },
+                {
+                  "name": "context",
+                  "type": "core::option::Option::<game_components_metagame::extensions::context::structs::GameContextDetails>"
+                },
+                {
+                  "name": "client_url",
+                  "type": "core::option::Option::<core::byte_array::ByteArray>"
+                },
+                {
+                  "name": "renderer_address",
+                  "type": "core::option::Option::<core::starknet::contract_address::ContractAddress>"
+                },
+                {
                   "name": "to",
                   "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "soulbound",
+                  "type": "core::bool"
                 }
               ],
               "outputs": [
                 {
                   "type": "core::integer::u64"
-                }
-              ],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "emit_metadata_update",
-              "inputs": [
-                {
-                  "name": "game_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "game_metadata",
-              "inputs": [],
-              "outputs": [
-                {
-                  "type": "tournaments::components::models::game::GameMetadata"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "token_metadata",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "tournaments::components::models::game::TokenMetadata"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "game_count",
-              "inputs": [],
-              "outputs": [
-                {
-                  "type": "core::integer::u64"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "namespace",
-              "inputs": [],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "score_model",
-              "inputs": [],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "score_attribute",
-              "inputs": [],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "settings_model",
-              "inputs": [],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
-          "type": "impl",
-          "name": "ERC721Impl",
-          "interface_name": "openzeppelin_token::erc721::interface::IERC721"
-        },
-        {
-          "type": "struct",
-          "name": "core::array::Span::<core::felt252>",
-          "members": [
-            {
-              "name": "snapshot",
-              "type": "@core::array::Array::<core::felt252>"
-            }
-          ]
-        },
-        {
-          "type": "interface",
-          "name": "openzeppelin_token::erc721::interface::IERC721",
-          "items": [
-            {
-              "type": "function",
-              "name": "balance_of",
-              "inputs": [
-                {
-                  "name": "account",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::integer::u256"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "owner_of",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u256"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::starknet::contract_address::ContractAddress"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "safe_transfer_from",
-              "inputs": [
-                {
-                  "name": "from",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "to",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u256"
-                },
-                {
-                  "name": "data",
-                  "type": "core::array::Span::<core::felt252>"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "transfer_from",
-              "inputs": [
-                {
-                  "name": "from",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "to",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u256"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "approve",
-              "inputs": [
-                {
-                  "name": "to",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u256"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "set_approval_for_all",
-              "inputs": [
-                {
-                  "name": "operator",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "approved",
-                  "type": "core::bool"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "get_approved",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u256"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::starknet::contract_address::ContractAddress"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "is_approved_for_all",
-              "inputs": [
-                {
-                  "name": "owner",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "operator",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
-          "type": "impl",
-          "name": "ERC721CamelOnlyImpl",
-          "interface_name": "openzeppelin_token::erc721::interface::IERC721CamelOnly"
-        },
-        {
-          "type": "interface",
-          "name": "openzeppelin_token::erc721::interface::IERC721CamelOnly",
-          "items": [
-            {
-              "type": "function",
-              "name": "balanceOf",
-              "inputs": [
-                {
-                  "name": "account",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::integer::u256"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "ownerOf",
-              "inputs": [
-                {
-                  "name": "tokenId",
-                  "type": "core::integer::u256"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::starknet::contract_address::ContractAddress"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "safeTransferFrom",
-              "inputs": [
-                {
-                  "name": "from",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "to",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "tokenId",
-                  "type": "core::integer::u256"
-                },
-                {
-                  "name": "data",
-                  "type": "core::array::Span::<core::felt252>"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "transferFrom",
-              "inputs": [
-                {
-                  "name": "from",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "to",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "tokenId",
-                  "type": "core::integer::u256"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "setApprovalForAll",
-              "inputs": [
-                {
-                  "name": "operator",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "approved",
-                  "type": "core::bool"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "getApproved",
-              "inputs": [
-                {
-                  "name": "tokenId",
-                  "type": "core::integer::u256"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::starknet::contract_address::ContractAddress"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "isApprovedForAll",
-              "inputs": [
-                {
-                  "name": "owner",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "operator",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
                 }
               ],
               "state_mutability": "view"
@@ -3741,115 +4318,15 @@
         },
         {
           "type": "event",
-          "name": "tournaments::components::game::game_component::MetadataUpdateEvent",
-          "kind": "struct",
-          "members": [
-            {
-              "name": "token_id",
-              "type": "core::integer::u256",
-              "kind": "key"
-            }
-          ]
-        },
-        {
-          "type": "event",
-          "name": "tournaments::components::game::game_component::Event",
+          "name": "game_components_minigame::minigame::MinigameComponent::Event",
           "kind": "enum",
-          "variants": [
-            {
-              "name": "MetadataUpdate",
-              "type": "tournaments::components::game::game_component::MetadataUpdateEvent",
-              "kind": "nested"
-            }
-          ]
+          "variants": []
         },
         {
           "type": "event",
-          "name": "openzeppelin_token::erc721::erc721::ERC721Component::Transfer",
-          "kind": "struct",
-          "members": [
-            {
-              "name": "from",
-              "type": "core::starknet::contract_address::ContractAddress",
-              "kind": "key"
-            },
-            {
-              "name": "to",
-              "type": "core::starknet::contract_address::ContractAddress",
-              "kind": "key"
-            },
-            {
-              "name": "token_id",
-              "type": "core::integer::u256",
-              "kind": "key"
-            }
-          ]
-        },
-        {
-          "type": "event",
-          "name": "openzeppelin_token::erc721::erc721::ERC721Component::Approval",
-          "kind": "struct",
-          "members": [
-            {
-              "name": "owner",
-              "type": "core::starknet::contract_address::ContractAddress",
-              "kind": "key"
-            },
-            {
-              "name": "approved",
-              "type": "core::starknet::contract_address::ContractAddress",
-              "kind": "key"
-            },
-            {
-              "name": "token_id",
-              "type": "core::integer::u256",
-              "kind": "key"
-            }
-          ]
-        },
-        {
-          "type": "event",
-          "name": "openzeppelin_token::erc721::erc721::ERC721Component::ApprovalForAll",
-          "kind": "struct",
-          "members": [
-            {
-              "name": "owner",
-              "type": "core::starknet::contract_address::ContractAddress",
-              "kind": "key"
-            },
-            {
-              "name": "operator",
-              "type": "core::starknet::contract_address::ContractAddress",
-              "kind": "key"
-            },
-            {
-              "name": "approved",
-              "type": "core::bool",
-              "kind": "data"
-            }
-          ]
-        },
-        {
-          "type": "event",
-          "name": "openzeppelin_token::erc721::erc721::ERC721Component::Event",
+          "name": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
           "kind": "enum",
-          "variants": [
-            {
-              "name": "Transfer",
-              "type": "openzeppelin_token::erc721::erc721::ERC721Component::Transfer",
-              "kind": "nested"
-            },
-            {
-              "name": "Approval",
-              "type": "openzeppelin_token::erc721::erc721::ERC721Component::Approval",
-              "kind": "nested"
-            },
-            {
-              "name": "ApprovalForAll",
-              "type": "openzeppelin_token::erc721::erc721::ERC721Component::ApprovalForAll",
-              "kind": "nested"
-            }
-          ]
+          "variants": []
         },
         {
           "type": "event",
@@ -3859,7 +4336,7 @@
         },
         {
           "type": "event",
-          "name": "lootsurvivor::systems::game_token::contracts::game_token_systems::Event",
+          "name": "death_mountain::systems::game_token::contracts::game_token_systems::Event",
           "kind": "enum",
           "variants": [
             {
@@ -3873,13 +4350,13 @@
               "kind": "nested"
             },
             {
-              "name": "GameEvent",
-              "type": "tournaments::components::game::game_component::Event",
+              "name": "MinigameEvent",
+              "type": "game_components_minigame::minigame::MinigameComponent::Event",
               "kind": "flat"
             },
             {
-              "name": "ERC721Event",
-              "type": "openzeppelin_token::erc721::erc721::ERC721Component::Event",
+              "name": "ObjectivesEvent",
+              "type": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
               "kind": "flat"
             },
             {
@@ -3891,27 +4368,29 @@
         }
       ],
       "init_calldata": [
-        "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282"
+        "0x065d2AB17338b5AffdEbAF95E2D79834B5f30Bac596fF55563c62C3c98700150",
+        "0x01fd7f186c0bb99f8d128f1eb40dbe3c7657df381957417f8c9a40804c005545"
       ],
-      "tag": "ls_0_0_1-game_token_systems",
-      "selector": "0x2e56d1c33ee39d46198aaa6a699e72b6f445eacc243ef2e61719e4198af9aed",
+      "tag": "ls_0_0_3-game_token_systems",
+      "selector": "0x4cc8e289ab4f6b9bdea32ac2b3428c84c3ae431519428363cc12341b1e4a188",
       "systems": [
         "dojo_init",
-        "upgrade",
-        "mint",
-        "emit_metadata_update",
-        "safe_transfer_from",
-        "transfer_from",
-        "approve",
-        "set_approval_for_all",
-        "safeTransferFrom",
-        "transferFrom",
-        "setApprovalForAll"
+        "start_game",
+        "explore",
+        "attack",
+        "flee",
+        "equip",
+        "drop",
+        "buy_items",
+        "select_stat_upgrades",
+        "create_objective",
+        "player_name",
+        "upgrade"
       ]
     },
     {
-      "address": "0x513026b65c44bf5843efa2fe925d311ae1593a589bceb74ec0e704df652d770",
-      "class_hash": "0x5cdf1657b5f1a819c446069e6a51ab19d209ee4ae842d6168da8895a90bb6ff",
+      "address": "0x217b739b2ddf3c485b4ba83761c0be73eb8ce13ee689c72685501939aadd27c",
+      "class_hash": "0x23cdb494302994de197966707c72df5708f2516f5205ed398dacb4c16fc4bcc",
       "abi": [
         {
           "type": "impl",
@@ -3966,11 +4445,11 @@
         {
           "type": "impl",
           "name": "LootSystemsImpl",
-          "interface_name": "lootsurvivor::systems::loot::contracts::ILootSystems"
+          "interface_name": "death_mountain::systems::loot::contracts::ILootSystems"
         },
         {
           "type": "enum",
-          "name": "lootsurvivor::constants::combat::CombatEnums::Tier",
+          "name": "death_mountain::constants::combat::CombatEnums::Tier",
           "variants": [
             {
               "name": "None",
@@ -4000,7 +4479,7 @@
         },
         {
           "type": "enum",
-          "name": "lootsurvivor::constants::combat::CombatEnums::Type",
+          "name": "death_mountain::constants::combat::CombatEnums::Type",
           "variants": [
             {
               "name": "None",
@@ -4030,7 +4509,7 @@
         },
         {
           "type": "enum",
-          "name": "lootsurvivor::constants::combat::CombatEnums::Slot",
+          "name": "death_mountain::constants::combat::CombatEnums::Slot",
           "variants": [
             {
               "name": "None",
@@ -4072,7 +4551,7 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::loot::Loot",
+          "name": "death_mountain::models::loot::Loot",
           "members": [
             {
               "name": "id",
@@ -4080,21 +4559,21 @@
             },
             {
               "name": "tier",
-              "type": "lootsurvivor::constants::combat::CombatEnums::Tier"
+              "type": "death_mountain::constants::combat::CombatEnums::Tier"
             },
             {
               "name": "item_type",
-              "type": "lootsurvivor::constants::combat::CombatEnums::Type"
+              "type": "death_mountain::constants::combat::CombatEnums::Type"
             },
             {
               "name": "slot",
-              "type": "lootsurvivor::constants::combat::CombatEnums::Slot"
+              "type": "death_mountain::constants::combat::CombatEnums::Slot"
             }
           ]
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::combat::SpecialPowers",
+          "name": "death_mountain::models::combat::SpecialPowers",
           "members": [
             {
               "name": "special1",
@@ -4126,7 +4605,7 @@
         },
         {
           "type": "interface",
-          "name": "lootsurvivor::systems::loot::contracts::ILootSystems",
+          "name": "death_mountain::systems::loot::contracts::ILootSystems",
           "items": [
             {
               "type": "function",
@@ -4139,7 +4618,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::loot::Loot"
+                  "type": "death_mountain::models::loot::Loot"
                 }
               ],
               "state_mutability": "view"
@@ -4163,7 +4642,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::combat::SpecialPowers"
+                  "type": "death_mountain::models::combat::SpecialPowers"
                 }
               ],
               "state_mutability": "view"
@@ -4239,7 +4718,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::constants::combat::CombatEnums::Tier"
+                  "type": "death_mountain::constants::combat::CombatEnums::Tier"
                 }
               ],
               "state_mutability": "view"
@@ -4255,7 +4734,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::constants::combat::CombatEnums::Type"
+                  "type": "death_mountain::constants::combat::CombatEnums::Type"
                 }
               ],
               "state_mutability": "view"
@@ -4271,7 +4750,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::constants::combat::CombatEnums::Slot"
+                  "type": "death_mountain::constants::combat::CombatEnums::Slot"
                 }
               ],
               "state_mutability": "view"
@@ -4393,7 +4872,7 @@
         },
         {
           "type": "event",
-          "name": "lootsurvivor::systems::loot::contracts::loot_systems::Event",
+          "name": "death_mountain::systems::loot::contracts::loot_systems::Event",
           "kind": "enum",
           "variants": [
             {
@@ -4410,15 +4889,15 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_1-loot_systems",
-      "selector": "0x6998739723690a00c04f7580a32efaaf4a2a2396850c3d16fb1b2257cc40491",
+      "tag": "ls_0_0_3-loot_systems",
+      "selector": "0x10079fb36ed6fa91c27a5b79eba43f61bb6705b2b41825788951d184e152692",
       "systems": [
         "upgrade"
       ]
     },
     {
-      "address": "0x165e98ddaea22ef835a18b01846054d40db39a2f3ec06ce2e6718a44d018680",
-      "class_hash": "0x13e9803640598ac36f27778b3337f1b34a3b0adcb49b135717c288335d989c6",
+      "address": "0x4528a0b81efeb6b5badedb2f00713d5dc883918183c5797ae3b88650d8105e7",
+      "class_hash": "0x2706de1bd3ecbd81bea176d7215c9161393e2f0ea2db2319651d3a3a1b2522",
       "abi": [
         {
           "type": "impl",
@@ -4472,12 +4951,106 @@
         },
         {
           "type": "impl",
-          "name": "RendererSystemsImpl",
-          "interface_name": "lootsurvivor::systems::renderer::contracts::IRendererSystems"
+          "name": "GameDetailsImpl",
+          "interface_name": "game_components_minigame::interface::IMinigameDetails"
+        },
+        {
+          "type": "struct",
+          "name": "game_components_minigame::structs::GameDetail",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "value",
+              "type": "core::byte_array::ByteArray"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<game_components_minigame::structs::GameDetail>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<game_components_minigame::structs::GameDetail>"
+            }
+          ]
         },
         {
           "type": "interface",
-          "name": "lootsurvivor::systems::renderer::contracts::IRendererSystems",
+          "name": "game_components_minigame::interface::IMinigameDetails",
+          "items": [
+            {
+              "type": "function",
+              "name": "token_description",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "game_details",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Span::<game_components_minigame::structs::GameDetail>"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "GameDetailsSVGImpl",
+          "interface_name": "game_components_minigame::interface::IMinigameDetailsSVG"
+        },
+        {
+          "type": "interface",
+          "name": "game_components_minigame::interface::IMinigameDetailsSVG",
+          "items": [
+            {
+              "type": "function",
+              "name": "game_details_svg",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "RendererSystemsImpl",
+          "interface_name": "death_mountain::systems::renderer::contracts::IRendererSystems"
+        },
+        {
+          "type": "interface",
+          "name": "death_mountain::systems::renderer::contracts::IRendererSystems",
           "items": [
             {
               "type": "function",
@@ -4491,6 +5064,38 @@
               "outputs": [
                 {
                   "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "generate_svg",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "generate_details",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Span::<game_components_minigame::structs::GameDetail>"
                 }
               ],
               "state_mutability": "view"
@@ -4596,7 +5201,7 @@
         },
         {
           "type": "event",
-          "name": "lootsurvivor::systems::renderer::contracts::renderer_systems::Event",
+          "name": "death_mountain::systems::renderer::contracts::renderer_systems::Event",
           "kind": "enum",
           "variants": [
             {
@@ -4613,15 +5218,15 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_1-renderer_systems",
-      "selector": "0x4608ae26b268d0cd477ec90404d51a3220f52cd9ef293a66cc6ac2d7609798f",
+      "tag": "ls_0_0_3-renderer_systems",
+      "selector": "0x392780804badb341aa4008518aad1229a075606089d4240a047100076445f04",
       "systems": [
         "upgrade"
       ]
     },
     {
-      "address": "0xefb3cd6b2d70109162ca62e57381db51424d085c930f35ac3e888be10922c2",
-      "class_hash": "0x6fe0ef13d1ba76ada3ddd907b0897c5600d4795b28d32308f50cb0e3f17569d",
+      "address": "0x60c1e9d21c5c056e9f1e2dfafff1e9d6bf62ae6c4b34176534334a1650645d1",
+      "class_hash": "0x4c76ddc85c17af3195c9e385e8360fe07c79dd4530ffc49fec4df9b469a2968",
       "abi": [
         {
           "type": "impl",
@@ -4674,13 +5279,119 @@
           ]
         },
         {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
           "type": "impl",
-          "name": "SettingsSystemsImpl",
-          "interface_name": "lootsurvivor::systems::settings::contracts::ISettingsSystems"
+          "name": "GameSettingsImpl",
+          "interface_name": "game_components_minigame::extensions::settings::interface::IMinigameSettings"
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::stats::Stats",
+          "name": "game_components_minigame::extensions::settings::structs::GameSetting",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "value",
+              "type": "core::byte_array::ByteArray"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<game_components_minigame::extensions::settings::structs::GameSetting>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<game_components_minigame::extensions::settings::structs::GameSetting>"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "game_components_minigame::extensions::settings::structs::GameSettingDetails",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "description",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "settings",
+              "type": "core::array::Span::<game_components_minigame::extensions::settings::structs::GameSetting>"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "game_components_minigame::extensions::settings::interface::IMinigameSettings",
+          "items": [
+            {
+              "type": "function",
+              "name": "settings_exist",
+              "inputs": [
+                {
+                  "name": "settings_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "settings",
+              "inputs": [
+                {
+                  "name": "settings_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "game_components_minigame::extensions::settings::structs::GameSettingDetails"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "SettingsSystemsImpl",
+          "interface_name": "death_mountain::systems::settings::contracts::ISettingsSystems"
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::stats::Stats",
           "members": [
             {
               "name": "strength",
@@ -4714,7 +5425,7 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::item::Item",
+          "name": "death_mountain::models::adventurer::item::Item",
           "members": [
             {
               "name": "id",
@@ -4728,45 +5439,45 @@
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::equipment::Equipment",
+          "name": "death_mountain::models::adventurer::equipment::Equipment",
           "members": [
             {
               "name": "weapon",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "chest",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "head",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "waist",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "foot",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "hand",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "neck",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "ring",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             }
           ]
         },
         {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::adventurer::Adventurer",
+          "name": "death_mountain::models::adventurer::adventurer::Adventurer",
           "members": [
             {
               "name": "health",
@@ -4790,11 +5501,11 @@
             },
             {
               "name": "stats",
-              "type": "lootsurvivor::models::adventurer::stats::Stats"
+              "type": "death_mountain::models::adventurer::stats::Stats"
             },
             {
               "name": "equipment",
-              "type": "lootsurvivor::models::adventurer::equipment::Equipment"
+              "type": "death_mountain::models::adventurer::equipment::Equipment"
             },
             {
               "name": "item_specials_seed",
@@ -4807,82 +5518,68 @@
           ]
         },
         {
-          "type": "enum",
-          "name": "core::bool",
-          "variants": [
-            {
-              "name": "False",
-              "type": "()"
-            },
-            {
-              "name": "True",
-              "type": "()"
-            }
-          ]
-        },
-        {
           "type": "struct",
-          "name": "lootsurvivor::models::adventurer::bag::Bag",
+          "name": "death_mountain::models::adventurer::bag::Bag",
           "members": [
             {
               "name": "item_1",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_2",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_3",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_4",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_5",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_6",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_7",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_8",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_9",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_10",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_11",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_12",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_13",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_14",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "item_15",
-              "type": "lootsurvivor::models::adventurer::item::Item"
+              "type": "death_mountain::models::adventurer::item::Item"
             },
             {
               "name": "mutated",
@@ -4891,20 +5588,38 @@
           ]
         },
         {
+          "type": "enum",
+          "name": "death_mountain::models::game::StatsMode",
+          "variants": [
+            {
+              "name": "Dodge",
+              "type": "()"
+            },
+            {
+              "name": "Reduction",
+              "type": "()"
+            }
+          ]
+        },
+        {
           "type": "struct",
-          "name": "lootsurvivor::models::game::GameSettings",
+          "name": "death_mountain::models::game::GameSettings",
           "members": [
             {
               "name": "settings_id",
               "type": "core::integer::u32"
             },
             {
+              "name": "vrf_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
               "name": "adventurer",
-              "type": "lootsurvivor::models::adventurer::adventurer::Adventurer"
+              "type": "death_mountain::models::adventurer::adventurer::Adventurer"
             },
             {
               "name": "bag",
-              "type": "lootsurvivor::models::adventurer::bag::Bag"
+              "type": "death_mountain::models::adventurer::bag::Bag"
             },
             {
               "name": "game_seed",
@@ -4917,28 +5632,44 @@
             {
               "name": "in_battle",
               "type": "core::bool"
+            },
+            {
+              "name": "stats_mode",
+              "type": "death_mountain::models::game::StatsMode"
+            },
+            {
+              "name": "base_damage_reduction",
+              "type": "core::integer::u8"
             }
           ]
         },
         {
           "type": "interface",
-          "name": "lootsurvivor::systems::settings::contracts::ISettingsSystems",
+          "name": "death_mountain::systems::settings::contracts::ISettingsSystems",
           "items": [
             {
               "type": "function",
               "name": "add_settings",
               "inputs": [
                 {
+                  "name": "vrf_address",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
                   "name": "name",
                   "type": "core::felt252"
                 },
                 {
+                  "name": "description",
+                  "type": "core::byte_array::ByteArray"
+                },
+                {
                   "name": "adventurer",
-                  "type": "lootsurvivor::models::adventurer::adventurer::Adventurer"
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
                 },
                 {
                   "name": "bag",
-                  "type": "lootsurvivor::models::adventurer::bag::Bag"
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 },
                 {
                   "name": "game_seed",
@@ -4951,6 +5682,14 @@
                 {
                   "name": "in_battle",
                   "type": "core::bool"
+                },
+                {
+                  "name": "stats_mode",
+                  "type": "death_mountain::models::game::StatsMode"
+                },
+                {
+                  "name": "base_damage_reduction",
+                  "type": "core::integer::u8"
                 }
               ],
               "outputs": [
@@ -4971,7 +5710,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::game::GameSettings"
+                  "type": "death_mountain::models::game::GameSettings"
                 }
               ],
               "state_mutability": "view"
@@ -4987,7 +5726,7 @@
               ],
               "outputs": [
                 {
-                  "type": "lootsurvivor::models::game::GameSettings"
+                  "type": "death_mountain::models::game::GameSettings"
                 }
               ],
               "state_mutability": "view"
@@ -5004,13 +5743,6 @@
               "state_mutability": "view"
             }
           ]
-        },
-        {
-          "type": "function",
-          "name": "dojo_init",
-          "inputs": [],
-          "outputs": [],
-          "state_mutability": "view"
         },
         {
           "type": "impl",
@@ -5068,6 +5800,33 @@
           ]
         },
         {
+          "type": "impl",
+          "name": "SRC5Impl",
+          "interface_name": "openzeppelin_introspection::interface::ISRC5"
+        },
+        {
+          "type": "interface",
+          "name": "openzeppelin_introspection::interface::ISRC5",
+          "items": [
+            {
+              "type": "function",
+              "name": "supports_interface",
+              "inputs": [
+                {
+                  "name": "interface_id",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
           "type": "constructor",
           "name": "constructor",
           "inputs": []
@@ -5104,7 +5863,19 @@
         },
         {
           "type": "event",
-          "name": "lootsurvivor::systems::settings::contracts::settings_systems::Event",
+          "name": "game_components_minigame::extensions::settings::settings::SettingsComponent::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "openzeppelin_introspection::src5::SRC5Component::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::settings::contracts::settings_systems::Event",
           "kind": "enum",
           "variants": [
             {
@@ -5116,14 +5887,25 @@
               "name": "WorldProviderEvent",
               "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
               "kind": "nested"
+            },
+            {
+              "name": "SettingsEvent",
+              "type": "game_components_minigame::extensions::settings::settings::SettingsComponent::Event",
+              "kind": "flat"
+            },
+            {
+              "name": "SRC5Event",
+              "type": "openzeppelin_introspection::src5::SRC5Component::Event",
+              "kind": "flat"
             }
           ]
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_1-settings_systems",
-      "selector": "0x66bb04604f81385856aa7b8526ccdaeeb6bf1568e3656e1eea1727d41d2f206",
+      "tag": "ls_0_0_3-settings_systems",
+      "selector": "0x2254d45023f5ef42fea645233c31178dd5d52f4f4e565b8271891a9939842d9",
       "systems": [
+        "dojo_init",
         "add_settings",
         "upgrade"
       ]
@@ -5133,83 +5915,89 @@
   "models": [
     {
       "members": [],
-      "class_hash": "0x36e073f57e35772e2b59f74a37fafbcc004d7d9e7b41646d43d0c12ea049ba3",
-      "tag": "ls_0_0_1-AdventurerEntropy",
-      "selector": "0x369ce532fa31b6549abc44fb7a6d333084daf0978c7b5e95ca78407fef17453"
+      "class_hash": "0x771a18fa631c8bf12e2b85cdf510b9b59959655090027883b18100641a08497",
+      "tag": "ls_0_0_3-AdventurerEntropy",
+      "selector": "0x61684060a1f4b5960652d3b83b68bbe4e900cd1d92d94968f7800bb9b7e9350"
     },
     {
       "members": [],
-      "class_hash": "0x4dfc271be295406f7da99e8e76f16d12abf77f5d477c80fdc261f80e02b4237",
-      "tag": "ls_0_0_1-AdventurerPacked",
-      "selector": "0xa5c361de35b1a9acbabf8dd9eead845c7302c15602ce4be7b221568434f2b3"
+      "class_hash": "0x7271344d76037ef2c0e6e8156b7dfa7c7b40dfc566b99f9770c99b14cb70e5b",
+      "tag": "ls_0_0_3-AdventurerKilled",
+      "selector": "0x190bbbc038c88a60dc5a91e98a38aaae4645e88a481152ecf6eb89353c11a02"
     },
     {
       "members": [],
-      "class_hash": "0x48c6db8ac242ce05f2d747797de4d00e533c8b82f2213bc7374543e481f7578",
-      "tag": "ls_0_0_1-BagPacked",
-      "selector": "0x2775a303d6e4b7050633a53726b7f0b470d335dcd09a10a265d5c4ba453767e"
+      "class_hash": "0x33b8218ffef53844194e5bc510edfa023441c8284a0254b002742509af88449",
+      "tag": "ls_0_0_3-AdventurerPacked",
+      "selector": "0x409e48c5486428ea3a9571967c5b481d18dad18afde48a0e0dbeea45c1a6119"
     },
     {
       "members": [],
-      "class_hash": "0x4c9aa5cf3f03bd208fcfc809bbefd59074e319870fd54e699df593d2df01b4d",
-      "tag": "ls_0_0_1-GameCounter",
-      "selector": "0xf9d664d45cf0ce7f86c2ff1313ba577752a416b01d4f3902597609f7cf5d3"
+      "class_hash": "0x283ab5cc1ee44d8476f367faf47184901b144bfbc36740491a5a96dbb950599",
+      "tag": "ls_0_0_3-BagPacked",
+      "selector": "0x66d61069c5c6e6d3ce5c9a681935a371f7bff3ddf295fca016efef28716b130"
     },
     {
       "members": [],
-      "class_hash": "0x2184a8d33905eed66c3a80bd753a579aadd0b8dd0652f9f513dc7f1949f53c4",
-      "tag": "ls_0_0_1-GameMetadata",
-      "selector": "0x4e75ab55ed734711b399c7fc6dd5311dc051b565d5f383e5f2f690a9a0c8f82"
+      "class_hash": "0x3f58ca824d6b406472a58004a59fedc42889bb3b46220766b10e4e2f004e5b6",
+      "tag": "ls_0_0_3-CollectableCount",
+      "selector": "0x7bae3d49ae4c6f939d927afdc02ff751da95bd19174dc8f12d53fe8a9273c2d"
     },
     {
       "members": [],
-      "class_hash": "0x35e166c888f48fda40e84274c0fadd91a3a914a29c320461189fa045c1d62ad",
-      "tag": "ls_0_0_1-GameSettings",
-      "selector": "0x2b4e78e32ea8503f2dc7123211b672ce9712a014664c3a4d955eefda8371ab6"
+      "class_hash": "0x6f72223ce0d9079f149abbe4f512cef0718c37129167cb3dbd5835841784b3a",
+      "tag": "ls_0_0_3-CollectableEntity",
+      "selector": "0x72c29215eaf728cf41f65097ed6931b15851f537c4e4b7740e22e89372a8726"
     },
     {
       "members": [],
-      "class_hash": "0x303efd2717ebe9fbb6425471d4955026a55ec39522f7580f3648d63d88a7409",
-      "tag": "ls_0_0_1-GameSettingsMetadata",
-      "selector": "0x625c0bd4f129262bf06ae31dce0790db319e6dc1ebf8b6a7f996dccfd27a03b"
+      "class_hash": "0x1574c394faebc84b15fd5e43414a47ac257ebadb3683775d4df7998bdfdc840",
+      "tag": "ls_0_0_3-DroppedItem",
+      "selector": "0x3c8e2abb4f0cace0aefd252d0d7df477e0a98f1f8077aa2bc263ba7e7278cf5"
     },
     {
       "members": [],
-      "class_hash": "0x7538cc093e191e767f1caf8ea3f1c4818e319db41d8f760e48753cb2e420156",
-      "tag": "ls_0_0_1-Score",
-      "selector": "0x17768bbe9b110e47f39164d7c6cbc2be5e8a146a4a6d321e3f36877c5b62e1d"
+      "class_hash": "0x654e3dcfe40ee0d8a3e2d17a448f8208a2515316b9573629ef9ebb038ae2fda",
+      "tag": "ls_0_0_3-EntityStats",
+      "selector": "0x2811e1508fb872e0e63b19e23eca902ea1758fc19a2fe0bbc53d4d4c479b2cb"
     },
     {
       "members": [],
-      "class_hash": "0x1209baf4f84faefa02c38ae721ddc691755ff4ea5993861fa22d822c913ab5b",
-      "tag": "ls_0_0_1-Settings",
-      "selector": "0x65aea8914867efd68abcd493ef62cd558714808a78da321c26cfb239691c15a"
+      "class_hash": "0x79210d657508115b5ed81b30ab50889a4fcd56266f646e17733b877cbc1fb36",
+      "tag": "ls_0_0_3-GameSettings",
+      "selector": "0x274b96fd70f18eba1d682d55fc31289caa91ba6f19b92c3f7ae31e4a272b11a"
     },
     {
       "members": [],
-      "class_hash": "0x4e0c7a60762ca47580e47d2d2dcb27dd5ad33262075cb9b126d670e97c67837",
-      "tag": "ls_0_0_1-SettingsCounter",
-      "selector": "0x4ce54354ad90c2baef50e7f5db05727087d6565f8522dbeb36d2e5893ef06da"
+      "class_hash": "0x42467a73ead2a48a5d522d48d5ca6fa81a6a5b1377b6b8f0e32c3b0f4c0c8b6",
+      "tag": "ls_0_0_3-GameSettingsMetadata",
+      "selector": "0x7544994f840a8e3ef7592b4c863e124c02d76dd7149c23f2569b5df812a39bd"
     },
     {
       "members": [],
-      "class_hash": "0x5a1e9671225dd42b4085d3fb27a7543ee87f0cb687514002e7b4d9fa77c78a1",
-      "tag": "ls_0_0_1-SettingsDetails",
-      "selector": "0x434abaa931311266f75d76fdfaa250fb42fb549b1b04a1c015009ddfd90132"
+      "class_hash": "0x2aa835e634c1a8ff12a13e1f1e8592a1f9efcfb61f048e8907a7b4e29656930",
+      "tag": "ls_0_0_3-ScoreObjective",
+      "selector": "0x40d937c19191bf178df18b746de58721794c7c6a81e57c8a249bf4fff770842"
     },
     {
       "members": [],
-      "class_hash": "0x336f9d3953c032d579de6675aa25e2903ea50708399ca5ec3312ee3480e7cca",
-      "tag": "ls_0_0_1-TokenMetadata",
-      "selector": "0x544af3859f7a1b523d0b5fac02a2f7b424a1fd6f145470fdca7003a637e28cb"
+      "class_hash": "0x5ece982bfe94084959dcedbf5a4474810aeeef714cc4bb2ef78248aa36dd9e4",
+      "tag": "ls_0_0_3-ScoreObjectiveCount",
+      "selector": "0x39e7bc23658680ced3e82a2544c3418953e2fb8c98066c185be6de9f1b95ae2"
+    },
+    {
+      "members": [],
+      "class_hash": "0x791787e562ed970a599a13e2f690391968b8f75ea0dcfc38573fc3300c6c942",
+      "tag": "ls_0_0_3-SettingsCounter",
+      "selector": "0x3ff9dfc290210c04eb55643880d68c0b9ea411fc35e44558a791e678496f94b"
     }
   ],
   "events": [
     {
       "members": [],
-      "class_hash": "0x6c6269784fff73e18c54bf400d8062294ed8be1d17e4abcd28f7a68be4e2f4b",
-      "tag": "ls_0_0_1-GameEvent",
-      "selector": "0x26d8912eece420b95692b8da8105587d09888bd0ff0e243c8e8cfb0e23ab894"
+      "class_hash": "0x5a3ab3a85b1c39cf5678ef7247fbec098103c4baf9f52d41632d22acce4e77d",
+      "tag": "ls_0_0_3-GameEvent",
+      "selector": "0x1660418e1f7c968e165e360b552243caad6d72b249a696cfbbea1120c8256f3"
     }
   ],
   "external_contracts": []

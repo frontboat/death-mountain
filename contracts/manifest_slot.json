@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
-    "address": "0x361eaaf44352fe789346b1c8fd287846d0a01aec768b1bf6b5ae65d28e1abb",
-    "seed": "pg-slot",
+    "address": "0x38f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d",
+    "seed": "pg-slot-10",
     "name": "Provable Games",
     "entrypoints": [
       "uuid",
@@ -1328,8 +1328,8 @@
   },
   "contracts": [
     {
-      "address": "0x48084aa72ea6ede1e913c0ae8fd58bbb96591853bad7574057f887e3ced416e",
-      "class_hash": "0x26f6d9ecadd8a8227216b33b70701aff753b01e56c71350e9b51ad494d1d29",
+      "address": "0x2a448be6109097822062ac4b3140ce03a5a5b15055c1b9040172a9307dfce7d",
+      "class_hash": "0x280af2d3ced01728ce0b7aa3d30db79d4c6fd9cae4da3192b3cf6a0e7284c61",
       "abi": [
         {
           "type": "impl",
@@ -1599,6 +1599,296 @@
           ]
         },
         {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Tier",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "T1",
+              "type": "()"
+            },
+            {
+              "name": "T2",
+              "type": "()"
+            },
+            {
+              "name": "T3",
+              "type": "()"
+            },
+            {
+              "name": "T4",
+              "type": "()"
+            },
+            {
+              "name": "T5",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Type",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "Magic_or_Cloth",
+              "type": "()"
+            },
+            {
+              "name": "Blade_or_Hide",
+              "type": "()"
+            },
+            {
+              "name": "Bludgeon_or_Metal",
+              "type": "()"
+            },
+            {
+              "name": "Necklace",
+              "type": "()"
+            },
+            {
+              "name": "Ring",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Slot",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "Weapon",
+              "type": "()"
+            },
+            {
+              "name": "Chest",
+              "type": "()"
+            },
+            {
+              "name": "Head",
+              "type": "()"
+            },
+            {
+              "name": "Waist",
+              "type": "()"
+            },
+            {
+              "name": "Foot",
+              "type": "()"
+            },
+            {
+              "name": "Hand",
+              "type": "()"
+            },
+            {
+              "name": "Neck",
+              "type": "()"
+            },
+            {
+              "name": "Ring",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::item::ItemVerbose",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::felt252"
+            },
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "tier",
+              "type": "death_mountain::constants::combat::CombatEnums::Tier"
+            },
+            {
+              "name": "item_type",
+              "type": "death_mountain::constants::combat::CombatEnums::Type"
+            },
+            {
+              "name": "slot",
+              "type": "death_mountain::constants::combat::CombatEnums::Slot"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::equipment::EquipmentVerbose",
+          "members": [
+            {
+              "name": "weapon",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "chest",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "head",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "waist",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "foot",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "hand",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "neck",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "ring",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::bag::BagVerbose",
+          "members": [
+            {
+              "name": "item_1",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_2",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_3",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_4",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_5",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_6",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_7",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_8",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_9",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_10",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_11",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_12",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_13",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_14",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            },
+            {
+              "name": "item_15",
+              "type": "death_mountain::models::adventurer::item::ItemVerbose"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::adventurer::AdventurerVerbose",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "level",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "gold",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "beast_health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "stat_upgrades_available",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "stats",
+              "type": "death_mountain::models::adventurer::stats::Stats"
+            },
+            {
+              "name": "equipment",
+              "type": "death_mountain::models::adventurer::equipment::EquipmentVerbose"
+            },
+            {
+              "name": "item_specials_seed",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "action_count",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "bag",
+              "type": "death_mountain::models::adventurer::bag::BagVerbose"
+            }
+          ]
+        },
+        {
           "type": "struct",
           "name": "death_mountain::models::game::AdventurerEntropy",
           "members": [
@@ -1698,6 +1988,54 @@
               "outputs": [
                 {
                   "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_level",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u8"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_dungeon",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_verbose",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::adventurer::AdventurerVerbose"
                 }
               ],
               "state_mutability": "view"
@@ -1959,8 +2297,16 @@
               "name": "get_market",
               "inputs": [
                 {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
                   "name": "seed",
                   "type": "core::integer::u64"
+                },
+                {
+                  "name": "market_size",
+                  "type": "core::integer::u8"
                 }
               ],
               "outputs": [
@@ -2088,16 +2434,16 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-adventurer_systems",
-      "selector": "0x1ca95f88072b2ffb7b4025757a14219e7fe8424918ae3bbb0515f980385054b",
+      "tag": "ls_0_0_4-adventurer_systems",
+      "selector": "0x41dc70e7470b35721970da5efc2390b0f799beae3b45f2b2c127dda39b5fa59",
       "systems": [
         "record_item_drop",
         "upgrade"
       ]
     },
     {
-      "address": "0x697b260e11ef51ab81e46bb358dbccf1b0ce2a2534df36cc9def764158b2d95",
-      "class_hash": "0x4f83c3867d222441321b264e8406d7aa3b8ee40bb49b302d8cf4ac27b752a15",
+      "address": "0x585441db087a860fefa0d0fd5265f6cda4f80bcd7f18b69d613dcf04f07bfb8",
+      "class_hash": "0x224b6c66a5f6f2524bbada67d04c8b62b78e07b9b34f8eb81407a045595d728",
       "abi": [
         {
           "type": "impl",
@@ -2156,7 +2502,7 @@
         },
         {
           "type": "enum",
-          "name": "death_mountain::models::game_data::CollectableResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>",
+          "name": "death_mountain::models::game_data::DataResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>",
           "variants": [
             {
               "name": "Ok",
@@ -2210,6 +2556,10 @@
             },
             {
               "name": "killed_by",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "timestamp",
               "type": "core::integer::u64"
             }
           ]
@@ -2497,7 +2847,7 @@
               ],
               "outputs": [
                 {
-                  "type": "death_mountain::models::game_data::CollectableResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>"
+                  "type": "death_mountain::models::game_data::DataResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>"
                 }
               ],
               "state_mutability": "view"
@@ -2792,8 +3142,8 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-beast_systems",
-      "selector": "0x109eca3273715c8b45ebc03ff4ebab910f5fd47787fe7a979eef82916712824",
+      "tag": "ls_0_0_4-beast_systems",
+      "selector": "0x24973fa5a9d37ba65ab5533fed769ca7f3ae72d33f65eb1538940546ee2041a",
       "systems": [
         "add_collectable",
         "add_kill",
@@ -2802,8 +3152,8 @@
       ]
     },
     {
-      "address": "0x452b20f594fc2ba21d2ec0e0d052d6955a09ca1a80e4c4ed69d432addf4da5d",
-      "class_hash": "0xec64a7ecf09e11d6dacb87b30a1f84935f42faa44d9835180503ec95dbdf35",
+      "address": "0x5428d998f2c1ae410cfe1d17e188b437d0b002b05c2277d57de511ecdb287b7",
+      "class_hash": "0x1439c7f3835a4bd86a61d17a535e0b3ecb28c3cde4a2fe72c7d75935635edd3",
       "abi": [
         {
           "type": "impl",
@@ -3176,8 +3526,8 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-game_systems",
-      "selector": "0x6e6d2c18e991b0dd44d9d7c4929f7f7ba616cc481020fa1cf37ce500b2af67b",
+      "tag": "ls_0_0_4-game_systems",
+      "selector": "0x3c31e243b5f092850ff2e2822aca94f0bb0f396286dea30a4334754eb0e7882",
       "systems": [
         "start_game",
         "explore",
@@ -3191,8 +3541,8 @@
       ]
     },
     {
-      "address": "0x44f5c8aa8a99803ef269545b85523f3aa10dcbb252f65867d3dd0a2874b43d7",
-      "class_hash": "0x2dc40894e62288dae4f3abfa6f79e652ed9885709fdad3eebd138d2ba0d02eb",
+      "address": "0x71f01c8476fc7f26d84ceced2efff5985f68ea6c8ddc1195967e391fc0383cb",
+      "class_hash": "0x77582a71616488adf26fc6ae6a94c40d7fb2806aafa04646d03a22816c52948",
       "abi": [
         {
           "type": "impl",
@@ -3311,73 +3661,6 @@
               "outputs": [
                 {
                   "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
-          "type": "impl",
-          "name": "GameDetailsImpl",
-          "interface_name": "game_components_minigame::interface::IMinigameDetails"
-        },
-        {
-          "type": "struct",
-          "name": "game_components_minigame::structs::GameDetail",
-          "members": [
-            {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "value",
-              "type": "core::byte_array::ByteArray"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "core::array::Span::<game_components_minigame::structs::GameDetail>",
-          "members": [
-            {
-              "name": "snapshot",
-              "type": "@core::array::Array::<game_components_minigame::structs::GameDetail>"
-            }
-          ]
-        },
-        {
-          "type": "interface",
-          "name": "game_components_minigame::interface::IMinigameDetails",
-          "items": [
-            {
-              "type": "function",
-              "name": "token_description",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "game_details",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::array::Span::<game_components_minigame::structs::GameDetail>"
                 }
               ],
               "state_mutability": "view"
@@ -4096,10 +4379,10 @@
       ],
       "init_calldata": [
         "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-        "0x0590a7080125891a172bdac73323aa4a54cac5c5e6076b8777e6be68a6c52093"
+        "0x004311c2b0845051fc5c703ec1792a36f99272e3400953632d62b3dac68f8598"
       ],
-      "tag": "ls_0_0_3-game_token_systems",
-      "selector": "0x4cc8e289ab4f6b9bdea32ac2b3428c84c3ae431519428363cc12341b1e4a188",
+      "tag": "ls_0_0_4-game_token_systems",
+      "selector": "0x1dfa85cc49440eaf8265e68e787d75f117563fa0d58ed4d0bf005de54cec798",
       "systems": [
         "dojo_init",
         "start_game",
@@ -4116,7 +4399,7 @@
       ]
     },
     {
-      "address": "0x1418271155195efecf17e6b560ca2a13ac2b8278ec2c05944fab7007a3737a3",
+      "address": "0xeb95cb56ba8db84d165acde440ffa10df3a5cea296bd2026df84259e7ae66e",
       "class_hash": "0x23cdb494302994de197966707c72df5708f2516f5205ed398dacb4c16fc4bcc",
       "abi": [
         {
@@ -4616,15 +4899,15 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-loot_systems",
-      "selector": "0x10079fb36ed6fa91c27a5b79eba43f61bb6705b2b41825788951d184e152692",
+      "tag": "ls_0_0_4-loot_systems",
+      "selector": "0x3a8c8848dee103c9d18b3149f97776b06466b3eb7b33bebdc6a16570c73493b",
       "systems": [
         "upgrade"
       ]
     },
     {
-      "address": "0x2ec6a2319b5e9ce1dc7c6c255d6677f403cedaa7d52486a64d952459fbbb2d6",
-      "class_hash": "0x5ea3d0b6fa90806c7354a79d22ce5d91b82cd5024da008c2be052acb4ea6dda",
+      "address": "0x12edde90d2bbc93f0dac5deacbab2e19c93bf21d08a1c8510dd18c5223d8db6",
+      "class_hash": "0x2fe0ac310645660c68ea99de35378ed6bc53aeb9765fdd99b4bcc5a5fb3bb22",
       "abi": [
         {
           "type": "impl",
@@ -4678,6 +4961,100 @@
         },
         {
           "type": "impl",
+          "name": "GameDetailsImpl",
+          "interface_name": "game_components_minigame::interface::IMinigameDetails"
+        },
+        {
+          "type": "struct",
+          "name": "game_components_minigame::structs::GameDetail",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "value",
+              "type": "core::byte_array::ByteArray"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<game_components_minigame::structs::GameDetail>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<game_components_minigame::structs::GameDetail>"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "game_components_minigame::interface::IMinigameDetails",
+          "items": [
+            {
+              "type": "function",
+              "name": "token_description",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "game_details",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Span::<game_components_minigame::structs::GameDetail>"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "GameDetailsSVGImpl",
+          "interface_name": "game_components_minigame::interface::IMinigameDetailsSVG"
+        },
+        {
+          "type": "interface",
+          "name": "game_components_minigame::interface::IMinigameDetailsSVG",
+          "items": [
+            {
+              "type": "function",
+              "name": "game_details_svg",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
           "name": "RendererSystemsImpl",
           "interface_name": "death_mountain::systems::renderer::contracts::IRendererSystems"
         },
@@ -4697,6 +5074,38 @@
               "outputs": [
                 {
                   "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "generate_svg",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "generate_details",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Span::<game_components_minigame::structs::GameDetail>"
                 }
               ],
               "state_mutability": "view"
@@ -4819,15 +5228,15 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-renderer_systems",
-      "selector": "0x392780804badb341aa4008518aad1229a075606089d4240a047100076445f04",
+      "tag": "ls_0_0_4-renderer_systems",
+      "selector": "0x7adebf2d7b5310affc487ef4c9e89e7d5698c0a21fc5a1fec9e0355eaa33885",
       "systems": [
         "upgrade"
       ]
     },
     {
-      "address": "0x92248ca0435cf588e51c9678296be68b32843105cc11275270a4125322a81c",
-      "class_hash": "0x4c76ddc85c17af3195c9e385e8360fe07c79dd4530ffc49fec4df9b469a2968",
+      "address": "0x20fd285b4df10d89d35f3d04cf3dd98e1ff9317e69bdb6466ae573bf03c9f1a",
+      "class_hash": "0x416ba88f9bbb0cd3e0207fd9d4c019b4c69475e2d0e18e82cf8fba2383bd3d4",
       "abi": [
         {
           "type": "impl",
@@ -5241,6 +5650,10 @@
             {
               "name": "base_damage_reduction",
               "type": "core::integer::u8"
+            },
+            {
+              "name": "market_size",
+              "type": "core::integer::u8"
             }
           ]
         },
@@ -5290,6 +5703,10 @@
                 },
                 {
                   "name": "base_damage_reduction",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "market_size",
                   "type": "core::integer::u8"
                 }
               ],
@@ -5503,8 +5920,8 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-settings_systems",
-      "selector": "0x2254d45023f5ef42fea645233c31178dd5d52f4f4e565b8271891a9939842d9",
+      "tag": "ls_0_0_4-settings_systems",
+      "selector": "0x31a1e22ff61fd598e436545aa2f24c5b1466f5d0df7d784b2732874c6de27f3",
       "systems": [
         "dojo_init",
         "add_settings",
@@ -5517,88 +5934,88 @@
     {
       "members": [],
       "class_hash": "0x771a18fa631c8bf12e2b85cdf510b9b59959655090027883b18100641a08497",
-      "tag": "ls_0_0_3-AdventurerEntropy",
-      "selector": "0x61684060a1f4b5960652d3b83b68bbe4e900cd1d92d94968f7800bb9b7e9350"
+      "tag": "ls_0_0_4-AdventurerEntropy",
+      "selector": "0x3344075f3cd4650d6c4bbb7833b4346a456e8176efbc6a8ca6246b54674a025"
     },
     {
       "members": [],
       "class_hash": "0x7271344d76037ef2c0e6e8156b7dfa7c7b40dfc566b99f9770c99b14cb70e5b",
-      "tag": "ls_0_0_3-AdventurerKilled",
-      "selector": "0x190bbbc038c88a60dc5a91e98a38aaae4645e88a481152ecf6eb89353c11a02"
+      "tag": "ls_0_0_4-AdventurerKilled",
+      "selector": "0xfc6d2433ba9c67a046c7faf908ed7b165ec71669cee8458c412136aea739c1"
     },
     {
       "members": [],
       "class_hash": "0x33b8218ffef53844194e5bc510edfa023441c8284a0254b002742509af88449",
-      "tag": "ls_0_0_3-AdventurerPacked",
-      "selector": "0x409e48c5486428ea3a9571967c5b481d18dad18afde48a0e0dbeea45c1a6119"
+      "tag": "ls_0_0_4-AdventurerPacked",
+      "selector": "0x478b8fc4c1613b921addcfa570636ee90a643ccdcd49341a86578a4df72a982"
     },
     {
       "members": [],
       "class_hash": "0x283ab5cc1ee44d8476f367faf47184901b144bfbc36740491a5a96dbb950599",
-      "tag": "ls_0_0_3-BagPacked",
-      "selector": "0x66d61069c5c6e6d3ce5c9a681935a371f7bff3ddf295fca016efef28716b130"
+      "tag": "ls_0_0_4-BagPacked",
+      "selector": "0x1bd7eea259cfb36535397d3beb9cfa96900e750084463787948440a69429b08"
     },
     {
       "members": [],
       "class_hash": "0x3f58ca824d6b406472a58004a59fedc42889bb3b46220766b10e4e2f004e5b6",
-      "tag": "ls_0_0_3-CollectableCount",
-      "selector": "0x7bae3d49ae4c6f939d927afdc02ff751da95bd19174dc8f12d53fe8a9273c2d"
+      "tag": "ls_0_0_4-CollectableCount",
+      "selector": "0x758aae3b62ff8635ca32de8f1644b92205b779d04c6cbc3b4ed2145e9400aab"
     },
     {
       "members": [],
-      "class_hash": "0x6f72223ce0d9079f149abbe4f512cef0718c37129167cb3dbd5835841784b3a",
-      "tag": "ls_0_0_3-CollectableEntity",
-      "selector": "0x72c29215eaf728cf41f65097ed6931b15851f537c4e4b7740e22e89372a8726"
+      "class_hash": "0x603d0d6568096654bbabaa2f1494a497f3060fa3c03882823cea468c8b9bf94",
+      "tag": "ls_0_0_4-CollectableEntity",
+      "selector": "0x408b365b85cc9db0c6771a8a5a457bb8a0a82122393d8ad15f1f972cc0b9057"
     },
     {
       "members": [],
       "class_hash": "0x1574c394faebc84b15fd5e43414a47ac257ebadb3683775d4df7998bdfdc840",
-      "tag": "ls_0_0_3-DroppedItem",
-      "selector": "0x3c8e2abb4f0cace0aefd252d0d7df477e0a98f1f8077aa2bc263ba7e7278cf5"
+      "tag": "ls_0_0_4-DroppedItem",
+      "selector": "0x6e58aaf7984abeadf09e3ae92a73cd5abc556b544357e766a45656c1a09e382"
     },
     {
       "members": [],
       "class_hash": "0x654e3dcfe40ee0d8a3e2d17a448f8208a2515316b9573629ef9ebb038ae2fda",
-      "tag": "ls_0_0_3-EntityStats",
-      "selector": "0x2811e1508fb872e0e63b19e23eca902ea1758fc19a2fe0bbc53d4d4c479b2cb"
+      "tag": "ls_0_0_4-EntityStats",
+      "selector": "0x77e71d14dd25f0b53aa631e1ffcb37772682e4c511f6b2ed3d2015a68fb0bc4"
     },
     {
       "members": [],
-      "class_hash": "0x79210d657508115b5ed81b30ab50889a4fcd56266f646e17733b877cbc1fb36",
-      "tag": "ls_0_0_3-GameSettings",
-      "selector": "0x274b96fd70f18eba1d682d55fc31289caa91ba6f19b92c3f7ae31e4a272b11a"
+      "class_hash": "0x60334ed79ffe3bb44f5331aa432014a9df104683769da7a4ad6dab9e23630fb",
+      "tag": "ls_0_0_4-GameSettings",
+      "selector": "0x2d00827e90e7237293408fdcb3ea93711c9de67192e8273497ada7e3e215f17"
     },
     {
       "members": [],
       "class_hash": "0x42467a73ead2a48a5d522d48d5ca6fa81a6a5b1377b6b8f0e32c3b0f4c0c8b6",
-      "tag": "ls_0_0_3-GameSettingsMetadata",
-      "selector": "0x7544994f840a8e3ef7592b4c863e124c02d76dd7149c23f2569b5df812a39bd"
+      "tag": "ls_0_0_4-GameSettingsMetadata",
+      "selector": "0x5f7f0260826486a68d0274079126d281fc2a55df9f27d762ca7f638e7a479f"
     },
     {
       "members": [],
       "class_hash": "0x2aa835e634c1a8ff12a13e1f1e8592a1f9efcfb61f048e8907a7b4e29656930",
-      "tag": "ls_0_0_3-ScoreObjective",
-      "selector": "0x40d937c19191bf178df18b746de58721794c7c6a81e57c8a249bf4fff770842"
+      "tag": "ls_0_0_4-ScoreObjective",
+      "selector": "0x766b0132b0d56618882664f8d221a2515758140edb39f126f938b04a7701063"
     },
     {
       "members": [],
       "class_hash": "0x5ece982bfe94084959dcedbf5a4474810aeeef714cc4bb2ef78248aa36dd9e4",
-      "tag": "ls_0_0_3-ScoreObjectiveCount",
-      "selector": "0x39e7bc23658680ced3e82a2544c3418953e2fb8c98066c185be6de9f1b95ae2"
+      "tag": "ls_0_0_4-ScoreObjectiveCount",
+      "selector": "0x61370ac87ecc1640ac12f631c394cbe3447463ae34ec83fcd78621f99217e8c"
     },
     {
       "members": [],
       "class_hash": "0x791787e562ed970a599a13e2f690391968b8f75ea0dcfc38573fc3300c6c942",
-      "tag": "ls_0_0_3-SettingsCounter",
-      "selector": "0x3ff9dfc290210c04eb55643880d68c0b9ea411fc35e44558a791e678496f94b"
+      "tag": "ls_0_0_4-SettingsCounter",
+      "selector": "0x454d01763423a3c05c5100fd8e57079741aab04769922fbc99d95f4ce955459"
     }
   ],
   "events": [
     {
       "members": [],
       "class_hash": "0x5a3ab3a85b1c39cf5678ef7247fbec098103c4baf9f52d41632d22acce4e77d",
-      "tag": "ls_0_0_3-GameEvent",
-      "selector": "0x1660418e1f7c968e165e360b552243caad6d72b249a696cfbbea1120c8256f3"
+      "tag": "ls_0_0_4-GameEvent",
+      "selector": "0x20e9be09271548f43e9d07795a333e0f3b02d2cb1101a80aca4363fbed9a05"
     }
   ],
   "external_contracts": []

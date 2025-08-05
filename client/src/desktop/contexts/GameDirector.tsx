@@ -115,6 +115,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameAddresses: [
       addAddressPadding(GAME_TOKEN_ADDRESS), // adding pad address to sdk
     ],
+    tokenIds: [gameId ? gameId.toString() : "0"],
   });
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
@@ -126,7 +127,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [videoQueue, setVideoQueue] = useState<string[]>([]);
 
   const gameTokensKey = useMemo(() => {
-    return gameTokens.map((token) => token.token_id).join(",");
+    return gameTokens.map((token: any) => token.token_id).join(",");
   }, [gameTokens]);
 
   useEffect(() => {

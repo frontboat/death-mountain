@@ -60,9 +60,9 @@ export const NETWORKS = {
     chainId: ChainId.WP_PG_SLOT,
     name: "Katana",
     status: "online",
-    namespace: "ls_0_0_3",
+    namespace: "ls_0_0_4",
     slot: "pg-slot",
-    rpcUrl: "https://api.cartridge.gg/x/pg-slot/katana",
+    rpcUrl: "https://api.cartridge.gg/x/pg-slot-2/katana",
     torii: "https://api.cartridge.gg/x/pg-slot-2/torii",
     tokens: {
       erc20: [],

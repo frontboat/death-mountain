@@ -61,6 +61,7 @@ pub struct GameSettings {
     pub in_battle: bool,
     pub stats_mode: StatsMode,
     pub base_damage_reduction: u8,
+    pub market_size: u8,
 }
 
 #[derive(Introspect, Copy, Drop, Serde, PartialEq)]

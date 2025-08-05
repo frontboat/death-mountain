@@ -15,6 +15,7 @@ export interface Settings {
   in_battle: boolean;
   stats_mode: string;
   base_damage_reduction: number;
+  market_size: number;
 }
 
 export const useGameSettings = () => {
@@ -102,7 +103,8 @@ export const useGameSettings = () => {
         game_seed: parseInt(item.game_seed, 16),
         game_seed_until_xp: item.game_seed_until_xp,
         stats_mode: item.stats_mode,
-        base_damage_reduction: item.base_damage_reduction || 0,
+        base_damage_reduction: item.base_damage_reduction || 50,
+        market_size: item.market_size || 25,
       }));
 
       // Sort by the order of input IDs if provided
