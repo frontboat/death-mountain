@@ -95,7 +95,7 @@ mod game_token_systems {
                 "Provable Games",
                 "Provable Games",
                 "Dungeon Generator",
-                "https://deathmountain.gg/favicon-32x32.png",
+                "https://deathmountain.gg/favicon.png",
                 Option::None, // color
                 Option::None, // client_url
                 Option::Some(renderer_address), // renderer address
@@ -118,6 +118,7 @@ mod game_token_systems {
                     in_battle: false,
                     stats_mode: StatsMode::Dodge,
                     base_damage_reduction: 50,
+                    market_size: 25,
                 },
             );
 

@@ -74,6 +74,7 @@ mod game_systems {
         level: u8,
         market_seed: u64,
         game_libs: GameLibs,
+        market_size: u8,
     ) {
         _emit_game_event(ref world, adventurer_id, action_count, GameEventDetails::level_up(LevelUpEvent { level }));
         _emit_game_event(
@@ -81,7 +82,9 @@ mod game_systems {
             adventurer_id,
             action_count,
             GameEventDetails::market_items(
-                MarketItemsEvent { items: game_libs.adventurer.get_market(adventurer_id, market_seed).span() },
+                MarketItemsEvent {
+                    items: game_libs.adventurer.get_market(adventurer_id, market_seed, market_size).span(),
+                },
             ),
         );
     }
@@ -155,7 +158,13 @@ mod game_systems {
                 );
 
                 _emit_lvl_events(
-                    ref world, adventurer_id, adventurer.action_count, adventurer.get_level(), market_seed, game_libs,
+                    ref world,
+                    adventurer_id,
+                    adventurer.action_count,
+                    adventurer.get_level(),
+                    market_seed,
+                    game_libs,
+                    game_settings.market_size,
                 );
 
                 if game_settings.in_battle {
@@ -218,7 +227,13 @@ mod game_systems {
             if (orig_adv.get_level() < adventurer.get_level()) {
                 _save_seed(ref world, adventurer_id, market_seed, 0);
                 _emit_lvl_events(
-                    ref world, adventurer_id, adventurer.action_count, adventurer.get_level(), market_seed, game_libs,
+                    ref world,
+                    adventurer_id,
+                    adventurer.action_count,
+                    adventurer.get_level(),
+                    market_seed,
+                    game_libs,
+                    game_settings.market_size,
                 );
             }
 
@@ -295,7 +310,13 @@ mod game_systems {
             if (orig_adv.get_level() < adventurer.get_level()) {
                 _save_seed(ref world, adventurer_id, market_seed, 0);
                 _emit_lvl_events(
-                    ref world, adventurer_id, adventurer.action_count, adventurer.get_level(), market_seed, game_libs,
+                    ref world,
+                    adventurer_id,
+                    adventurer.action_count,
+                    adventurer.get_level(),
+                    market_seed,
+                    game_libs,
+                    game_settings.market_size,
                 );
             }
 
@@ -353,7 +374,13 @@ mod game_systems {
             if (orig_adv.get_level() < adventurer.get_level()) {
                 _save_seed(ref world, adventurer_id, market_seed, 0);
                 _emit_lvl_events(
-                    ref world, adventurer_id, adventurer.action_count, adventurer.get_level(), market_seed, game_libs,
+                    ref world,
+                    adventurer_id,
+                    adventurer.action_count,
+                    adventurer.get_level(),
+                    market_seed,
+                    game_libs,
+                    game_settings.market_size,
                 );
             }
 
@@ -476,11 +503,19 @@ mod game_systems {
             _assert_not_in_battle(adventurer);
             assert(adventurer.stat_upgrades_available == 0, messages::MARKET_CLOSED);
 
+            let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
+
             // if the player is buying items, process purchases
             let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
             if (items.len() != 0) {
                 _buy_items(
-                    adventurer_id, adventurer_entropy.market_seed, ref adventurer, ref bag, items.clone(), game_libs,
+                    adventurer_id,
+                    adventurer_entropy.market_seed,
+                    ref adventurer,
+                    ref bag,
+                    items.clone(),
+                    game_libs,
+                    game_settings.market_size,
                 );
             }
 
@@ -1403,9 +1438,10 @@ mod game_systems {
         ref bag: Bag,
         items_to_purchase: Array<ItemPurchase>,
         game_libs: GameLibs,
+        market_size: u8,
     ) {
         // get adventurer entropy
-        let market_inventory = game_libs.adventurer.get_market(adventurer_id, market_seed);
+        let market_inventory = game_libs.adventurer.get_market(adventurer_id, market_seed, market_size);
 
         // mutable array for returning items that need to be equipped as part of this purchase
         let mut items_to_equip = ArrayTrait::<u8>::new();
@@ -1896,7 +1932,7 @@ mod tests {
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
         // get valid item from market
-        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
         let item_id = *market_items.at(0);
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
 
@@ -1923,7 +1959,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         // get first item on the market
         let item_id = *market_items.at(3);
@@ -1952,7 +1988,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         // try to buy same item but equip one and put one in bag
         let item_id = *market_items.at(0);
@@ -2002,7 +2038,7 @@ mod tests {
         game.select_stat_upgrades(adventurer_id, stat_upgrades);
 
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
         shopping_cart.append(ItemPurchase { item_id: *market_items.at(0), equip: false });
@@ -2029,7 +2065,7 @@ mod tests {
         game.select_stat_upgrades(adventurer_id, stat_upgrades);
 
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         let mut purchased_weapon: u8 = 0;
         let mut purchased_chest: u8 = 0;
@@ -2163,7 +2199,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         let mut purchased_weapon: u8 = 0;
         let mut purchased_chest: u8 = 0;
@@ -2412,7 +2448,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         // get first item on the market
         let purchased_item_id = *market_items.at(0);
@@ -2515,7 +2551,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         // buy two items
         let mut items_to_purchase = ArrayTrait::<ItemPurchase>::new();

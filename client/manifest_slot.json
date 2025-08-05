@@ -2122,7 +2122,7 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-adventurer_systems",
+      "tag": "ls_0_0_4-adventurer_systems",
       "selector": "0x1ca95f88072b2ffb7b4025757a14219e7fe8424918ae3bbb0515f980385054b",
       "systems": [
         "record_item_drop",
@@ -2826,7 +2826,7 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-beast_systems",
+      "tag": "ls_0_0_4-beast_systems",
       "selector": "0x109eca3273715c8b45ebc03ff4ebab910f5fd47787fe7a979eef82916712824",
       "systems": [
         "add_collectable",
@@ -3210,7 +3210,7 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-game_systems",
+      "tag": "ls_0_0_4-game_systems",
       "selector": "0x6e6d2c18e991b0dd44d9d7c4929f7f7ba616cc481020fa1cf37ce500b2af67b",
       "systems": [
         "start_game",
@@ -4065,7 +4065,7 @@
         "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
         "0x004311c2b0845051fc5c703ec1792a36f99272e3400953632d62b3dac68f8598"
       ],
-      "tag": "ls_0_0_3-game_token_systems",
+      "tag": "ls_0_0_4-game_token_systems",
       "selector": "0x4cc8e289ab4f6b9bdea32ac2b3428c84c3ae431519428363cc12341b1e4a188",
       "systems": [
         "dojo_init",
@@ -4583,7 +4583,7 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-loot_systems",
+      "tag": "ls_0_0_4-loot_systems",
       "selector": "0x10079fb36ed6fa91c27a5b79eba43f61bb6705b2b41825788951d184e152692",
       "systems": [
         "upgrade"
@@ -4912,7 +4912,7 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-renderer_systems",
+      "tag": "ls_0_0_4-renderer_systems",
       "selector": "0x392780804badb341aa4008518aad1229a075606089d4240a047100076445f04",
       "systems": [
         "upgrade"
@@ -5596,7 +5596,7 @@
         }
       ],
       "init_calldata": [],
-      "tag": "ls_0_0_3-settings_systems",
+      "tag": "ls_0_0_4-settings_systems",
       "selector": "0x2254d45023f5ef42fea645233c31178dd5d52f4f4e565b8271891a9939842d9",
       "systems": [
         "dojo_init",
@@ -5610,79 +5610,79 @@
     {
       "members": [],
       "class_hash": "0x771a18fa631c8bf12e2b85cdf510b9b59959655090027883b18100641a08497",
-      "tag": "ls_0_0_3-AdventurerEntropy",
+      "tag": "ls_0_0_4-AdventurerEntropy",
       "selector": "0x61684060a1f4b5960652d3b83b68bbe4e900cd1d92d94968f7800bb9b7e9350"
     },
     {
       "members": [],
       "class_hash": "0x7271344d76037ef2c0e6e8156b7dfa7c7b40dfc566b99f9770c99b14cb70e5b",
-      "tag": "ls_0_0_3-AdventurerKilled",
+      "tag": "ls_0_0_4-AdventurerKilled",
       "selector": "0x190bbbc038c88a60dc5a91e98a38aaae4645e88a481152ecf6eb89353c11a02"
     },
     {
       "members": [],
       "class_hash": "0x33b8218ffef53844194e5bc510edfa023441c8284a0254b002742509af88449",
-      "tag": "ls_0_0_3-AdventurerPacked",
+      "tag": "ls_0_0_4-AdventurerPacked",
       "selector": "0x409e48c5486428ea3a9571967c5b481d18dad18afde48a0e0dbeea45c1a6119"
     },
     {
       "members": [],
       "class_hash": "0x283ab5cc1ee44d8476f367faf47184901b144bfbc36740491a5a96dbb950599",
-      "tag": "ls_0_0_3-BagPacked",
+      "tag": "ls_0_0_4-BagPacked",
       "selector": "0x66d61069c5c6e6d3ce5c9a681935a371f7bff3ddf295fca016efef28716b130"
     },
     {
       "members": [],
       "class_hash": "0x3f58ca824d6b406472a58004a59fedc42889bb3b46220766b10e4e2f004e5b6",
-      "tag": "ls_0_0_3-CollectableCount",
+      "tag": "ls_0_0_4-CollectableCount",
       "selector": "0x7bae3d49ae4c6f939d927afdc02ff751da95bd19174dc8f12d53fe8a9273c2d"
     },
     {
       "members": [],
       "class_hash": "0x6f72223ce0d9079f149abbe4f512cef0718c37129167cb3dbd5835841784b3a",
-      "tag": "ls_0_0_3-CollectableEntity",
+      "tag": "ls_0_0_4-CollectableEntity",
       "selector": "0x72c29215eaf728cf41f65097ed6931b15851f537c4e4b7740e22e89372a8726"
     },
     {
       "members": [],
       "class_hash": "0x1574c394faebc84b15fd5e43414a47ac257ebadb3683775d4df7998bdfdc840",
-      "tag": "ls_0_0_3-DroppedItem",
+      "tag": "ls_0_0_4-DroppedItem",
       "selector": "0x3c8e2abb4f0cace0aefd252d0d7df477e0a98f1f8077aa2bc263ba7e7278cf5"
     },
     {
       "members": [],
       "class_hash": "0x654e3dcfe40ee0d8a3e2d17a448f8208a2515316b9573629ef9ebb038ae2fda",
-      "tag": "ls_0_0_3-EntityStats",
+      "tag": "ls_0_0_4-EntityStats",
       "selector": "0x2811e1508fb872e0e63b19e23eca902ea1758fc19a2fe0bbc53d4d4c479b2cb"
     },
     {
       "members": [],
       "class_hash": "0x79210d657508115b5ed81b30ab50889a4fcd56266f646e17733b877cbc1fb36",
-      "tag": "ls_0_0_3-GameSettings",
+      "tag": "ls_0_0_4-GameSettings",
       "selector": "0x274b96fd70f18eba1d682d55fc31289caa91ba6f19b92c3f7ae31e4a272b11a"
     },
     {
       "members": [],
       "class_hash": "0x42467a73ead2a48a5d522d48d5ca6fa81a6a5b1377b6b8f0e32c3b0f4c0c8b6",
-      "tag": "ls_0_0_3-GameSettingsMetadata",
+      "tag": "ls_0_0_4-GameSettingsMetadata",
       "selector": "0x7544994f840a8e3ef7592b4c863e124c02d76dd7149c23f2569b5df812a39bd"
     },
     {
       "members": [],
       "class_hash": "0x2aa835e634c1a8ff12a13e1f1e8592a1f9efcfb61f048e8907a7b4e29656930",
-      "tag": "ls_0_0_3-ScoreObjective",
+      "tag": "ls_0_0_4-ScoreObjective",
       "selector": "0x40d937c19191bf178df18b746de58721794c7c6a81e57c8a249bf4fff770842"
     },
     {
       "members": [],
       "class_hash": "0x5ece982bfe94084959dcedbf5a4474810aeeef714cc4bb2ef78248aa36dd9e4",
-      "tag": "ls_0_0_3-ScoreObjectiveCount",
+      "tag": "ls_0_0_4-ScoreObjectiveCount",
       "selector": "0x39e7bc23658680ced3e82a2544c3418953e2fb8c98066c185be6de9f1b95ae2"
     },
     {
       "members": [],
       "class_hash": "0x791787e562ed970a599a13e2f690391968b8f75ea0dcfc38573fc3300c6c942",
-      "tag": "ls_0_0_3-SettingsCounter",
+      "tag": "ls_0_0_4-SettingsCounter",
       "selector": "0x3ff9dfc290210c04eb55643880d68c0b9ea411fc35e44558a791e678496f94b"
     }
   ],
@@ -5690,7 +5690,7 @@
     {
       "members": [],
       "class_hash": "0x5a3ab3a85b1c39cf5678ef7247fbec098103c4baf9f52d41632d22acce4e77d",
-      "tag": "ls_0_0_3-GameEvent",
+      "tag": "ls_0_0_4-GameEvent",
       "selector": "0x1660418e1f7c968e165e360b552243caad6d72b249a696cfbbea1120c8256f3"
     }
   ],

@@ -32,7 +32,7 @@ pub trait IAdventurerSystems<T> {
     fn bag_contains(self: @T, bag: Bag, item_id: u8) -> (bool, Item);
     fn get_randomness(self: @T, adventurer_xp: u16, seed: u64) -> (u32, u32, u16, u16, u8, u8, u8, u8);
     fn get_battle_randomness(self: @T, xp: u16, action_count: u16, seed: u64) -> (u8, u8, u8, u8);
-    fn get_market(self: @T, adventurer_id: u64, seed: u64) -> Array<u8>;
+    fn get_market(self: @T, adventurer_id: u64, seed: u64, market_size: u8) -> Array<u8>;
 }
 
 #[dojo::contract]
@@ -203,8 +203,7 @@ mod adventurer_systems {
             ImplAdventurer::get_battle_randomness(xp, action_count, seed)
         }
 
-        fn get_market(self: @ContractState, adventurer_id: u64, seed: u64) -> Array<u8> {
-            let market_size = ImplMarket::get_market_size();
+        fn get_market(self: @ContractState, adventurer_id: u64, seed: u64, market_size: u8) -> Array<u8> {
             ImplMarket::get_available_items(adventurer_id, seed, market_size)
         }
     }
