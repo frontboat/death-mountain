@@ -27,7 +27,8 @@ const DEFAULT_SETTINGS: GameSettingsData = {
   game_seed: 0,
   game_seed_until_xp: 0,
   stats_mode: 'Dodge',
-  base_damage_reduction: 0,
+  base_damage_reduction: 50,
+  market_size: 25,
   adventurer: {
     health: 100,
     xp: 1,
@@ -681,6 +682,9 @@ export default function GameSettings() {
             </Box>
             <Box sx={{ width: '100%', mt: 1 }}>
               {renderSettingItem('Base Damage Reduction', 'base_damage_reduction', 'number', [0, 100])}
+            </Box>
+            <Box sx={{ width: '100%', mt: 1 }}>
+              {renderSettingItem('Market Size', 'market_size', 'number', [0, 31])}
             </Box>
 
             {gameSettings.in_battle && beast !== null ? (

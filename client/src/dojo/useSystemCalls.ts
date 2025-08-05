@@ -302,6 +302,7 @@ export const useSystemCalls = () => {
             settings.in_battle,
             settings.stats_mode === "Dodge" ? 0 : 1,
             settings.base_damage_reduction,
+            settings.market_size,
           ],
         },
       ],
