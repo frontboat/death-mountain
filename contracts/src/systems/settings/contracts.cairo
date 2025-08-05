@@ -32,7 +32,7 @@ mod settings_systems {
     use death_mountain::libs::settings::generate_settings_array;
     use death_mountain::models::adventurer::adventurer::{Adventurer};
     use death_mountain::models::adventurer::bag::{Bag, ImplBag};
-    use death_mountain::models::adventurer::equipment::{ImplEquipment, IEquipment};
+    use death_mountain::models::adventurer::equipment::{IEquipment, ImplEquipment};
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter, StatsMode};
 
     use dojo::model::ModelStorage;
