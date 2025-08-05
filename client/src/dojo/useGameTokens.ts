@@ -227,15 +227,13 @@ export const useGameTokens = () => {
       let games = gamesData.map((game: any) => {
         let adventurerData = gameEvents.find(
           (event: any) =>
-            event.adventurer_id ===
-            addAddressPadding(game.token_id.toString(16))
+            parseInt(event.adventurer_id, 16) === game.token_id
         );
 
         let adventurer = adventurerData?.details?.adventurer || {};
-
         let tokenId = game.token_id;
-        let expires_at = game.lifecycle.end * 1000;
-        let available_at = game.lifecycle.start * 1000;
+        let expires_at = (game.lifecycle.end || 0) * 1000;
+        let available_at = (game.lifecycle.start || 0) * 1000;
 
         return {
           ...adventurer,
