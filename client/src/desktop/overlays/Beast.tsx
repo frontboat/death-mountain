@@ -3,7 +3,6 @@ import { useGameStore } from '@/stores/gameStore';
 import { beastPowerPercent } from '@/utils/beast';
 import { calculateLevel } from '@/utils/game';
 import { beastNameSize } from '@/utils/utils';
-import { useStarknetApi } from '@/api/starknet';
 import { Box, LinearProgress, Typography, keyframes } from '@mui/material';
 import { useEffect, useState } from 'react';
 
@@ -20,12 +19,11 @@ const pulseGold = keyframes`
 `;
 
 export default function Beast() {
-  const { isBeastCollectable } = useStarknetApi();
   const { adventurer, beast, battleEvent, setShowInventory } = useGameStore();
   const [beastHealth, setBeastHealth] = useState(adventurer!.beast_health);
 
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
-  const collectable = beast ? isBeastCollectable(beast!.id) : false;
+  const collectable = beast ? beast!.isCollectable : false;
 
   useEffect(() => {
     if (battleEvent && battleEvent.type === "attack") {

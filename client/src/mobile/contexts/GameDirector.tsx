@@ -98,7 +98,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     drop,
   } = useSystemCalls();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { getAdventurer } = useStarknetApi();
+  const { getAdventurer, isBeastCollectable } = useStarknetApi();
   const { getSettingsList } = useGameSettings();
   const { fetchMetadata } = useGameTokens();
   const { getEntityModel } = useEntityModel();
@@ -109,6 +109,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameId,
     adventurer,
     adventurerState,
+    beast,
     setAdventurer,
     setBag,
     setBeast,
@@ -121,6 +122,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     metadata,
     gameSettings,
     setGameSettings,
+    setShowBeastCollected,
   } = useGameStore();
 
   const [spectating, setSpectating] = useState(false);
@@ -202,7 +204,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     if (subscription) {
       try {
         subscription.cancel();
-      } catch (error) {}
+      } catch (error) { }
     }
 
     const [initialData, sub] = await sdk.subscribeEventQuery({
@@ -277,7 +279,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     if (event.type === "beast") {
-      setBeast(event.beast!);
+      let isCollectable = await isBeastCollectable(event.beast!);
+      setBeast({ ...event.beast!, isCollectable });
+    }
+
+    if (event.type === "defeated_beast" && beast?.isCollectable) {
+      setShowBeastCollected(true);
     }
 
     if (event.type === "market_items") {

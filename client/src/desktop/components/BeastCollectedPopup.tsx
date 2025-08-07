@@ -1,24 +1,17 @@
-import { Box, Typography, Paper, IconButton, Divider } from '@mui/material';
-import beastImg from '../assets/images/beast.png';
+import beastImg from '@/assets/images/beast.png';
+import { Beast } from '@/types/game';
+import CategoryIcon from '@mui/icons-material/Category';
 import CloseIcon from '@mui/icons-material/Close';
-import FlashOnIcon from '@mui/icons-material/FlashOn';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
 import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import CategoryIcon from '@mui/icons-material/Category';
-import React from 'react';
+import { Box, Divider, IconButton, Paper, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 
 export interface BeastCollectedPopupProps {
   onClose: () => void;
-  beast?: {
-    name: string;
-    power: number;
-    rank: number;
-    tier: number;
-    level: number;
-    type: string;
-  };
+  beast?: Beast;
 }
 
 const statIcons = {
@@ -59,12 +52,7 @@ export default function BeastCollectedPopup({ onClose, beast }: BeastCollectedPo
               <Box sx={styles.statBadgeMain}>
                 {statIcons.power}
                 <Typography sx={styles.statLabelMain}>Power</Typography>
-                <Typography sx={styles.statValueMain}>{displayBeast?.power}</Typography>
-              </Box>
-              <Box sx={styles.statBadgeMain}>
-                {statIcons.rank}
-                <Typography sx={styles.statLabelMain}>Rank</Typography>
-                <Typography sx={styles.statValueMain}>{displayBeast?.rank}</Typography>
+                <Typography sx={styles.statValueMain}>{(6 - displayBeast!.tier) * displayBeast!.level}</Typography>
               </Box>
             </Box>
             <Box sx={styles.bottomRow}>

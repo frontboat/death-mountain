@@ -8,7 +8,6 @@ import Adventurer from './Adventurer';
 import Beast from './Beast';
 import InventoryOverlay from './Inventory';
 import TipsOverlay from './Tips';
-import BeastCollectedPopup from '@/desktop/components/BeastCollectedPopup';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -16,14 +15,13 @@ const equipMessage = "Equipping items";
 
 export default function CombatOverlay() {
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { adventurer, adventurerState, beast, battleEvent, bag, equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
+  const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment, setShowBeastRewards } = useGameStore();
 
   const [untilDeath, setUntilDeath] = useState(false);
   const [attackInProgress, setAttackInProgress] = useState(false);
   const [fleeInProgress, setFleeInProgress] = useState(false);
   const [equipInProgress, setEquipInProgress] = useState(false);
   const [combatLog, setCombatLog] = useState("");
-  const [showBeastPopup, setShowBeastPopup] = useState(false);
 
   useEffect(() => {
     if (adventurer?.xp === 0) {
@@ -95,29 +93,6 @@ export default function CombatOverlay() {
 
   return (
     <Box sx={styles.container}>
-      {/* Test Button for BeastCollectedPopup */}
-      {/* <Button
-        size="small"
-        variant="outlined"
-        sx={{ position: 'absolute', bottom: 12, right: 12, zIndex: 3000, minWidth: 0, px: 1, py: 0.5, fontSize: 12 }}
-        onClick={() => setShowBeastPopup(true)}
-      >
-        Test Beast Popup
-      </Button> */}
-      {showBeastPopup && beast && (
-        <BeastCollectedPopup
-          onClose={() => setShowBeastPopup(false)}
-          // Pass beast values, fallback to dummy if missing
-          beast={{
-            name: beast.baseName || 'Unknown Beast',
-            power: (6 - beast.tier) * beast.level,
-            rank: 15,
-            tier: beast.tier,
-            level: beast.level || 1,
-            type: beast.type,
-          }}
-        />
-      )}
       <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${beast!.baseName.toLowerCase()}.png')` }]} />
 
       {/* Adventurer */}

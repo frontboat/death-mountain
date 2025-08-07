@@ -58,6 +58,7 @@ export interface Beast {
   tier: number;
   specialPrefix: string | null;
   specialSuffix: string | null;
+  isCollectable: boolean;
 }
 
 export interface Stats {

@@ -145,7 +145,8 @@ export const getBeastFromSeed = (adventurer_xp: number, entropy: number): Beast 
     type: encounter.type,
     tier: Number(encounter.tier),
     specialPrefix: encounter.level! >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_PREFIXES[1 + Number(rnd5 % BigInt(69))] : null,
-    specialSuffix: encounter.level! >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_SUFFIXES[1 + Number(rnd6 % BigInt(18))] : null
+    specialSuffix: encounter.level! >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_SUFFIXES[1 + Number(rnd6 % BigInt(18))] : null,
+    isCollectable: false
   };
 };
 

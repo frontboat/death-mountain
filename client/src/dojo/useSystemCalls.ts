@@ -10,6 +10,7 @@ export const useSystemCalls = () => {
 
   const namespace = dojoConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
+  const DUNGEON_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS;
   const GAME_ADDRESS = getContractByName(
     dojoConfig.manifest,
     namespace,

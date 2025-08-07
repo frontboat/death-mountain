@@ -21,7 +21,6 @@ const fleeMessage = "Attempting to flee";
 const equipMessage = "Equipping items";
 
 export default function BeastScreen() {
-  const { isBeastCollectable } = useStarknetApi();
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, adventurerState, beast, battleEvent, bag, gameSettings,
     equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
@@ -151,7 +150,6 @@ export default function BeastScreen() {
 
   const combatStats = beast ? calculateCombatStats(adventurer!, bag, beast) : null;
   const bestItemIds = combatStats?.bestItems.map((item: Item) => item.id) || [];
-  const collectable = beast ? isBeastCollectable(beast!.id) : false;
 
   return (
     <motion.div
@@ -170,7 +168,7 @@ export default function BeastScreen() {
                 variant={beast!.name.length > 28 ? "h5" : "h4"}
                 sx={[
                   styles.beastName,
-                  collectable && {
+                  beast!.isCollectable && {
                     animation: `${pulseTextGlow} 2s infinite`,
                   }
                 ]}
@@ -203,14 +201,14 @@ export default function BeastScreen() {
                 value={(beastHealth / beast!.health) * 100}
                 sx={styles.healthBar}
               />
-              {collectable && (
+              {beast!.isCollectable && (
                 <Typography sx={styles.collectableText}>
                   This beast can be collected
                 </Typography>
               )}
             </Box>
           </Box>
-          <Box sx={collectable ? styles.collectableBeastContainer : styles.beastImageContainer}>
+          <Box sx={beast!.isCollectable ? styles.collectableBeastContainer : styles.beastImageContainer}>
             <img
               src={getBeastImageById(beast!.id)}
               alt={beast!.name}
