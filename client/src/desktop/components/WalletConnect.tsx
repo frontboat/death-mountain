@@ -2,9 +2,11 @@ import { useController } from '@/contexts/controller';
 import { ellipseAddress } from '@/utils/utils';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import { Button } from '@mui/material';
+import { useAccount } from '@starknet-react/core';
 
 function WalletConnect() {
-  const { account, address, isPending, playerName, login, openProfile } = useController()
+  const { isPending, playerName, login, openProfile } = useController()
+  const { account, address } = useAccount();
 
   return (
     <>
@@ -17,7 +19,7 @@ function WalletConnect() {
           size='small'
           fullWidth
           startIcon={<SportsEsportsOutlinedIcon htmlColor='secondary.contrastText' />}
-          sx={{ justifyContent: 'center', color: 'secondary.contrastText', opacity: 1 }}
+          sx={{ justifyContent: 'center', color: 'secondary.contrastText', opacity: 1, height: '40px' }}
         >
           {playerName ? playerName : ellipseAddress(address, 4, 4)}
         </Button>
@@ -30,7 +32,7 @@ function WalletConnect() {
           size='small'
           fullWidth
           startIcon={<SportsEsportsOutlinedIcon htmlColor='secondary.contrastText' />}
-          sx={{ justifyContent: 'center', color: 'secondary.contrastText' }}
+          sx={{ justifyContent: 'center', color: 'secondary.contrastText', height: '40px' }}
         >
           Log In
         </Button>

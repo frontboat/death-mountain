@@ -2,8 +2,7 @@ import { useController } from "@/contexts/controller";
 import { useDojoConfig } from "@/contexts/starknet";
 import { GameSettingsData, ItemPurchase, Stats } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
-import { Call } from "@mui/icons-material";
-import { CallData, CairoOption, CairoOptionVariant, byteArray } from "starknet";
+import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
 export const useSystemCalls = () => {
   const { account } = useController();
@@ -67,7 +66,7 @@ export const useSystemCalls = () => {
    * @param name The name of the game
    * @param settingsId The settings ID for the game
    */
-  const mintGame = async (account: any, name: string, settingsId = 0) => {
+  const mintGame = async (name: string, settingsId = 0) => {
     try {
       let tx = await account!.execute([
         {

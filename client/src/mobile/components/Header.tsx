@@ -5,6 +5,7 @@ import { Box, IconButton } from '@mui/material';
 import { useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import SettingsMenu from './HeaderMenu';
+import Network from './Network';
 import WalletConnect from './WalletConnect';
 
 function Header() {
@@ -29,6 +30,10 @@ function Header() {
 
 
       <Box sx={styles.headerButtons}>
+        <Box sx={styles.networkContainer}>
+          <Network />
+        </Box>
+
         {address && <WalletConnect />}
 
         <IconButton
@@ -65,7 +70,7 @@ const styles = {
   networkContainer: {
     display: 'flex',
     alignItems: 'center',
-    width: '100px'
+    width: '140px'
   },
   headerButtons: {
     display: 'flex',

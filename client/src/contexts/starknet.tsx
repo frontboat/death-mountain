@@ -1,7 +1,7 @@
 import { ChainId, getNetworkConfig, NetworkConfig, NETWORKS } from "@/utils/networkConfig";
 import { stringToFelt } from "@/utils/utils";
 import ControllerConnector from "@cartridge/connector/controller";
-import { mainnet, sepolia } from "@starknet-react/chains";
+import { sepolia } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
 
@@ -20,24 +20,19 @@ interface DynamicConnectorContext {
 
 const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(null);
 
-const initialNetworkKey = import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN || ChainId.SN_MAIN;
-const initialConfig = getNetworkConfig(initialNetworkKey);
-const allChains = Object.values(NETWORKS).map(network => ({
-  rpcUrl: network.rpcUrl
-}));
-
+const controllerConfig = getNetworkConfig(ChainId.SN_SEPOLIA);
 const cartridgeController = typeof window !== "undefined" ? new ControllerConnector({
-  policies: initialConfig.policies,
-  namespace: initialConfig.namespace,
-  slot: initialConfig.slot,
-  preset: initialConfig.preset,
-  chains: allChains,
-  defaultChainId: stringToFelt(initialConfig.chainId).toString(),
-  tokens: initialConfig.tokens,
+  policies: controllerConfig.policies,
+  namespace: controllerConfig.namespace,
+  slot: controllerConfig.slot,
+  preset: controllerConfig.preset,
+  chains: controllerConfig.chains,
+  defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
+  tokens: controllerConfig.tokens,
 }) : null;
 
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
-
+  const initialConfig = getNetworkConfig(ChainId.WP_PG_SLOT);
   const [currentNetworkConfig, setCurrentNetworkConfig] = useState<NetworkConfig>(initialConfig);
 
   // Create dynamic dojoConfig based on current network
@@ -59,8 +54,8 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
 
 
   const rpc = useCallback(() => {
-    return { nodeUrl: currentNetworkConfig.chains[0].rpcUrl };
-  }, [currentNetworkConfig.chains]);
+    return { nodeUrl: controllerConfig.chains[0].rpcUrl };
+  }, []);
 
   return (
     <DynamicConnectorContext.Provider value={{
@@ -69,7 +64,7 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
       dojoConfig
     }}>
       <StarknetConfig
-        chains={[mainnet, sepolia]}
+        chains={[sepolia]}
         provider={jsonRpcProvider({ rpc })}
         connectors={[cartridgeController as any]}
         explorer={voyager}

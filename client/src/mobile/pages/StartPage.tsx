@@ -36,25 +36,6 @@ export default function LandingPage() {
             </Typography>
           </Button>
 
-          {!address && (
-            <>
-              <Box sx={styles.orDivider}>
-                <Box sx={{ flex: 1, height: '1px', bgcolor: 'rgba(255,255,255,0.3)' }} />
-                <Typography sx={styles.orText}>or</Typography>
-                <Box sx={{ flex: 1, height: '1px', bgcolor: 'rgba(255,255,255,0.3)' }} />
-              </Box>
-              <Button
-                fullWidth
-                variant="outlined"
-                size="small"
-                sx={{ textAlign: 'center', justifyContent: 'center', height: '36px' }}
-                onClick={() => navigate('/survivor/play?mode=practice')}
-              >
-                <Typography sx={{ fontSize: '0.8rem' }}>Play Practice</Typography>
-              </Button>
-            </>
-          )}
-
           {address && <>
             <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
               <ArrowDropDownIcon color='primary' />
