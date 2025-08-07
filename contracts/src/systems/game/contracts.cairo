@@ -201,8 +201,8 @@ mod game_systems {
                 _save_bag(ref world, adventurer_id, adventurer.action_count, game_settings.bag, game_libs);
                 _save_adventurer(ref world, ref adventurer, game_settings.bag, adventurer_id, game_libs);
 
-                post_action(token_address, adventurer_id)
             }
+            post_action(token_address, adventurer_id)
         }
 
         fn explore(ref self: ContractState, adventurer_id: u64, till_beast: bool) {
