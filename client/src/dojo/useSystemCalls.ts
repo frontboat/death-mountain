@@ -120,7 +120,7 @@ export const useSystemCalls = () => {
 
     let calls: any[] = [
       {
-        contractAddress: GAME_TOKEN_ADDRESS,
+        contractAddress: GAME_ADDRESS,
         entrypoint: "start_game",
         calldata: [gameId, weapon],
       },
@@ -154,7 +154,7 @@ export const useSystemCalls = () => {
    */
   const explore = (gameId: number, tillBeast: boolean) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "explore",
       calldata: [gameId, tillBeast],
     };
@@ -167,7 +167,7 @@ export const useSystemCalls = () => {
    */
   const attack = (gameId: number, toTheDeath: boolean) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "attack",
       calldata: [gameId, toTheDeath],
     };
@@ -180,7 +180,7 @@ export const useSystemCalls = () => {
    */
   const flee = (gameId: number, toTheDeath: boolean) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "flee",
       calldata: [gameId, toTheDeath],
     };
@@ -193,7 +193,7 @@ export const useSystemCalls = () => {
    */
   const equip = (gameId: number, items: number[]) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "equip",
       calldata: [gameId, items],
     };
@@ -206,7 +206,7 @@ export const useSystemCalls = () => {
    */
   const drop = (gameId: number, items: number[]) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "drop",
       calldata: [gameId, items],
     };
@@ -221,7 +221,7 @@ export const useSystemCalls = () => {
    */
   const buyItems = (gameId: number, potions: number, items: ItemPurchase[]) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "buy_items",
       calldata: [gameId, potions, items],
     };
@@ -229,7 +229,7 @@ export const useSystemCalls = () => {
 
   const selectStatUpgrades = (gameId: number, statUpgrades: Stats) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "select_stat_upgrades",
       calldata: [gameId, statUpgrades],
     };
