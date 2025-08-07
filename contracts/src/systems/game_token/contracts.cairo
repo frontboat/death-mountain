@@ -4,14 +4,6 @@ use death_mountain::models::market::ItemPurchase;
 
 #[starknet::interface]
 pub trait IGameTokenSystems<T> {
-    fn start_game(ref self: T, adventurer_id: u64, weapon: u8);
-    fn explore(ref self: T, adventurer_id: u64, till_beast: bool);
-    fn attack(ref self: T, adventurer_id: u64, to_the_death: bool);
-    fn flee(ref self: T, adventurer_id: u64, to_the_death: bool);
-    fn equip(ref self: T, adventurer_id: u64, items: Array<u8>);
-    fn drop(ref self: T, adventurer_id: u64, items: Array<u8>);
-    fn buy_items(ref self: T, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>);
-    fn select_stat_upgrades(ref self: T, adventurer_id: u64, stat_upgrades: Stats);
     fn create_objective(ref self: T, score: u32);
     fn player_name(ref self: T, adventurer_id: u64) -> ByteArray;
 }
@@ -39,7 +31,7 @@ mod game_token_systems {
     use game_components_minigame::minigame::MinigameComponent;
 
     use openzeppelin_introspection::src5::SRC5Component;
-    use starknet::ContractAddress;
+    use starknet::{ContractAddress, get_contract_address};
 
     // Components
     component!(path: MinigameComponent, storage: minigame, event: MinigameEvent);
@@ -100,7 +92,7 @@ mod game_token_systems {
                 Option::None, // client_url
                 Option::Some(renderer_address), // renderer address
                 Option::Some(settings_systems_address), // settings_address
-                Option::None, // objectives_address
+                Option::Some(get_contract_address()), // objectives_address
                 denshokan_address,
             );
 
@@ -191,79 +183,6 @@ mod game_token_systems {
     // ------------------------------------------ //
     #[abi(embed_v0)]
     impl GameTokenSystemsImpl of super::IGameTokenSystems<ContractState> {
-        fn start_game(ref self: ContractState, adventurer_id: u64, weapon: u8) {
-            let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            self.minigame.pre_action(adventurer_id);
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let game_systems = IGameSystemsDispatcher { contract_address: game_systems_address };
-            game_systems.start_game(adventurer_id, weapon);
-            self.minigame.post_action(adventurer_id);
-        }
-
-        fn explore(ref self: ContractState, adventurer_id: u64, till_beast: bool) {
-            let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            self.minigame.pre_action(adventurer_id);
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let game_systems = IGameSystemsDispatcher { contract_address: game_systems_address };
-            game_systems.explore(adventurer_id, till_beast);
-            self.minigame.post_action(adventurer_id);
-        }
-
-
-        fn attack(ref self: ContractState, adventurer_id: u64, to_the_death: bool) {
-            let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            self.minigame.pre_action(adventurer_id);
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let game_systems = IGameSystemsDispatcher { contract_address: game_systems_address };
-            game_systems.attack(adventurer_id, to_the_death);
-            self.minigame.post_action(adventurer_id);
-        }
-
-        fn flee(ref self: ContractState, adventurer_id: u64, to_the_death: bool) {
-            let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            self.minigame.pre_action(adventurer_id);
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let game_systems = IGameSystemsDispatcher { contract_address: game_systems_address };
-            game_systems.flee(adventurer_id, to_the_death);
-            self.minigame.post_action(adventurer_id);
-        }
-
-        fn equip(ref self: ContractState, adventurer_id: u64, items: Array<u8>) {
-            let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            self.minigame.pre_action(adventurer_id);
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let game_systems = IGameSystemsDispatcher { contract_address: game_systems_address };
-            game_systems.equip(adventurer_id, items);
-            self.minigame.post_action(adventurer_id);
-        }
-
-        fn drop(ref self: ContractState, adventurer_id: u64, items: Array<u8>) {
-            let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            self.minigame.pre_action(adventurer_id);
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let game_systems = IGameSystemsDispatcher { contract_address: game_systems_address };
-            game_systems.drop(adventurer_id, items);
-            self.minigame.post_action(adventurer_id);
-        }
-
-        fn buy_items(ref self: ContractState, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>) {
-            let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            self.minigame.pre_action(adventurer_id);
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let game_systems = IGameSystemsDispatcher { contract_address: game_systems_address };
-            game_systems.buy_items(adventurer_id, potions, items);
-            self.minigame.post_action(adventurer_id);
-        }
-
-        fn select_stat_upgrades(ref self: ContractState, adventurer_id: u64, stat_upgrades: Stats) {
-            let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            self.minigame.pre_action(adventurer_id);
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let game_systems = IGameSystemsDispatcher { contract_address: game_systems_address };
-            game_systems.select_stat_upgrades(adventurer_id, stat_upgrades);
-            self.minigame.post_action(adventurer_id);
-        }
-
         fn create_objective(ref self: ContractState, score: u32) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
             let objective_count_model: ScoreObjectiveCount = world.read_model(VERSION);
