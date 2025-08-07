@@ -1,9 +1,8 @@
-import { ReactNode, useState, useEffect } from "react";
-import { useNetwork } from "@starknet-react/core";
 import {
   initMetagame,
   MetagameProvider as MetagameSDKProvider,
 } from "metagame-sdk";
+import { ReactNode, useEffect, useState } from "react";
 // import { feltToString } from "@/lib/utils";
 // import { ChainId, CHAINS } from "@/dojo/setup/networks";
 // import { manifests } from "@/dojo/setup/config";
@@ -11,12 +10,10 @@ import { useDynamicConnector } from "@/contexts/starknet.tsx";
 
 export const MetagameProvider = ({ children }: { children: ReactNode }) => {
   const [metagameClient, setMetagameClient] = useState<any>(undefined);
-  const { chain } = useNetwork();
   const { dojoConfig } = useDynamicConnector();
 
   useEffect(() => {
     if (!dojoConfig) {
-      console.error(`No config found for chain ID: ${chain.id}`);
       setMetagameClient(undefined);
       return;
     }
@@ -29,12 +26,12 @@ export const MetagameProvider = ({ children }: { children: ReactNode }) => {
       .then(setMetagameClient)
       .catch((error) => {
         console.error(
-          `Failed to initialize Metagame SDK for chain ${chain.id}:`,
+          `Failed to initialize Metagame SDK for chain ${dojoConfig.chainId}:`,
           error
         );
         setMetagameClient(undefined);
       });
-  }, [chain]);
+  }, [dojoConfig]);
 
   if (!metagameClient) {
     return (

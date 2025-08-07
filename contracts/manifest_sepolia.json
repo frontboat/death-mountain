@@ -2,7 +2,7 @@
   "world": {
     "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
     "address": "0x38f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d",
-    "seed": "test_ls_0_6",
+    "seed": "DNC",
     "name": "Provable Games",
     "entrypoints": [
       "uuid",

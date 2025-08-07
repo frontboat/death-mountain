@@ -1,9 +1,9 @@
 import { useController } from '@/contexts/controller';
+import { useDynamicConnector } from '@/contexts/starknet';
 import discordIcon from '@/desktop/assets/images/discord.png';
 import AdventurersList from '@/desktop/components/AdventurersList';
 import Settings from '@/desktop/components/Settings';
 import { getMenuLeftOffset } from '@/utils/utils';
-import BarChartIcon from '@mui/icons-material/BarChart';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
@@ -13,17 +13,21 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-import LinearProgress from '@mui/material/LinearProgress';
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Network from '../components/Network';
+import WalletConnect from '../components/WalletConnect';
 import StatisticsModal from './StatisticsModal';
+import { useAccount } from '@starknet-react/core';
+import { ChainId } from '@/utils/networkConfig';
 
 export default function MainMenu() {
   const navigate = useNavigate();
-  const { address } = useController();
+  const { account } = useAccount();
+  const { login } = useController();
+  const { currentNetworkConfig } = useDynamicConnector();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -38,7 +42,21 @@ export default function MainMenu() {
   }, []);
 
   const handleStartGame = () => {
+    if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA && !account) {
+      login();
+      return;
+    }
+
     navigate(`/survivor/play`);
+  };
+
+  const handleShowAdventurers = () => {
+    if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA && !account) {
+      login();
+      return;
+    }
+
+    setShowAdventurers(true);
   };
 
   return (
@@ -54,15 +72,13 @@ export default function MainMenu() {
                 LOOT SURVIVOR 2
               </Typography>
               <Typography color="secondary" sx={styles.modeTitle}>
-                Beast Mode
+                {currentNetworkConfig.name}
               </Typography>
             </Box>
 
             {/* <PriceIndicator /> */}
 
-
             <Button
-              disabled={!address}
               variant="outlined"
               fullWidth
               size="large"
@@ -71,40 +87,24 @@ export default function MainMenu() {
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <TokenIcon sx={{ fontSize: 20, mr: 1 }} />
-                <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: 0.5, color: !address ? 'rgba(255, 255, 255, 0.3)' : '#d0c98d' }}>
+                <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: 0.5, color: '#d0c98d' }}>
                   New Game
                 </Typography>
               </Box>
             </Button>
 
             <Button
-              disabled={!address}
               variant="outlined"
               fullWidth
               size="large"
-              onClick={() => setShowAdventurers(true)}
+              onClick={handleShowAdventurers}
               sx={{ pl: 1, height: '36px' }}
             >
               <ShieldOutlinedIcon sx={{ fontSize: 20, mr: 1 }} />
-              <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: 0.5, color: !address ? 'rgba(255, 255, 255, 0.3)' : '#d0c98d' }}>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: 0.5, color: '#d0c98d' }}>
                 My Adventurers
               </Typography>
             </Button>
-
-            {/* <Button
-              variant="outlined"
-              fullWidth
-              size="large"
-              onClick={() => navigate('/survivor/play?mode=practice')}
-              sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px' }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <img src={practiceIcon} alt="Practice" style={{ width: 20, height: 20, marginRight: '8px' }} />
-                <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 500, letterSpacing: 0.5 }}>
-                  Practice
-                </Typography>
-              </Box>
-            </Button> */}
 
             <Divider sx={{ width: '100%', my: 0.5 }} />
 
@@ -121,7 +121,7 @@ export default function MainMenu() {
               </Typography>
             </Button>
 
-            <Button
+            {/* <Button
               variant="outlined"
               fullWidth
               size="large"
@@ -133,11 +133,13 @@ export default function MainMenu() {
               <Typography sx={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.3)', fontWeight: 500, letterSpacing: 0.5 }}>
                 Statistics
               </Typography>
-            </Button>
+            </Button> */}
 
             <Box sx={styles.bottom}>
+              <Network />
+              <WalletConnect />
 
-              <Stack spacing={0.5} sx={{ width: '100%', mb: 1 }}>
+              {/* {currentNetworkConfig.name === "Beast Mode" && <Stack spacing={0.5} sx={{ width: '100%' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
                   <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 500, letterSpacing: 0.5 }}>
                     Beasts Collected
@@ -170,12 +172,11 @@ export default function MainMenu() {
                     }}
                   />
                 </Box>
-              </Stack>
-              {/* <WalletConnect /> */}
+              </Stack>} */}
 
               <Box sx={styles.bottomRow}>
                 <Typography sx={styles.alphaVersion}>
-                  TEST VERSION 0.0.1
+                  Provable Games
                 </Typography>
                 <Box sx={styles.socialButtons}>
                   <IconButton size="small" sx={styles.socialButton} onClick={() => window.open('https://x.com/lootsurvivor', '_blank')}>
@@ -261,10 +262,12 @@ const styles = {
     width: '100%',
   },
   bottomRow: {
+    mt: 0.5,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
+    width: '99%',
+    mr: -1
   },
   socialButtons: {
     display: 'flex',

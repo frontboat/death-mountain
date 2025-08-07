@@ -28,28 +28,28 @@ export enum ChainId {
 }
 
 export const NETWORKS = {
-  SN_MAIN: {
-    chainId: ChainId.SN_MAIN,
-    name: "Mainnet",
-    status: "offline",
-    namespace: "ls_0_0_1",
-    slot: "pg-mainnet",
-    rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet",
-    torii: "https://api.cartridge.gg/x/pg-mainnet/torii",
-    tokens: {
-      erc20: [],
-    },
-    manifest: manifest_sepolia,
-    vrf: true,
-  },
+  // SN_MAIN: {
+  //   chainId: ChainId.SN_MAIN,
+  //   name: "Beast Mode",
+  //   status: "offline",
+  //   namespace: "ls_0_0_1",
+  //   slot: "pg-mainnet",
+  //   rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet",
+  //   torii: "https://api.cartridge.gg/x/pg-mainnet/torii",
+  //   tokens: {
+  //     erc20: [],
+  //   },
+  //   manifest: manifest_sepolia,
+  //   vrf: true,
+  // },
   SN_SEPOLIA: {
     chainId: ChainId.SN_SEPOLIA,
-    name: "Sepolia",
-    status: "offline",
-    namespace: "ls_0_0_1",
-    slot: "pg-sepolia",
+    name: "Beast Mode",
+    status: "online",
+    namespace: "ls_0_0_5",
+    slot: "pg-sepolia-2",
     rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
-    torii: "https://api.cartridge.gg/x/pg-sepolia/torii",
+    torii: "https://api.cartridge.gg/x/pg-sepolia-2/torii",
     tokens: {
       erc20: [],
     },
@@ -58,7 +58,7 @@ export const NETWORKS = {
   },
   WP_PG_SLOT: {
     chainId: ChainId.WP_PG_SLOT,
-    name: "Katana",
+    name: "Practice Mode",
     status: "online",
     namespace: "ls_0_0_4",
     slot: "pg-slot",
@@ -96,7 +96,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const policies = [
     {
       target: game_token_systems,
-      method: "mint",
+      method: "mint_game",
     },
     {
       target: game_systems,
