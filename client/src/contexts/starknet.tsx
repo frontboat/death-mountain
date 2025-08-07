@@ -3,7 +3,7 @@ import { stringToFelt } from "@/utils/utils";
 import ControllerConnector from "@cartridge/connector/controller";
 import { sepolia } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState, useEffect } from "react";
 
 interface DynamicConnectorContext {
   setCurrentNetworkConfig: (network: NetworkConfig) => void;
@@ -32,10 +32,31 @@ const cartridgeController = typeof window !== "undefined" ? new ControllerConnec
 }) : null;
 
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
-  const initialConfig = getNetworkConfig(ChainId.WP_PG_SLOT);
-  const [currentNetworkConfig, setCurrentNetworkConfig] = useState<NetworkConfig>(initialConfig);
+  const getInitialNetwork = (): NetworkConfig => {
+    if (typeof window !== "undefined") {
+      const savedNetwork = localStorage.getItem("lastSelectedNetwork");
+      if (savedNetwork) {
+        try {
+          const chainId = savedNetwork as ChainId;
+          if (Object.values(ChainId).includes(chainId)) {
+            return getNetworkConfig(chainId);
+          }
+        } catch (error) {
+          console.warn("Invalid saved network, using default:", error);
+        }
+      }
+    }
+    return getNetworkConfig(import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN as ChainId);
+  };
 
-  // Create dynamic dojoConfig based on current network
+  const [currentNetworkConfig, setCurrentNetworkConfig] = useState<NetworkConfig>(getInitialNetwork);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("lastSelectedNetwork", currentNetworkConfig.chainId);
+    }
+  }, [currentNetworkConfig.chainId]);
+
   const dojoConfig = useMemo(() => {
     const network = NETWORKS[currentNetworkConfig.chainId as keyof typeof NETWORKS];
     if (!network) {
