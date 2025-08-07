@@ -1,20 +1,19 @@
+import { useController } from "@/contexts/controller";
+import { useDojoConfig } from "@/contexts/starknet";
+import { useGameTokens } from "@/dojo/useGameTokens";
+import { calculateLevel } from "@/utils/game";
+import { getContractByName } from "@dojoengine/core";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import WatchIcon from "@mui/icons-material/Watch";
 import { Box, Button, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useController } from "@/contexts/controller";
-import { useGameTokens } from "@/dojo/useGameTokens";
 import {
-  useGameTokens as useMetagameTokens,
-  GameTokenData,
+  useGameTokens as useMetagameTokens
 } from "metagame-sdk";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import WatchIcon from "@mui/icons-material/Watch";
-import { calculateLevel } from "@/utils/game";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { getContractByName } from "@dojoengine/core";
-import { useDojoConfig } from "@/contexts/starknet";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface AdventurersListProps {
   onBack: () => void;

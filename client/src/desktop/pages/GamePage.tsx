@@ -1,5 +1,5 @@
-import { useDojoConfig } from "@/contexts/starknet";
 import { useController } from "@/contexts/controller";
+import { useDojoConfig, useDynamicConnector } from "@/contexts/starknet";
 import VideoPlayer from "@/desktop/components/VideoPlayer";
 import { useGameDirector } from "@/desktop/contexts/GameDirector";
 import CombatOverlay from "@/desktop/overlays/Combat";
@@ -9,10 +9,11 @@ import LoadingOverlay from "@/desktop/overlays/Loading";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { streamIds } from "@/utils/cloudflare";
-import { ChainId } from "@/utils/networkConfig";
+import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
 import { useDojoSDK } from "@dojoengine/sdk/react";
 import { Box } from "@mui/material";
+import { useAccount } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useReducer, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -37,17 +38,16 @@ const AnimatedOverlay = ({ children, overlayKey }: AnimatedOverlayProps) => (
 export default function GamePage() {
   const navigate = useNavigate();
   const { sdk } = useDojoSDK();
+  const { setCurrentNetworkConfig } = useDynamicConnector();
   const dojoConfig = useDojoConfig();
   const { mintGame } = useSystemCalls();
   const {
     account,
-    address,
     playerName,
     login,
     isPending,
-    startPractice,
-    endPractice,
   } = useController();
+  const { address: controllerAddress } = useAccount();
   const {
     gameId,
     adventurer,
@@ -80,18 +80,20 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
-    if (!account && gameId && adventurer) {
-      navigate("/survivor");
-    }
-  }, [account]);
-
-  useEffect(() => {
     if (!sdk || isPending) return;
 
-    if (!address && mode !== "practice") return login();
+    if (mode === "real" && dojoConfig.chainId !== ChainId.SN_SEPOLIA) {
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.SN_SEPOLIA) as NetworkConfig);
+      return;
+    }
+
+    if (!controllerAddress && mode === "real") {
+      login();
+      return;
+    }
 
     if (mode === "practice" && dojoConfig.chainId !== ChainId.WP_PG_SLOT) {
-      startPractice();
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
     }
 
@@ -105,27 +107,25 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, address, isPending, sdk, update, dojoConfig.chainId]);
+  }, [game_id, controllerAddress, isPending, sdk, update, dojoConfig.chainId]);
 
   useEffect(() => {
     return () => {
       if (subscription) {
         try {
           subscription.cancel();
-        } catch (error) {}
+        } catch (error) { }
       }
 
-      endPractice();
       exitGame();
     };
   }, []);
 
   async function mint() {
     setVideoQueue([streamIds.start]);
-    let tokenId = await mintGame(account, playerName, settings_id);
+    let tokenId = await mintGame(playerName, settings_id);
     navigate(
-      `/survivor/play?id=${tokenId}${
-        mode === "practice" ? "&mode=practice" : ""
+      `/survivor/play?id=${tokenId}${mode === "practice" ? "&mode=practice" : ""
       }`,
       { replace: true }
     );
