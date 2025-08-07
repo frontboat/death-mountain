@@ -46,6 +46,7 @@ mod settings_systems {
     use openzeppelin_introspection::src5::SRC5Component;
     use starknet::ContractAddress;
     use super::ISettingsSystems;
+    use death_mountain::utils::renderer::encoding::U256BytesUsedTraitImpl;
 
     component!(path: SettingsComponent, storage: settings, event: SettingsEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
@@ -147,12 +148,22 @@ mod settings_systems {
             let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
             let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
             let minigame_token_address = minigame_dispatcher.token_address();
+
+            let mut _name = Default::default();
+
+            if name != 0 {
+                _name
+                    .append_word(
+                        name, U256BytesUsedTraitImpl::bytes_used(name.into()).into()
+                    );
+            }
+
             self
                 .settings
                 .create_settings(
                     game_token_systems_address,
                     settings_count.count,
-                    format!("{}", name),
+                    _name,
                     description.clone(),
                     settings,
                     minigame_token_address,

@@ -6,8 +6,6 @@ seed = "DNC"
 [env]
 rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
 world_address = "0x38f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d"
-account_address = "0x065d2AB17338b5AffdEbAF95E2D79834B5f30Bac596fF55563c62C3c98700150"
-private_key = "0x0625adf89082edbffac775d64e9a5bba11483f6ef97c0925fb0433cb79d88581"
 
 [namespace]
 default = "ls_0_0_5"
