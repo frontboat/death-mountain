@@ -93,41 +93,6 @@ export const useStarknetApi = () => {
     return null;
   };
 
-  const isBeastCollectable = async (beast: Beast): Promise<boolean> => {
-    let dungeon_address = import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS;
-    let prefix = Object.keys(BEAST_NAME_PREFIXES).find((key: any) => BEAST_NAME_PREFIXES[key] === beast.specialPrefix) || 0;
-    let suffix = Object.keys(BEAST_NAME_SUFFIXES).find((key: any) => BEAST_NAME_SUFFIXES[key] === beast.specialSuffix) || 0;
-
-    try {
-      const response = await fetch(dojoConfig.rpcUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          method: "starknet_call",
-          params: [
-            {
-              contract_address: getContractByName(dojoConfig.manifest, dojoConfig.namespace, "beast_systems")?.address,
-              entry_point_selector: "0x2d2cf969aebd8177fcad3b575d0a677304f73d9b10444d1e5ab44b3d67ecd70",
-              calldata: [dungeon_address, beast.id.toString(16), prefix.toString(16), suffix.toString(16)],
-            },
-            "pending",
-          ],
-          id: 0,
-        }),
-      });
-
-      const data = await response.json();
-      return data?.result[0] === "0x0";
-    } catch (error) {
-      console.log('error', error)
-    }
-
-    return false;
-  }
-
   const createBurnerAccount = async (rpcProvider: RpcProvider) => {
     const privateKey = stark.randomAddress();
     const publicKey = ec.starkCurve.getStarkKey(privateKey);
@@ -160,5 +125,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getAdventurer, createBurnerAccount, isBeastCollectable };
+  return { getAdventurer, createBurnerAccount };
 };

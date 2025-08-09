@@ -14,7 +14,7 @@ import BeastCollectedPopup from '../components/BeastCollectedPopup';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue } = useGameDirector();
-  const { exploreLog, adventurer, setShowOverlay, showBeastCollected, setShowBeastCollected, beast } = useGameStore();
+  const { exploreLog, adventurer, setShowOverlay, showBeastCollected, setShowBeastCollected, beast, collectableBeast } = useGameStore();
   const { cart, inProgress, setInProgress } = useMarketStore();
   const [isSelectingStats, setIsSelectingStats] = useState(false);
   const [selectedStats, setSelectedStats] = useState({
@@ -203,10 +203,10 @@ export default function ExploreOverlay() {
         )}
       </Box>
 
-      {showBeastCollected && beast && (
+      {showBeastCollected && collectableBeast && (
         <BeastCollectedPopup
           onClose={() => setShowBeastCollected(false)}
-          beast={beast}
+          beast={collectableBeast}
         />
       )}
     </Box>

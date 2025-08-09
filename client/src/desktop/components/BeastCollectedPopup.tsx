@@ -1,4 +1,4 @@
-import beastImg from '@/assets/images/beast.png';
+import beastImg from '@/desktop/assets/images/beast.png';
 import { Beast } from '@/types/game';
 import CategoryIcon from '@mui/icons-material/Category';
 import CloseIcon from '@mui/icons-material/Close';

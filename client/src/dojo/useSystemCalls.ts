@@ -1,6 +1,7 @@
+import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useController } from "@/contexts/controller";
 import { useDojoConfig } from "@/contexts/starknet";
-import { GameSettingsData, ItemPurchase, Stats } from "@/types/game";
+import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
@@ -57,6 +58,47 @@ export const useSystemCalls = () => {
     } catch (error) {
       console.error("Error executing action:", error);
       forceResetAction();
+      throw error;
+    }
+  };
+
+  /**
+   * Mints a new game token.
+   * @param account The Starknet account
+   * @param name The name of the game
+   * @param settingsId The settings ID for the game
+   */
+  const buyGame = async (payment: Payment, name: string) => {
+    let paymentData = payment.paymentType === 'Ticket' ? [0] : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
+
+    try {
+      let tx = await account!.execute([
+        {
+          contractAddress: DUNGEON_ADDRESS,
+          entrypoint: "buy_game",
+          calldata: [
+            paymentData,
+            byteArray.byteArrayFromString(name),
+            account!.address, // send game to this address
+            false, // soulbound
+          ],
+        },
+      ]);
+
+      const receipt: any = await account!.waitForTransaction(
+        tx.transaction_hash,
+        { retryInterval: 500 }
+      );
+
+      const tokenMetadataEvent = receipt.events.find(
+        (event: any) => event.data.length === 14
+      );
+
+      const gameId = parseInt(tokenMetadataEvent.data[1], 16);
+
+      return gameId;
+    } catch (error) {
+      console.error("Error buying game:", error);
       throw error;
     }
   };
@@ -131,7 +173,7 @@ export const useSystemCalls = () => {
       calls.unshift(requestRandom());
     }
 
-    await executeAction(calls, () => {});
+    await executeAction(calls, () => { });
   };
 
   /**
@@ -236,6 +278,17 @@ export const useSystemCalls = () => {
     };
   };
 
+  const claimBeast = (gameId: number, beast: Beast) => {
+    let prefix = Object.keys(BEAST_NAME_PREFIXES).find((key: any) => BEAST_NAME_PREFIXES[key] === beast.specialPrefix) || 0;
+    let suffix = Object.keys(BEAST_NAME_SUFFIXES).find((key: any) => BEAST_NAME_SUFFIXES[key] === beast.specialSuffix) || 0;
+
+    executeAction([{
+      contractAddress: DUNGEON_ADDRESS,
+      entrypoint: "claim_beast",
+      calldata: [gameId, beast.id, prefix, suffix],
+    }], () => { });
+  };
+
   const createSettings = async (settings: GameSettingsData) => {
     let bag = {
       item_1: settings.bag[0]
@@ -306,7 +359,7 @@ export const useSystemCalls = () => {
           ],
         },
       ],
-      () => {}
+      () => { }
     );
   };
 
@@ -319,7 +372,9 @@ export const useSystemCalls = () => {
     drop,
     buyItems,
     selectStatUpgrades,
+    claimBeast,
     createSettings,
+    buyGame,
     mintGame,
     requestRandom,
     executeAction,

@@ -55,11 +55,10 @@ mod game_systems {
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-    use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_minigame::libs::{assert_token_ownership, post_action, pre_action};
     use starknet::{ContractAddress, get_tx_info};
     use super::VRF_ENABLED;
-    use game_components_minigame::libs::{assert_token_ownership, pre_action, post_action};
-    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
 
     // ------------------------------------------ //
     // ------------ Helper Functions ------------ //
@@ -141,6 +140,7 @@ mod game_systems {
                             health: beast.starting_health,
                             level: beast.combat_spec.level,
                             specials: beast.combat_spec.specials,
+                            is_collectable: false,
                         },
                     ),
                 );
@@ -192,6 +192,7 @@ mod game_systems {
                                 health: beast.starting_health,
                                 level: beast.combat_spec.level,
                                 specials: beast.combat_spec.specials,
+                                is_collectable: false,
                             },
                         ),
                     );
@@ -200,7 +201,6 @@ mod game_systems {
                 _save_seed(ref world, adventurer_id, market_seed, 0);
                 _save_bag(ref world, adventurer_id, adventurer.action_count, game_settings.bag, game_libs);
                 _save_adventurer(ref world, ref adventurer, game_settings.bag, adventurer_id, game_libs);
-
             }
             post_action(token_address, adventurer_id)
         }
@@ -768,6 +768,15 @@ mod game_systems {
                 // save seed to get correct beast
                 _save_seed(ref world, adventurer_id, 0, explore_seed);
 
+                let is_collectable = game_libs
+                    .beast
+                    .is_beast_collectable(
+                        adventurer_id,
+                        ImplBeast::get_beast_hash(
+                            beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                        ),
+                    );
+
                 // emit beast event
                 _emit_game_event(
                     ref world,
@@ -780,6 +789,7 @@ mod game_systems {
                             health: beast.starting_health,
                             level: beast.combat_spec.level,
                             specials: beast.combat_spec.specials,
+                            is_collectable,
                         },
                     ),
                 );

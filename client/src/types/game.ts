@@ -110,6 +110,14 @@ export interface GameAction {
   untilDeath?: boolean;
 }
 
+export interface Payment {
+  paymentType: 'Ticket' | 'Golden Pass';
+  goldenPass?: {
+    address: string;
+    tokenId: number;
+  }
+}
+
 export interface Metadata {
   player_name: string;
   settings_id: number;

@@ -3,6 +3,8 @@ import { useDynamicConnector } from '@/contexts/starknet';
 import discordIcon from '@/desktop/assets/images/discord.png';
 import AdventurersList from '@/desktop/components/AdventurersList';
 import Settings from '@/desktop/components/Settings';
+import { useSystemCalls } from '@/dojo/useSystemCalls';
+import { ChainId } from '@/utils/networkConfig';
 import { getMenuLeftOffset } from '@/utils/utils';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -14,20 +16,20 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import { useAccount } from '@starknet-react/core';
 import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Network from '../components/Network';
 import WalletConnect from '../components/WalletConnect';
 import StatisticsModal from './StatisticsModal';
-import { useAccount } from '@starknet-react/core';
-import { ChainId } from '@/utils/networkConfig';
 
 export default function MainMenu() {
   const navigate = useNavigate();
   const { account } = useAccount();
-  const { login } = useController();
+  const { login, playerName } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
+  const { buyGame } = useSystemCalls();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -41,13 +43,22 @@ export default function MainMenu() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleStartGame = () => {
-    if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA && !account) {
+  const handleBuyGame = async () => {
+    if (!account) {
       login();
       return;
     }
 
-    navigate(`/survivor/play`);
+    let gameId = await buyGame({ paymentType: 'Ticket' }, playerName);
+    navigate(`/survivor/play?id=${gameId}`);
+  };
+
+  const handleStartGame = () => {
+    if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA) {
+      handleBuyGame();
+    } else {
+      navigate(`/survivor/play`);
+    }
   };
 
   const handleShowAdventurers = () => {

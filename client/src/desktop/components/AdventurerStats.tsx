@@ -49,7 +49,7 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
   }, [selectedStats, onStatsChange]);
 
   useEffect(() => {
-    setViewMode(beast ? 'combat' : 'stats');
+    setViewMode((beast && adventurer?.beast_health! > 0) ? 'combat' : 'stats');
   }, [beast]);
 
   const handleStatIncrement = (stat: keyof typeof STAT_DESCRIPTIONS) => {
@@ -215,7 +215,7 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
           </Box>
         </Box>
       ))}
-      
+
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 0.5 }}>
         {adventurer?.stat_upgrades_available! > 0 &&
           <Typography color="secondary" >{pointsRemaining} remaining</Typography>
@@ -279,7 +279,7 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
             <Typography sx={styles.statLabel}>{COMBAT_STAT_TITLE(stat)}</Typography>
           </Box>
           <Box sx={styles.statControls}>
-            <Typography sx={{ width: '18px', textAlign: 'center', pt: '1px' }}>
+            <Typography sx={{ width: '28px', textAlign: 'center', pt: '1px' }}>
               {(combatStats as any)?.[stat]}{stat === 'critChance' && '%'}
             </Typography>
           </Box>

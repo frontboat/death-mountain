@@ -71,7 +71,8 @@ export const useEvents = () => {
           type: getBeastType(beast.id),
           tier: getBeastTier(beast.id),
           specialPrefix: beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_PREFIXES[beast.specials.special2] : null,
-          specialSuffix: beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_SUFFIXES[beast.specials.special3] : null
+          specialSuffix: beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_SUFFIXES[beast.specials.special3] : null,
+          isCollectable: true //beast.is_collectable
         }
       };
     }

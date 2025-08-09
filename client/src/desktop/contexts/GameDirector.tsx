@@ -28,6 +28,7 @@ import { useSubscribeGameTokens } from "metagame-sdk";
 import { getContractByName } from "@dojoengine/core";
 import { useDojoConfig } from "@/contexts/starknet";
 import { addAddressPadding } from "starknet";
+import { useStarknetApi } from "@/api/starknet";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -76,11 +77,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     selectStatUpgrades,
     equip,
     drop,
+    claimBeast,
   } = useSystemCalls();
   const { getSettingsList } = useGameSettings();
   const { fetchMetadata } = useGameTokens();
   const dojoConfig = useDojoConfig();
-
   const namespace = dojoConfig.namespace;
   const GAME_TOKEN_ADDRESS = getContractByName(
     dojoConfig.manifest,
@@ -109,6 +110,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setGameSettings,
     setShowInventory,
     setShowOverlay,
+    setShowBeastCollected,
+    collectableBeast,
+    incrementBeastsCollected,
+    setCollectableBeast,
   } = useGameStore();
 
   const { games: gameTokens } = useSubscribeGameTokens({
@@ -180,7 +185,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     if (subscription) {
       try {
         subscription.cancel();
-      } catch (error) {}
+      } catch (error) { }
     }
 
     const [initialData, sub] = await sdk.subscribeEventQuery({
@@ -263,6 +268,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (event.type === "beast") {
       setBeast(event.beast!);
+      setCollectableBeast(event.beast!.isCollectable ? event.beast! : null);
+    }
+
+    if (event.type === "defeated_beast" && collectableBeast) {
+      //claimBeast(gameId!, collectableBeast);
+      setShowBeastCollected(true);
+      incrementBeastsCollected();
     }
 
     if (event.type === "market_items") {

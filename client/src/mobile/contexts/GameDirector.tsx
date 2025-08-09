@@ -96,9 +96,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     selectStatUpgrades,
     equip,
     drop,
+    claimBeast,
   } = useSystemCalls();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { getAdventurer, isBeastCollectable } = useStarknetApi();
+  const { getAdventurer } = useStarknetApi();
   const { getSettingsList } = useGameSettings();
   const { fetchMetadata } = useGameTokens();
   const { getEntityModel } = useEntityModel();
@@ -109,7 +110,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameId,
     adventurer,
     adventurerState,
-    beast,
+    collectableBeast,
     setAdventurer,
     setBag,
     setBeast,
@@ -123,6 +124,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameSettings,
     setGameSettings,
     setShowBeastCollected,
+    incrementBeastsCollected,
+    setCollectableBeast,
   } = useGameStore();
 
   const [spectating, setSpectating] = useState(false);
@@ -279,12 +282,14 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     if (event.type === "beast") {
-      let isCollectable = await isBeastCollectable(event.beast!);
-      setBeast({ ...event.beast!, isCollectable });
+      setBeast(event.beast!);
+      setCollectableBeast(event.beast!.isCollectable ? event.beast! : null);
     }
 
-    if (event.type === "defeated_beast" && beast?.isCollectable) {
+    if (event.type === "defeated_beast" && collectableBeast) {
+      //claimBeast(gameId!, collectableBeast);
       setShowBeastCollected(true);
+      incrementBeastsCollected();
     }
 
     if (event.type === "market_items") {
