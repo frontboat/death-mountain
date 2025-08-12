@@ -50,6 +50,7 @@ export interface Bag {
 
 export interface Beast {
   id: number;
+  seed: bigint;
   baseName: string;
   name: string;
   health: number;
@@ -116,6 +117,12 @@ export interface Payment {
     address: string;
     tokenId: number;
   }
+}
+
+export interface Collectable {
+  beast: Beast;
+  showPopup: boolean;
+  tokenURI: string | null;
 }
 
 export interface Metadata {

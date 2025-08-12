@@ -58,3 +58,50 @@ export function beastNameSize(name: string) {
     return '16px';
   }
 }
+
+export function decodeHexByteArray(byteArray: string[]): string {
+  // Skip the first byte if it's a length prefix (like 0x1a6)
+  // Start from index 1 to get the actual data
+  const dataBytes = byteArray.slice(1);
+  
+  // Convert hex byte array to string
+  const hexString = dataBytes.map((byte: string) => {
+    // Remove '0x' prefix and ensure 2 characters
+    const cleanByte = byte.replace('0x', '').padStart(2, '0');
+    return cleanByte;
+  }).join('');
+  
+  // Convert hex to string using browser-compatible method
+  const decodedString = hexString.match(/.{1,2}/g)?.map((byte: string) => 
+    String.fromCharCode(parseInt(byte, 16))
+  ).join('') || '';
+  
+  return decodedString;
+}
+
+export function extractImageFromTokenURI(tokenURI: string): string | null {
+  try {
+    // Check if it's a data URI
+    if (tokenURI.startsWith('data:application/json;base64,')) {
+      // Extract the base64 part
+      const base64Data = tokenURI.replace('data:application/json;base64,', '');
+      
+      // Clean the base64 string - remove any invalid characters
+      const cleanBase64 = base64Data.replace(/[^A-Za-z0-9+/=]/g, '');
+      
+      // Add padding if needed
+      const paddedBase64 = cleanBase64 + '='.repeat((4 - cleanBase64.length % 4) % 4);
+      
+      // Decode base64 to string
+      const jsonString = atob(paddedBase64);
+      // Parse the JSON
+      const metadata = JSON.parse(jsonString);
+      // Return the image field
+      return metadata.image || null;
+    }
+    return tokenURI; // Return as-is if not a data URI
+  } catch (error) {
+    console.error('Error extracting image from token URI:', error);
+    return null;
+  }
+}

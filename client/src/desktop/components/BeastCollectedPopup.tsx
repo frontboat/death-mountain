@@ -1,29 +1,17 @@
-import beastImg from '@/desktop/assets/images/beast.png';
-import { Beast } from '@/types/game';
-import CategoryIcon from '@mui/icons-material/Category';
 import CloseIcon from '@mui/icons-material/Close';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import FlashOnIcon from '@mui/icons-material/FlashOn';
-import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import { Box, Divider, IconButton, Paper, Typography } from '@mui/material';
+import { Box, IconButton, Paper, Typography, Link } from '@mui/material';
 import { motion } from 'framer-motion';
+import { extractImageFromTokenURI } from '@/utils/utils';
+import { useController } from '@/contexts/controller';
 
 export interface BeastCollectedPopupProps {
   onClose: () => void;
-  beast?: Beast;
+  tokenURI: string;
 }
 
-const statIcons = {
-  power: <FlashOnIcon sx={{ color: '#ffb74d', fontSize: 28 }} />,
-  rank: <EmojiEventsIcon sx={{ color: '#ffe082', fontSize: 24 }} />,
-  tier: <MilitaryTechIcon sx={{ color: '#ffd54f', fontSize: 24 }} />,
-  level: <TrendingUpIcon sx={{ color: '#fff59d', fontSize: 24 }} />,
-  type: <CategoryIcon sx={{ color: '#bdbdbd', fontSize: 24 }} />,
-};
-
-export default function BeastCollectedPopup({ onClose, beast }: BeastCollectedPopupProps) {
-  const displayBeast = beast;
+export default function BeastCollectedPopup({ onClose, tokenURI }: BeastCollectedPopupProps) {
+  const imageSrc = extractImageFromTokenURI(tokenURI);
+  const { openProfile } = useController();
 
   return (
     <Box sx={styles.overlay}>
@@ -37,32 +25,31 @@ export default function BeastCollectedPopup({ onClose, beast }: BeastCollectedPo
           <IconButton onClick={onClose} sx={styles.closeBtn} aria-label="Close" size="small">
             <CloseIcon sx={{ fontSize: 24 }} />
           </IconButton>
-          <Box sx={styles.imageWrap}>
-            <Box
-              component="img"
-              src={beastImg}
-              alt="Beast"
-              sx={styles.image}
-            />
-          </Box>
-          <Typography sx={styles.name}>{displayBeast?.name}</Typography>
-          <Divider sx={styles.divider} />
-          <Box sx={styles.statsGrid}>
-            <Box sx={styles.topRow}>
-              <Box sx={styles.statBadgeMain}>
-                {statIcons.power}
-                <Typography sx={styles.statLabelMain}>Power</Typography>
-                <Typography sx={styles.statValueMain}>{(6 - displayBeast!.tier) * displayBeast!.level}</Typography>
-              </Box>
-            </Box>
-            <Box sx={styles.bottomRow}>
-              <Box sx={styles.statBadge}><Typography sx={styles.statLabel}>Tier</Typography><Typography sx={styles.statValue}>{displayBeast?.tier}</Typography></Box>
-              <Box sx={styles.statBadge}><Typography sx={styles.statLabel}>Level</Typography><Typography sx={styles.statValue}>{displayBeast?.level}</Typography></Box>
-              <Box sx={styles.statBadge}><Typography sx={styles.statLabel}>Type</Typography><Typography sx={styles.statValue}>{displayBeast?.type}</Typography></Box>
-            </Box>
-          </Box>
-          <Divider sx={styles.divider} />
           <Typography sx={styles.collected}>Beast Collected!</Typography>
+          <Box sx={styles.imageWrap}>
+            {imageSrc ? (
+              <Box
+                component="img"
+                src={imageSrc}
+                alt="Beast"
+                sx={styles.image}
+              />
+            ) : (
+              <Box sx={styles.fallbackImage}>
+                <Typography sx={styles.fallbackText}>Image Unavailable</Typography>
+              </Box>
+            )}
+          </Box>
+          <Link
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              openProfile();
+            }}
+            sx={styles.walletLink}
+          >
+            View Beast in Wallet
+          </Link>
         </Paper>
       </motion.div>
     </Box>
@@ -125,20 +112,13 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     mb: 2,
-    mt: -2,
-    width: 120,
-    height: 120,
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, rgba(255, 224, 130, 0.06) 0%, rgba(255, 224, 130, 0.01) 100%)',
-    border: '1.5px solid rgba(255, 224, 130, 0.18)',
-    boxShadow: '0 0 12px 0 #ffe08222',
+    width: 250,
+    height: 350,
   },
   image: {
-    width: 90,
-    height: 90,
+    width: 250,
+    height: 350,
     objectFit: 'contain',
-    filter: 'drop-shadow(0 0 8px #ffe08233)',
-    borderRadius: '50%',
   },
   name: {
     fontSize: 28,
@@ -175,71 +155,47 @@ const styles = {
     width: '100%',
     justifyContent: 'center',
   },
-  statBadgeMain: {
-    gridColumn: '1',
-    gridRow: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(90deg, #ffe08222 0%, #ffb74d22 100%)',
-    border: '1.5px solid #ffb74d',
-    borderRadius: 3,
-    px: 3,
-    py: 1.5,
-    boxShadow: '0 2px 8px #ffb74d22',
-    minWidth: 120,
-  },
-  statLabelMain: {
-    color: '#ffb74d',
-    fontWeight: 700,
-    fontSize: 15,
-    mt: 0.5,
-    mb: 0.5,
-    letterSpacing: 0.5,
-    textShadow: '0 1px 2px #232526',
-  },
-  statValueMain: {
-    color: '#ffe082',
-    fontWeight: 800,
-    fontSize: 22,
-    textShadow: '0 1px 4px #232526',
-  },
-  statBadge: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(90deg, #232526 0%, #35373a 100%)',
-    border: '1.5px solid rgba(255, 224, 130, 0.13)',
-    borderRadius: 3,
-    px: 2,
-    py: 1,
-    minWidth: 80,
-  },
-  statLabel: {
-    color: '#ffe082',
-    fontWeight: 600,
-    fontSize: 13,
-    mt: 0.5,
-    mb: 0.5,
-    letterSpacing: 0.3,
-    textShadow: '0 1px 2px #232526',
-  },
-  statValue: {
-    color: '#fff',
-    fontWeight: 700,
-    fontSize: 16,
-    textShadow: '0 1px 2px #232526',
-  },
   collected: {
-    mt: 1,
+    mb: 2,
     color: '#ffe082',
     fontWeight: 700,
-    fontSize: 20,
+    fontSize: 24,
     letterSpacing: 1,
     textShadow: '0 1px 4px #232526',
     fontFamily: 'Cinzel, Georgia, serif',
     textAlign: 'center',
+  },
+  fallbackImage: {
+    width: 250,
+    height: 350,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(255, 224, 130, 0.1)',
+    border: '1px dashed rgba(255, 224, 130, 0.3)',
+    borderRadius: 2,
+  },
+  fallbackText: {
+    color: '#ffe082',
+    fontSize: 12,
+    textAlign: 'center',
+    opacity: 0.7,
+  },
+  walletLink: {
+    mt: 2,
+    color: '#ffe082',
+    fontSize: 16,
+    fontWeight: 600,
+    textAlign: 'center',
+    cursor: 'pointer',
+    padding: '12px 24px',
+    background: 'rgba(255, 224, 130, 0.1)',
+    border: '2px solid rgba(255, 224, 130, 0.3)',
+    borderRadius: 2,
+    '&:hover': {
+      color: '#ffd54f',
+      background: 'rgba(255, 224, 130, 0.2)',
+      borderColor: 'rgba(255, 224, 130, 0.5)',
+    },
   },
 }; 

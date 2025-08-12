@@ -768,14 +768,18 @@ mod game_systems {
                 // save seed to get correct beast
                 _save_seed(ref world, adventurer_id, 0, explore_seed);
 
-                let is_collectable = game_libs
-                    .beast
-                    .is_beast_collectable(
-                        adventurer_id,
-                        ImplBeast::get_beast_hash(
-                            beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
-                        ),
-                    );
+                let is_collectable = if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+                    game_libs
+                        .beast
+                        .is_beast_collectable(
+                            adventurer_id,
+                            ImplBeast::get_beast_hash(
+                                beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                            ),
+                        )
+                } else {
+                    false
+                };
 
                 // emit beast event
                 _emit_game_event(

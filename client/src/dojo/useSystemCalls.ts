@@ -1,17 +1,22 @@
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useController } from "@/contexts/controller";
 import { useDojoConfig } from "@/contexts/starknet";
+import { useStarknetApi } from "@/api/starknet";
+import { useGameStore } from "@/stores/gameStore";
 import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
 export const useSystemCalls = () => {
+  const { getBeastTokenURI } = useStarknetApi();
+  const { setCollectableTokenURI } = useGameStore();
   const { account } = useController();
   const dojoConfig = useDojoConfig();
 
   const namespace = dojoConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const DUNGEON_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS;
+  const DUNGEON_TICKET = import.meta.env.VITE_PUBLIC_DUNGEON_TICKET;
   const GAME_ADDRESS = getContractByName(
     dojoConfig.manifest,
     namespace,
@@ -69,10 +74,19 @@ export const useSystemCalls = () => {
    * @param settingsId The settings ID for the game
    */
   const buyGame = async (payment: Payment, name: string) => {
-    let paymentData = payment.paymentType === 'Ticket' ? [0] : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
+    let paymentData = payment.paymentType === 'Ticket' ? 0 : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
 
     try {
       let tx = await account!.execute([
+        {
+          contractAddress: DUNGEON_TICKET,
+          entrypoint: "approve",
+          calldata: CallData.compile([
+            DUNGEON_ADDRESS,
+            1e18,
+            "0",
+          ]),
+        },
         {
           contractAddress: DUNGEON_ADDRESS,
           entrypoint: "buy_game",
@@ -278,15 +292,39 @@ export const useSystemCalls = () => {
     };
   };
 
-  const claimBeast = (gameId: number, beast: Beast) => {
+  const claimBeast = async (gameId: number, beast: Beast) => {
     let prefix = Object.keys(BEAST_NAME_PREFIXES).find((key: any) => BEAST_NAME_PREFIXES[key] === beast.specialPrefix) || 0;
     let suffix = Object.keys(BEAST_NAME_SUFFIXES).find((key: any) => BEAST_NAME_SUFFIXES[key] === beast.specialSuffix) || 0;
 
-    executeAction([{
-      contractAddress: DUNGEON_ADDRESS,
-      entrypoint: "claim_beast",
-      calldata: [gameId, beast.id, prefix, suffix],
-    }], () => { });
+    try {
+      let tx = await account!.execute([
+        {
+          contractAddress: DUNGEON_ADDRESS,
+          entrypoint: "claim_beast",
+          calldata: [gameId, beast.id, prefix, suffix],
+        },
+      ]);
+
+      const receipt: any = await account!.waitForTransaction(
+        tx.transaction_hash,
+        { retryInterval: 500 }
+      );
+
+      console.log("claim receipt", receipt);
+      const tokenMetadataEvent = receipt.events.find(
+        (event: any) => event.data.length === 14
+      );
+
+      const tokenId = tokenMetadataEvent ? parseInt(tokenMetadataEvent.data[1], 16) : 1;
+
+      const tokenURI = await getBeastTokenURI(tokenId);
+      setCollectableTokenURI(tokenURI);
+
+      return tokenId;
+    } catch (error) {
+      console.error("Error claiming beast:", error);
+      throw error;
+    }
   };
 
   const createSettings = async (settings: GameSettingsData) => {

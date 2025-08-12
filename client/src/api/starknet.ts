@@ -1,8 +1,8 @@
 import { useDojoConfig } from "@/contexts/starknet";
-import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
-import { Adventurer, Beast } from "@/types/game";
+import { Adventurer } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
 import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
+import { decodeHexByteArray } from "@/utils/utils";
 
 export const useStarknetApi = () => {
   const dojoConfig = useDojoConfig();
@@ -21,7 +21,7 @@ export const useStarknetApi = () => {
             {
               contract_address: getContractByName(dojoConfig.manifest, dojoConfig.namespace, "adventurer_systems")?.address,
               entry_point_selector: "0x3d3148be1dfdfcfcd22f79afe7aee5a3147ef412bfb2ea27949e7f8c8937a7",
-              calldata: [adventurerId.toString(16)],
+              calldata: [num.toHex(adventurerId)],
             },
             "pending",
           ],
@@ -93,6 +93,45 @@ export const useStarknetApi = () => {
     return null;
   };
 
+  const getBeastTokenURI = async (beastId: number): Promise<string | null> => {
+    try {
+      const response = await fetch(dojoConfig.rpcUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "starknet_call",
+          params: [
+            {
+              contract_address: import.meta.env.VITE_PUBLIC_BEASTS_ADDRESS,
+              entry_point_selector: "0x226ad7e84c1fe08eb4c525ed93cccadf9517670341304571e66f7c4f95cbe54",
+              calldata: [num.toHex(beastId), "0x0"],
+            },
+            "pending",
+          ],
+          id: 0,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('beast token uri data', data)
+      
+      if (data?.result && Array.isArray(data.result)) {
+        const decodedString = decodeHexByteArray(data.result);
+        console.log('decoded beast token uri:', decodedString);
+        return decodedString;
+      }
+      
+      return data?.result;
+    } catch (error) {
+      console.log('error', error)
+    }
+
+    return null;
+  };
+
   const createBurnerAccount = async (rpcProvider: RpcProvider) => {
     const privateKey = stark.randomAddress();
     const publicKey = ec.starkCurve.getStarkKey(privateKey);
@@ -125,5 +164,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getAdventurer, createBurnerAccount };
+  return { getAdventurer, getBeastTokenURI, createBurnerAccount };
 };

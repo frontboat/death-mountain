@@ -144,8 +144,19 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
       {isNameMatch && (
         <>
           <Box sx={styles.divider} />
-          <Box sx={styles.nameMatchContainer}>
-            <Typography sx={styles.nameMatchWarning}>
+          <Box sx={{
+            ...styles.nameMatchContainer,
+            border: ItemUtils.isWeapon(item.id) 
+              ? '1px solid rgba(0, 255, 0, 0.6)' 
+              : '1px solid rgba(255, 0, 0, 0.6)',
+            backgroundColor: ItemUtils.isWeapon(item.id) 
+              ? 'rgba(0, 255, 0, 0.1)' 
+              : 'rgba(255, 0, 0, 0.1)',
+          }}>
+            <Typography sx={{
+              ...styles.nameMatchWarning,
+              color: ItemUtils.isWeapon(item.id) ? '#00FF00' : '#FF4444',
+            }}>
               Name matches beast!
             </Typography>
           </Box>

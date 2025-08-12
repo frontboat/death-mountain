@@ -1,4 +1,4 @@
-import { useDynamicConnector } from "@/contexts/starknet";
+import { useDojoConfig, useDynamicConnector } from "@/contexts/starknet";
 import { Settings, useGameSettings } from "@/dojo/useGameSettings";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
@@ -14,7 +14,9 @@ import {
 import { getNewItemsEquipped } from "@/utils/game";
 import { useQueries } from "@/utils/queries";
 import { delay } from "@/utils/utils";
+import { getContractByName } from "@dojoengine/core";
 import { useDojoSDK } from "@dojoengine/sdk/react";
+import { useSubscribeGameTokens } from "metagame-sdk";
 import {
   createContext,
   PropsWithChildren,
@@ -24,11 +26,7 @@ import {
   useReducer,
   useState,
 } from "react";
-import { useSubscribeGameTokens } from "metagame-sdk";
-import { getContractByName } from "@dojoengine/core";
-import { useDojoConfig } from "@/contexts/starknet";
 import { addAddressPadding } from "starknet";
-import { useStarknetApi } from "@/api/starknet";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -96,6 +94,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameId,
     adventurer,
     adventurerState,
+    collectable,
     setAdventurer,
     setBag,
     setBeast,
@@ -110,10 +109,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setGameSettings,
     setShowInventory,
     setShowOverlay,
-    setShowBeastCollected,
-    collectableBeast,
-    incrementBeastsCollected,
-    setCollectableBeast,
+    setCollectable,
+    incrementBeastsCollected
   } = useGameStore();
 
   const { games: gameTokens } = useSubscribeGameTokens({
@@ -268,13 +265,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (event.type === "beast") {
       setBeast(event.beast!);
-      setCollectableBeast(event.beast!.isCollectable ? event.beast! : null);
+      setCollectable(event.beast!.isCollectable ? event.beast! : null);
     }
 
-    if (event.type === "defeated_beast" && collectableBeast) {
-      //claimBeast(gameId!, collectableBeast);
-      setShowBeastCollected(true);
+    if (event.type === "defeated_beast" && collectable) {
       incrementBeastsCollected();
+      claimBeast(gameId!, collectable);
     }
 
     if (event.type === "market_items") {

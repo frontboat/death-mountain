@@ -30,7 +30,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
     namespace,
     "game_token_systems"
   )?.address;
-  const { data: gamesData } = useMetagameTokens({
+  const { data: gamesData, loading: gamesLoading } = useMetagameTokens({
     gameAddresses: [GAME_TOKEN_ADDRESS],
     owner: address,
   });
@@ -116,7 +116,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
       </Box>
 
       <Box sx={styles.listContainer}>
-        {loading ? (
+        {(loading || gamesLoading) ? (
           <Typography sx={{ textAlign: "center", py: 2 }}>
             Loading...
           </Typography>

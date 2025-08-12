@@ -14,7 +14,6 @@ import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
 import ItemTooltip from '../components/ItemTooltip';
-import { useStarknetApi } from '@/api/starknet';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -203,7 +202,7 @@ export default function BeastScreen() {
               />
               {beast!.isCollectable && (
                 <Typography sx={styles.collectableText}>
-                  This beast can be collected
+                  Defeat this beast to collect it
                 </Typography>
               )}
             </Box>

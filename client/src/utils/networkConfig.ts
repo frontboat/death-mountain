@@ -46,10 +46,10 @@ export const NETWORKS = {
     chainId: ChainId.SN_SEPOLIA,
     name: "Beast Mode",
     status: "online",
-    namespace: "ls_0_0_3",
-    slot: "pg-sepolia",
+    namespace: "ls_0_0_6",
+    slot: "ls-sepolia",
     rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
-    torii: "https://api.cartridge.gg/x/pg-sepolia/torii",
+    torii: "https://api.cartridge.gg/x/ls-sepolia/torii",
     tokens: {
       erc20: [],
     },

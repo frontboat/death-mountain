@@ -1,15 +1,16 @@
-world_address = "0x05246cbbe2bef7fd190adbf05e47bee876ab2ab0e272c3346e0e760cd26adaa7"
+world_address = "0x38f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d"
 rpc = "https://api.cartridge.gg/x/starknet/sepolia"
 
 [events]
 raw = true
 
 [sql]
-historical = ["ls_0_0_1-GameEvent"]
+historical = ["ls_0_0_6-GameEvent"]
 
 [indexing]
 pending = true
 contracts = [
-    "erc721:0x6f261eba018dda4f60bdc1d0874cb7e97bf424979dda63fcbdf8bdcba1fb644",
-    "erc721:0x6023d97ec32567c8576337cfb1a8a9257d1791c5a375dece0717f7b4661b720"
+  "erc721:0x01fd7f186c0bb99f8d128f1eb40dbe3c7657df381957417f8c9a40804c005545", # denshokan
+  "erc721:0x0660e6dc65db95f11bf2e44f3f3c3e376147504ce298cf42958d451ad11da8e6", # Beasts
+  "erc721:0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da", # Golden token
 ]

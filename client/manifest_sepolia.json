@@ -2443,7 +2443,7 @@
     },
     {
       "address": "0x3a3110175c256bd02c5b89d600a82e15c691568bf8da1ffe06ffbfb3cc7a292",
-      "class_hash": "0x5a36f88d9304371366f96427df731ce913da0a5328106192d96946807300036",
+      "class_hash": "0x59bfaa756313d362c6ad9661695de20da6242ab792e146488bc1aca00a615dd",
       "abi": [
         {
           "type": "impl",
@@ -3015,6 +3015,30 @@
                 }
               ],
               "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_beast_hash",
+              "inputs": [
+                {
+                  "name": "id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "prefix",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "suffix",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
             }
           ]
         },
@@ -3145,7 +3169,7 @@
     },
     {
       "address": "0x1c6591aee12e667200d16832c30e2439cdb80220e131f97108a98e5d508f912",
-      "class_hash": "0x2b53a7fe8272ebe46239b97f022692afac81e8251c45a8459baf4063743697f",
+      "class_hash": "0x5ab9e72086683e432dceb41ff11a2f59aaf139f2058ea9fb6afbd0b7061b8d1",
       "abi": [
         {
           "type": "impl",

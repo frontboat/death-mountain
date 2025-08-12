@@ -138,6 +138,7 @@ export const getBeastFromSeed = (adventurer_xp: number, entropy: number): Beast 
 
   return {
     id: Number(encounter.id!),
+    seed: u64_1,
     baseName: BEAST_NAMES[Number(encounter.id!)],
     name: encounter.level! >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? `"${encounter.specialName!}" ${BEAST_NAMES[Number(encounter.id!)]}` : BEAST_NAMES[Number(encounter.id!)],
     health: encounter.health!,
@@ -146,7 +147,7 @@ export const getBeastFromSeed = (adventurer_xp: number, entropy: number): Beast 
     tier: Number(encounter.tier),
     specialPrefix: encounter.level! >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_PREFIXES[1 + Number(rnd5 % BigInt(69))] : null,
     specialSuffix: encounter.level! >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_SUFFIXES[1 + Number(rnd6 % BigInt(18))] : null,
-    isCollectable: false
+    isCollectable: false,
   };
 };
 

@@ -249,3 +249,17 @@ export const beastPowerPercent = (adventurerLevel: number, power: number) => {
 
   return (adjusted_power / adjusted_max_power) * 100
 }
+
+export const getCollectableTraits = (seed: bigint) => {
+  const shiny_seed = Number(seed & BigInt(0xFFFFFFFF)) % 10000;
+  const shiny = shiny_seed < 400;
+
+  // Use the upper 32 bits for animated trait
+  const animated_seed = Number((seed / BigInt(0x100000000)) & BigInt(0xFFFFFFFF)) % 10000;
+  const animated = animated_seed < 400;
+
+  return {
+    shiny,
+    animated,
+  };
+};

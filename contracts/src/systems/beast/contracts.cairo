@@ -35,6 +35,7 @@ pub trait IBeastSystems<T> {
         special2_rnd: u8,
         special3_rnd: u8,
     ) -> Beast;
+    fn get_beast_hash(self: @T, id: u8, prefix: u8, suffix: u8) -> felt252;
 }
 
 #[dojo::contract]
@@ -232,6 +233,10 @@ mod beast_systems {
             special3_rnd: u8,
         ) -> Beast {
             ImplBeast::get_beast(adventurer_level, weapon_type, seed, health_rnd, level_rnd, special2_rnd, special3_rnd)
+        }
+
+        fn get_beast_hash(self: @ContractState, id: u8, prefix: u8, suffix: u8) -> felt252 {
+            ImplBeast::get_beast_hash(id, prefix, suffix)
         }
     }
 }

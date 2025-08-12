@@ -110,7 +110,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameId,
     adventurer,
     adventurerState,
-    collectableBeast,
+    collectable,
     setAdventurer,
     setBag,
     setBeast,
@@ -123,9 +123,9 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     metadata,
     gameSettings,
     setGameSettings,
-    setShowBeastCollected,
     incrementBeastsCollected,
-    setCollectableBeast,
+    setCollectable,
+    setCollectableTokenURI,
   } = useGameStore();
 
   const [spectating, setSpectating] = useState(false);
@@ -283,12 +283,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (event.type === "beast") {
       setBeast(event.beast!);
-      setCollectableBeast(event.beast!.isCollectable ? event.beast! : null);
+      setCollectable(event.beast!.isCollectable ? event.beast! : null);
     }
 
-    if (event.type === "defeated_beast" && collectableBeast) {
-      //claimBeast(gameId!, collectableBeast);
-      setShowBeastCollected(true);
+    if (event.type === "defeated_beast" && collectable) {
+      claimBeast(gameId!, collectable);
+      setCollectableTokenURI(event.beast!.tokenURI);
       incrementBeastsCollected();
     }
 
