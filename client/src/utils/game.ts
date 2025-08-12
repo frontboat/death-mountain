@@ -245,10 +245,25 @@ export const calculateCombatStats = (adventurer: Adventurer, bagItems: Item[], b
   let bestProtection = 0;
   let bestItems: Item[] = [];
 
+  let bestWeapon = adventurer.equipment.weapon;
+  let bestDamage = baseDamage;
+
   if (beast) {
     let totalDefense = 0;
     let totalBestDefense = 0;
     let maxDamage = beast.level * (6 - Number(beast.tier)) * 1.5;
+
+    bagItems.filter((item) => ItemUtils.getItemSlot(item.id) === 'Weapon').forEach((item) => {
+      let itemDamage = calculateAttackDamage(item, adventurer, beast).baseDamage;
+      if (itemDamage > bestDamage) {
+        bestDamage = itemDamage;
+        bestWeapon = item;
+      }
+    });
+
+    if (bestWeapon) {
+      bestItems.push(bestWeapon)
+    }
 
     ['head', 'chest', 'waist', 'hand', 'foot'].forEach((slot) => {
       const armor = adventurer.equipment[slot as keyof Equipment];
@@ -301,6 +316,7 @@ export const calculateCombatStats = (adventurer: Adventurer, bagItems: Item[], b
   return {
     baseDamage,
     protection,
+    bestDamage,
     bestProtection,
     bestItems,
     critChance: adventurer.stats.luck,

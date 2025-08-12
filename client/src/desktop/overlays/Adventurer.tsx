@@ -30,6 +30,8 @@ export default function Adventurer({ combatStats }: { combatStats?: CombatStats 
   const previewHealthPercent = (previewHealth / maxHealth) * 100;
   const previewProtection = combatStats?.bestProtection || 0;
   const previewProtectionPercent = Math.min(100, previewProtection);
+  const previewAttack = combatStats?.bestDamage || 0;
+  const previewAttackPercent = Math.min(100, Math.floor(previewAttack / (beast?.health || 1) * 100));
 
   return (
     <>
@@ -94,6 +96,13 @@ export default function Adventurer({ combatStats }: { combatStats?: CombatStats 
                     value={Math.min(100, Math.floor(combatStats.baseDamage / beast.health * 100))}
                     sx={styles.attackBar}
                   />
+                  {previewAttack > combatStats.baseDamage && (
+                    <LinearProgress
+                      variant="determinate"
+                      value={previewAttackPercent}
+                      sx={styles.previewAttackBar}
+                    />
+                  )}
                 </Box>
                 {/* Defense Bar */}
                 <Box sx={{ position: 'relative' }}>
@@ -300,6 +309,18 @@ const styles = {
     right: 0,
     '& .MuiLinearProgress-bar': {
       backgroundColor: 'rgba(192, 192, 192, 0.3)',
+    },
+  },
+  previewAttackBar: {
+    height: '12px',
+    borderRadius: '5px',
+    backgroundColor: 'transparent',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    '& .MuiLinearProgress-bar': {
+      backgroundColor: 'rgba(255, 140, 0, 0.3)',
     },
   },
 }; 

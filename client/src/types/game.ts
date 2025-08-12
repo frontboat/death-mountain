@@ -75,6 +75,7 @@ export interface Stats {
 export interface CombatStats {
   baseDamage: number;
   protection: number;
+  bestDamage: number;
   bestProtection: number;
   bestItems: Item[];
   critChance: number;
