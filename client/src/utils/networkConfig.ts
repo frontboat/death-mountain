@@ -91,6 +91,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     "game_token_systems"
   )?.address;
   const vrf_provider = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
+  const DUNGEON_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS;
 
   // Base policies that are common across networks
   const policies = [
@@ -134,6 +135,10 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
       target: vrf_provider,
       method: "request_random",
     },
+    {
+      target: DUNGEON_ADDRESS,
+      method: "claim_beast",
+    }
   ];
 
   return {

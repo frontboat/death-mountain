@@ -222,7 +222,6 @@ export default function MainMenu() {
         ]}
         recommendedOption="token"
         onSelectPayment={(type, token) => {
-          console.log('Selected payment:', type, token);
           setShowPaymentOptions(false);
           // Implementation will go here
         }}

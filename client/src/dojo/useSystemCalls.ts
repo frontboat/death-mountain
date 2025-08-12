@@ -310,13 +310,7 @@ export const useSystemCalls = () => {
         { retryInterval: 500 }
       );
 
-      console.log("claim receipt", receipt);
-      const tokenMetadataEvent = receipt.events.find(
-        (event: any) => event.data.length === 14
-      );
-
-      const tokenId = tokenMetadataEvent ? parseInt(tokenMetadataEvent.data[1], 16) : 1;
-
+      const tokenId = parseInt(receipt.events[1].data[2], 16);
       const tokenURI = await getBeastTokenURI(tokenId);
       setCollectableTokenURI(tokenURI);
 

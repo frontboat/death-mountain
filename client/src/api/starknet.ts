@@ -116,11 +116,9 @@ export const useStarknetApi = () => {
       });
 
       const data = await response.json();
-      console.log('beast token uri data', data)
       
       if (data?.result && Array.isArray(data.result)) {
         const decodedString = decodeHexByteArray(data.result);
-        console.log('decoded beast token uri:', decodedString);
         return decodedString;
       }
       

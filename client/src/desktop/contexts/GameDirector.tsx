@@ -24,7 +24,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  useState,
+  useState
 } from "react";
 import { addAddressPadding } from "starknet";
 
@@ -128,6 +128,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [eventQueue, setEventQueue] = useState<any[]>([]);
   const [videoQueue, setVideoQueue] = useState<string[]>([]);
 
+  const [beastDefeated, setBeastDefeated] = useState(false);
+
   const gameTokensKey = useMemo(() => {
     return gameTokens.map((token: any) => token.token_id).join(",");
   }, [gameTokens]);
@@ -178,6 +180,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     processNextEvent();
   }, [eventQueue, isProcessing]);
 
+  useEffect(() => {
+    if (beastDefeated && collectable) {
+      incrementBeastsCollected();
+      claimBeast(gameId!, collectable);
+    }
+  }, [beastDefeated]);
+
   const subscribeEvents = async (gameId: number, settings: Settings) => {
     if (subscription) {
       try {
@@ -194,6 +203,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
               Boolean(getEntityModel(entity, "GameEvent"))
             )
             .map((entity: any) => processGameEvent(entity));
+
+          if (events.some((event: any) => event.type === "defeated_beast")) {
+            setBeastDefeated(true);
+          }
 
           setEventQueue((prev) => [...prev, ...events]);
         }
@@ -223,7 +236,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     });
   };
 
-  const processEvent = async (event: any, skipVideo: boolean) => {
+  const processEvent = async (event: any, reconnecting: boolean) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
 
@@ -233,7 +246,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       }
 
       if (
-        !skipVideo &&
+        !reconnecting &&
         event.adventurer!.item_specials_seed &&
         event.adventurer!.item_specials_seed !== adventurer?.item_specials_seed
       ) {
@@ -242,12 +255,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         setShowInventory(true);
       }
 
-      if (!skipVideo && event.adventurer!.stat_upgrades_available > 0) {
+      if (!reconnecting && event.adventurer!.stat_upgrades_available > 0) {
         setShowInventory(true);
       }
 
       if (
-        !skipVideo &&
+        !reconnecting &&
         event.adventurer!.stat_upgrades_available === 0 &&
         adventurer?.stat_upgrades_available! > 0
       ) {
@@ -265,12 +278,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (event.type === "beast") {
       setBeast(event.beast!);
+      setBeastDefeated(false);
       setCollectable(event.beast!.isCollectable ? event.beast! : null);
-    }
-
-    if (event.type === "defeated_beast" && collectable) {
-      incrementBeastsCollected();
-      claimBeast(gameId!, collectable);
     }
 
     if (event.type === "market_items") {
@@ -279,7 +288,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     if (!spectating && ExplorerLogEvents.includes(event.type)) {
-      if (!skipVideo && event.type === "discovery") {
+      if (!reconnecting && event.type === "discovery") {
         if (event.discovery?.type === "Loot") {
           setNewInventoryItems([...newInventoryItems, event.discovery.amount!]);
         }
@@ -292,16 +301,16 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setExploreLog(event);
     }
 
-    if (!skipVideo && BattleEvents.includes(event.type)) {
+    if (!reconnecting && BattleEvents.includes(event.type)) {
       setBattleEvent(event);
     }
 
-    if (!skipVideo && getVideoId(event)) {
+    if (!reconnecting && getVideoId(event)) {
       setShowOverlay(false);
       setVideoQueue((prev) => [...prev, getVideoId(event)!]);
     }
 
-    if (!skipVideo && delayTimes[event.type]) {
+    if (!reconnecting && delayTimes[event.type]) {
       await delay(delayTimes[event.type]);
     }
   };

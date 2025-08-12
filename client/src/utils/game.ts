@@ -43,11 +43,10 @@ const critical_hit_bonus = (base_damage: number, ring: Item | null): number => {
   total = base_damage;
 
   // Titanium Ring gives 3% bonus per level on critical hits
-  if (ring && ItemUtils.getItemName(ring.id) === "TitaniumRing" && total > 0) {
+  if (ring && ItemUtils.getItemName(ring.id) === "Titanium Ring" && total > 0) {
     const ringLevel = calculateLevel(ring.xp);
     total += Math.floor((total * 3 * ringLevel) / 100);
   }
-
   return total;
 };
 
@@ -68,7 +67,7 @@ const calculateWeaponSpecialBonus = (weaponId: number, weaponLevel: number, item
   }
 
   // Platinum Ring gives 3% bonus per level on special matches
-  if (ItemUtils.getItemName(ring.id) === "PlatinumRing" && bonus > 0) {
+  if (ItemUtils.getItemName(ring.id) === "Platinum Ring" && bonus > 0) {
     const ringLevel = calculateLevel(ring.xp);
     bonus += Math.floor((bonus * 3 * ringLevel) / 100);
   }
