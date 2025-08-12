@@ -251,6 +251,13 @@ export const beastPowerPercent = (adventurerLevel: number, power: number) => {
 }
 
 export const getCollectableTraits = (seed: bigint) => {
+  if (seed === BigInt(0)) {
+    return {
+      shiny: false,
+      animated: false,
+    };
+  }
+
   const shiny_seed = Number(seed & BigInt(0xFFFFFFFF)) % 10000;
   const shiny = shiny_seed < 400;
 

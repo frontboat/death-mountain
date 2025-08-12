@@ -1,12 +1,11 @@
-import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from '@/constants/beast';
 import BeastTooltip from '@/desktop/components/BeastTooltip';
 import { useGameStore } from '@/stores/gameStore';
 import { beastPowerPercent, getCollectableTraits } from '@/utils/beast';
 import { calculateLevel } from '@/utils/game';
 import { beastNameSize } from '@/utils/utils';
 import { Box, LinearProgress, Typography, keyframes } from '@mui/material';
-import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 const pulseGold = keyframes`
   0% {

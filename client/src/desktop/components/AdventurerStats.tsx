@@ -1,9 +1,10 @@
 import { MAX_STAT_VALUE } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
 import { ability_based_percentage, calculateCombatStats, calculateLevel } from '@/utils/game';
+import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, FormControl, MenuItem, Select, Tooltip, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 const STAT_DESCRIPTIONS = {
   strength: "Increases attack damage.",
@@ -52,8 +53,19 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
     setViewMode((beast && adventurer?.beast_health! > 0) ? 'combat' : 'stats');
   }, [beast]);
 
+  const combatStats = useMemo(() => {
+    return calculateCombatStats(adventurer!, bag, beast);
+  }, [adventurer, bag, beast]);
+
+  const equippedItemStats = useMemo(() => {
+    return ItemUtils.getEquippedItemStats(adventurer!, bag);
+  }, [adventurer, bag]);
+
+  const totalSelected = Object.values(selectedStats).reduce((a, b) => a + b, 0);
+  const pointsRemaining = adventurer!.stat_upgrades_available - totalSelected;
+
   const handleStatIncrement = (stat: keyof typeof STAT_DESCRIPTIONS) => {
-    if (pointsRemaining > 0 && (selectedStats[stat] + adventurer!.stats[stat]) < MAX_STAT_VALUE) {
+    if (pointsRemaining > 0 && (selectedStats[stat] + adventurer!.stats[stat]) < (MAX_STAT_VALUE + equippedItemStats[stat])) {
       setSelectedStats(prev => ({
         ...prev,
         [stat]: prev[stat] + 1
@@ -69,10 +81,6 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
       }));
     }
   };
-
-  const totalSelected = Object.values(selectedStats).reduce((a, b) => a + b, 0);
-  const pointsRemaining = adventurer!.stat_upgrades_available - totalSelected;
-  const combatStats = calculateCombatStats(adventurer!, bag, beast);
 
   function STAT_TITLE(stat: string) {
     if (stat === 'intelligence') {
@@ -207,7 +215,7 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
               variant="contained"
               size="small"
               onClick={() => handleStatIncrement(stat as keyof typeof STAT_DESCRIPTIONS)}
-              disabled={(adventurer!.stats[stat as keyof typeof STAT_DESCRIPTIONS] + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]) >= MAX_STAT_VALUE}
+              disabled={(adventurer!.stats[stat as keyof typeof STAT_DESCRIPTIONS] + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]) >= (MAX_STAT_VALUE + equippedItemStats[stat as keyof typeof STAT_DESCRIPTIONS])}
               sx={styles.controlButton}
             >
               +
