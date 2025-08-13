@@ -2,8 +2,7 @@ import { useController } from "@/contexts/controller";
 import { useDojoConfig } from "@/contexts/starknet";
 import { GameSettingsData, ItemPurchase, Stats } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
-import { Call } from "@mui/icons-material";
-import { CallData, CairoOption, CairoOptionVariant, byteArray } from "starknet";
+import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
 export const useSystemCalls = () => {
   const { account } = useController();
@@ -67,7 +66,7 @@ export const useSystemCalls = () => {
    * @param name The name of the game
    * @param settingsId The settings ID for the game
    */
-  const mintGame = async (account: any, name: string, settingsId = 0) => {
+  const mintGame = async (name: string, settingsId = 0) => {
     try {
       let tx = await account!.execute([
         {
@@ -121,7 +120,7 @@ export const useSystemCalls = () => {
 
     let calls: any[] = [
       {
-        contractAddress: GAME_TOKEN_ADDRESS,
+        contractAddress: GAME_ADDRESS,
         entrypoint: "start_game",
         calldata: [gameId, weapon],
       },
@@ -155,7 +154,7 @@ export const useSystemCalls = () => {
    */
   const explore = (gameId: number, tillBeast: boolean) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "explore",
       calldata: [gameId, tillBeast],
     };
@@ -168,7 +167,7 @@ export const useSystemCalls = () => {
    */
   const attack = (gameId: number, toTheDeath: boolean) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "attack",
       calldata: [gameId, toTheDeath],
     };
@@ -181,7 +180,7 @@ export const useSystemCalls = () => {
    */
   const flee = (gameId: number, toTheDeath: boolean) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "flee",
       calldata: [gameId, toTheDeath],
     };
@@ -194,7 +193,7 @@ export const useSystemCalls = () => {
    */
   const equip = (gameId: number, items: number[]) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "equip",
       calldata: [gameId, items],
     };
@@ -207,7 +206,7 @@ export const useSystemCalls = () => {
    */
   const drop = (gameId: number, items: number[]) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "drop",
       calldata: [gameId, items],
     };
@@ -222,7 +221,7 @@ export const useSystemCalls = () => {
    */
   const buyItems = (gameId: number, potions: number, items: ItemPurchase[]) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "buy_items",
       calldata: [gameId, potions, items],
     };
@@ -230,7 +229,7 @@ export const useSystemCalls = () => {
 
   const selectStatUpgrades = (gameId: number, statUpgrades: Stats) => {
     return {
-      contractAddress: GAME_TOKEN_ADDRESS,
+      contractAddress: GAME_ADDRESS,
       entrypoint: "select_stat_upgrades",
       calldata: [gameId, statUpgrades],
     };

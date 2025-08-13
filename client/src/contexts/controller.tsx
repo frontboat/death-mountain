@@ -1,9 +1,7 @@
 import { useStarknetApi } from "@/api/starknet";
 import {
   ChainId,
-  getNetworkConfig,
-  NetworkConfig,
-  NETWORKS,
+  NETWORKS
 } from "@/utils/networkConfig";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import {
@@ -25,8 +23,6 @@ export interface ControllerContext {
   openProfile: () => void;
   login: () => void;
   logout: () => void;
-  startPractice: () => void;
-  endPractice: () => void;
 }
 
 // Create a context
@@ -39,8 +35,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { account, address, isConnecting } = useAccount();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
-  const { currentNetworkConfig, setCurrentNetworkConfig } =
-    useDynamicConnector();
+  const { currentNetworkConfig } = useDynamicConnector();
   const { createBurnerAccount } = useStarknetApi();
 
   const [burner, setBurner] = useState<Account | null>(null);
@@ -51,20 +46,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     () => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl }),
     []
   );
-
-  useEffect(() => {
-    if (account) {
-      // Handle mixed networks
-      if (
-        (account as any).walletProvider?.account?.channel?.nodeUrl &&
-        (account as any).walletProvider.account.channel.nodeUrl !==
-          currentNetworkConfig.chains[0].rpcUrl
-      ) {
-        console.log("Disconnecting from network");
-        return disconnect();
-      }
-    }
-  }, [account]);
 
   useEffect(() => {
     if (
@@ -104,22 +85,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     setCreatingBurner(false);
   };
 
-  const startPractice = () => {
-    if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      setCurrentNetworkConfig(
-        getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig
-      );
-    }
-  };
-
-  const endPractice = () => {
-    setCurrentNetworkConfig(
-      getNetworkConfig(
-        import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN as ChainId
-      ) as NetworkConfig
-    );
-  };
-
   return (
     <ControllerContext.Provider
       value={{
@@ -127,7 +92,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
           currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
             ? burner
             : account,
-        address: burner?.address || address,
+        address: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? burner?.address : address,
         playerName: userName || "Adventurer",
         isPending: isConnecting || isPending || creatingBurner,
 
@@ -137,8 +102,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
             connector: connectors.find((conn) => conn.id === "controller"),
           }),
         logout: () => disconnect(),
-        startPractice,
-        endPractice,
       }}
     >
       {children}

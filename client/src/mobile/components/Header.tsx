@@ -1,15 +1,14 @@
-import { useController } from '@/contexts/controller';
 import { useGameStore } from '@/stores/gameStore';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Box, IconButton } from '@mui/material';
 import { useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import SettingsMenu from './HeaderMenu';
+import Network from './Network';
 import WalletConnect from './WalletConnect';
 
 function Header() {
   const { gameId, adventurer } = useGameStore();
-  const { address } = useController();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handleSettingsClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -29,7 +28,11 @@ function Header() {
 
 
       <Box sx={styles.headerButtons}>
-        {address && <WalletConnect />}
+        <Box sx={styles.networkContainer}>
+          <Network />
+        </Box>
+
+        <WalletConnect />
 
         <IconButton
           onClick={handleSettingsClick}
@@ -65,7 +68,7 @@ const styles = {
   networkContainer: {
     display: 'flex',
     alignItems: 'center',
-    width: '100px'
+    width: '140px'
   },
   headerButtons: {
     display: 'flex',

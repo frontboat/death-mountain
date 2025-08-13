@@ -2,9 +2,11 @@ import { useController } from '@/contexts/controller';
 import { ellipseAddress } from '@/utils/utils';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { Button } from '@mui/material';
+import { useAccount } from '@starknet-react/core';
 
 function WalletConnect() {
-  const { account, address, isPending, playerName, login, openProfile } = useController()
+  const { isPending, playerName, login, openProfile } = useController()
+  const { account, address } = useAccount();
 
   return (
     <>
