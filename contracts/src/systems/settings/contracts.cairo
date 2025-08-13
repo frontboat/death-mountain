@@ -34,6 +34,7 @@ mod settings_systems {
     use death_mountain::models::adventurer::bag::{Bag, ImplBag};
     use death_mountain::models::adventurer::equipment::{IEquipment, ImplEquipment};
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter, StatsMode};
+    use death_mountain::utils::renderer::encoding::U256BytesUsedTraitImpl;
 
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
@@ -46,7 +47,6 @@ mod settings_systems {
     use openzeppelin_introspection::src5::SRC5Component;
     use starknet::ContractAddress;
     use super::ISettingsSystems;
-    use death_mountain::utils::renderer::encoding::U256BytesUsedTraitImpl;
 
     component!(path: SettingsComponent, storage: settings, event: SettingsEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
@@ -152,10 +152,7 @@ mod settings_systems {
             let mut _name = Default::default();
 
             if name != 0 {
-                _name
-                    .append_word(
-                        name, U256BytesUsedTraitImpl::bytes_used(name.into()).into()
-                    );
+                _name.append_word(name, U256BytesUsedTraitImpl::bytes_used(name.into()).into());
             }
 
             self

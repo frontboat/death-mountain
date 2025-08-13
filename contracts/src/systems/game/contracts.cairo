@@ -55,11 +55,11 @@ mod game_systems {
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_minigame::libs::{assert_token_ownership, post_action, pre_action};
     use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
     use starknet::{ContractAddress, get_tx_info};
     use super::VRF_ENABLED;
-    use game_components_minigame::libs::{assert_token_ownership, pre_action, post_action};
-    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
 
     // ------------------------------------------ //
     // ------------ Helper Functions ------------ //
@@ -200,7 +200,6 @@ mod game_systems {
                 _save_seed(ref world, adventurer_id, market_seed, 0);
                 _save_bag(ref world, adventurer_id, adventurer.action_count, game_settings.bag, game_libs);
                 _save_adventurer(ref world, ref adventurer, game_settings.bag, adventurer_id, game_libs);
-
             }
             post_action(token_address, adventurer_id)
         }
