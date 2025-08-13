@@ -20,7 +20,7 @@ interface DynamicConnectorContext {
 
 const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(null);
 
-const controllerConfig = getNetworkConfig(ChainId.SN_SEPOLIA);
+const controllerConfig = getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN);
 const cartridgeController = typeof window !== "undefined" ? new ControllerConnector({
   policies: controllerConfig.policies,
   namespace: controllerConfig.namespace,

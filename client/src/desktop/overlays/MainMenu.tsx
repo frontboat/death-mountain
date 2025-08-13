@@ -56,7 +56,7 @@ export default function MainMenu() {
   };
 
   const handleStartGame = () => {
-    if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA) {
+    if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
       handleBuyGame();
     } else {
       navigate(`/survivor/play`);
@@ -64,7 +64,7 @@ export default function MainMenu() {
   };
 
   const handleShowAdventurers = () => {
-    if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA && !account) {
+    if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN && !account) {
       login();
       return;
     }
@@ -96,7 +96,7 @@ export default function MainMenu() {
                 variant="outlined"
                 fullWidth
                 size="large"
-                onClick={() => handleStartGame()} //handleStartGame()} //setShowPaymentOptions(true)
+                onClick={() => setShowPaymentOptions(true)} //handleStartGame()} //setShowPaymentOptions(true)
                 sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px', mt: 2 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -210,20 +210,13 @@ export default function MainMenu() {
         </AnimatePresence>
         <StatisticsModal open={showStats} onClose={() => setShowStats(false)} />
       </Box>
-      
+
       <PaymentOptionsModal
         open={showPaymentOptions}
         onClose={() => setShowPaymentOptions(false)}
         hasGoldenToken={true}
-        userTokens={[
-          { symbol: 'ETH', balance: '0.25', icon: '⟠' },
-          { symbol: 'LORDS', balance: '1250', icon: '👑' },
-          { symbol: 'USDC', balance: '50', icon: '💵' }
-        ]}
-        recommendedOption="token"
         onSelectPayment={(type, token) => {
           setShowPaymentOptions(false);
-          // Implementation will go here
         }}
       />
     </>

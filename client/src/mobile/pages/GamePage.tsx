@@ -77,8 +77,8 @@ export default function GamePage() {
   useEffect(() => {
     if (!sdk || isPending) return;
 
-    if (mode === "real" && dojoConfig.chainId !== ChainId.SN_SEPOLIA) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.SN_SEPOLIA) as NetworkConfig);
+    if (mode === "real" && dojoConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
+      setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
       return;
     }
 

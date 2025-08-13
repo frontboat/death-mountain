@@ -14,12 +14,14 @@ import {
 } from "react";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
+import { useGameTokens } from "@/dojo/useGameTokens";
 
 export interface ControllerContext {
   account: any;
   address: string | undefined;
   playerName: string;
   isPending: boolean;
+  tokenBalances: Record<string, string>;
   openProfile: () => void;
   login: () => void;
   logout: () => void;
@@ -36,16 +38,36 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { createBurnerAccount } = useStarknetApi();
+  const { createBurnerAccount, getTokenBalances } = useStarknetApi();
+  const { getGameTokens } = useGameTokens();
 
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
   const [creatingBurner, setCreatingBurner] = useState(false);
+  const [tokenBalances, setTokenBalances] = useState({});
+  const [goldenPassIds, setGoldenPassIds] = useState<number[]>([]);
 
   const demoRpcProvider = useMemo(
     () => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl }),
     []
   );
+
+  useEffect(() => {
+    async function fetchTokenBalances() {
+      // @ts-ignore
+      const balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN].paymentTokens);
+      setTokenBalances(balances);
+
+      // @ts-ignore
+      const gameTokens = await getGameTokens(address, NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN].goldenToken);
+      console.log('gameTokens', gameTokens);
+      setGoldenPassIds(gameTokens);
+    }
+
+    if (address) {
+      fetchTokenBalances();
+    }
+  }, [address]);
 
   useEffect(() => {
     if (
@@ -95,6 +117,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         address: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? burner?.address : address,
         playerName: userName || "Adventurer",
         isPending: isConnecting || isPending || creatingBurner,
+        tokenBalances,
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
         login: () =>

@@ -4,39 +4,223 @@ import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined
 import TokenIcon from '@mui/icons-material/Token';
 import { Box, Button, FormControl, IconButton, Link, MenuItem, Select, Typography } from '@mui/material';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback, memo } from 'react';
+import { useController } from '@/contexts/controller';
+import { NETWORKS } from '@/utils/networkConfig';
+import { getSwapQuote } from '@/api/ekubo';
 
 interface PaymentOptionsModalProps {
   open: boolean;
   onClose: () => void;
   hasGoldenToken?: boolean;
-  userTokens?: Array<{ symbol: string; balance: string; icon?: string }>;
   onSelectPayment: (type: 'golden' | 'token' | 'credit', tokenSymbol?: string) => void;
-  recommendedOption?: 'golden' | 'token' | 'credit';
 }
+
+interface TokenSelectionProps {
+  userTokens: any[];
+  selectedToken: string;
+  tokenQuote: { amount: string; loading: boolean; error?: string };
+  onTokenChange: (tokenSymbol: string) => void;
+  onSelectPayment: () => void;
+  styles: any;
+}
+
+// Memoized token selection component
+const TokenSelectionContent = memo(({ 
+  userTokens, 
+  selectedToken, 
+  tokenQuote, 
+  onTokenChange, 
+  onSelectPayment,
+  styles 
+}: TokenSelectionProps) => (
+  <Box sx={styles.paymentCard}>
+    <Box sx={styles.cardHeader}>
+      <Box sx={styles.iconContainer}>
+        <TokenIcon sx={{ fontSize: 28, color: '#d0c98d' }} />
+      </Box>
+      <Box sx={{ flex: 1 }}>
+        <Typography sx={styles.paymentTitle}>Pay with Crypto</Typography>
+        <Typography sx={styles.paymentSubtitle}>Select any token in your controller wallet</Typography>
+      </Box>
+    </Box>
+
+    <Box sx={styles.sectionContainer} pb={2} mt={1}>
+      <FormControl fullWidth sx={styles.selectControl}>
+        <Select
+          value={selectedToken}
+          onChange={(e) => onTokenChange(e.target.value)}
+          sx={styles.cyberpunkSelect}
+          MenuProps={{
+            PaperProps: {
+              sx: {
+                background: 'rgba(24, 40, 24, 0.95)',
+                border: '1px solid rgba(208, 201, 141, 0.3)',
+                backdropFilter: 'blur(8px)',
+              }
+            }
+          }}
+        >
+          {userTokens.map((token: any) => (
+            <MenuItem key={token.symbol} value={token.symbol} sx={styles.selectItem}>
+              <Box sx={styles.tokenRow}>
+                <Box sx={styles.tokenLeft}>
+                  <Typography sx={styles.tokenIcon}>{token.icon}</Typography>
+                  <Typography sx={styles.tokenName}>{token.symbol}</Typography>
+                </Box>
+                <Typography sx={styles.tokenBalance}>{token.balance}</Typography>
+              </Box>
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Box>
+
+    <Box sx={styles.costDisplay}>
+      <Typography sx={styles.costText}>
+        {tokenQuote.loading ? (
+          'Loading quote...'
+        ) : tokenQuote.error ? (
+          `Error: ${tokenQuote.error}`
+        ) : tokenQuote.amount ? (
+          `Cost: ${tokenQuote.amount} ${selectedToken}`
+        ) : (
+          'Loading...'
+        )}
+      </Typography>
+    </Box>
+
+    <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, mb: 2 }}>
+      <Button
+        variant="contained"
+        sx={styles.activateButton}
+        onClick={onSelectPayment}
+        fullWidth
+        disabled={tokenQuote.loading || !!tokenQuote.error}
+      >
+        <Typography sx={styles.buttonText}>Enter Dungeon</Typography>
+      </Button>
+    </Box>
+  </Box>
+));
+
+TokenSelectionContent.displayName = 'TokenSelectionContent';
 
 export default function PaymentOptionsModal({
   open,
   onClose,
   hasGoldenToken = true,
-  userTokens = [
-    { symbol: 'ETH', balance: '0.25', icon: '⟠' },
-    { symbol: 'LORDS', balance: '1250', icon: '👑' },
-    { symbol: 'USDC', balance: '50', icon: '💵' }
-  ],
-  onSelectPayment,
-  recommendedOption = 'token'
+  onSelectPayment
 }: PaymentOptionsModalProps) {
-  const [selectedToken, setSelectedToken] = useState(userTokens[0]?.symbol || 'ETH');
-  const [hoveredOption, setHoveredOption] = useState<string | null>(null);
+  const { tokenBalances } = useController();
+
+  // Get payment tokens from network config
+  const paymentTokens = useMemo(() => {
+    const network = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS];
+    return (network as any)?.paymentTokens || [];
+  }, []);
+
+  // Create user tokens list with balances and icons
+  const userTokens = useMemo(() => {
+    return paymentTokens.map((token: any) => ({
+      symbol: token.name,
+      balance: tokenBalances[token.name] || '0',
+      icon: token.name === 'ETH' ? '⟠' : token.name === 'LORD' ? '👑' : token.name === 'USDC' ? '💵' : '🪙',
+      address: token.address,
+      decimals: token.decimals || 18,
+      displayDecimals: token.displayDecimals || 4
+    }));
+  }, [paymentTokens, tokenBalances]);
+
+  const [selectedToken, setSelectedToken] = useState('LORD');
   const [currentView, setCurrentView] = useState<'golden' | 'token' | 'credit' | null>(null);
+  const [tokenQuote, setTokenQuote] = useState<{ amount: string; loading: boolean; error?: string }>({
+    amount: '',
+    loading: false
+  });
+
+  // Get dungeon ticket address
+  const dungeonTicketAddress = useMemo(() => {
+    const dungeonToken = paymentTokens.find((t: any) => t.name === 'DNG40');
+    return dungeonToken?.address;
+  }, [paymentTokens]);
+
+  const fetchTokenQuote = useCallback(async (tokenSymbol: string) => {
+    const selectedTokenData = userTokens.find((t: any) => t.symbol === tokenSymbol);
+
+    if (!selectedTokenData?.address || !dungeonTicketAddress) {
+      setTokenQuote({ amount: '', loading: false, error: 'Token not supported' });
+      return;
+    }
+
+    setTokenQuote({ amount: '', loading: true });
+
+    try {
+      // Get quote for 1 dungeon ticket (reverse the quote to get guaranteed price)
+      const quote = await getSwapQuote(-1e18, dungeonTicketAddress, selectedTokenData.address);
+
+      if (quote && quote.total > 0) {
+        // Calculate amount: multiply by -1 and divide by token decimals to get price of 1 dungeon ticket
+        const amount = ((quote.total * -1) / Math.pow(10, selectedTokenData.decimals)).toFixed(selectedTokenData.displayDecimals);
+        setTokenQuote({ amount, loading: false });
+      } else {
+        setTokenQuote({ amount: '', loading: false, error: 'No quote available' });
+      }
+    } catch (error) {
+      console.error('Error fetching quote:', error);
+      setTokenQuote({ amount: '', loading: false, error: 'Failed to get quote' });
+    }
+  }, [userTokens, dungeonTicketAddress]);
 
   const handleSelectPayment = (type: 'golden' | 'token' | 'credit') => {
     onSelectPayment(type, type === 'token' ? selectedToken : undefined);
   };
 
+  // Handle token selection change
+  const handleTokenChange = useCallback((tokenSymbol: string) => {
+    setSelectedToken(tokenSymbol);
+    fetchTokenQuote(tokenSymbol);
+  }, [fetchTokenQuote]);
+
   // Determine what to show based on user's situation
-  const hasTokens = userTokens && userTokens.length > 0 && userTokens.some(t => parseFloat(t.balance) > 0);
+  const hasTokens = userTokens && userTokens.length > 0 && userTokens.some((t: any) => parseFloat(t.balance) > 0);
+
+  // Reusable motion wrapper component - only animates on view changes, not token changes
+  const MotionWrapper = ({ children, viewKey }: { children: React.ReactNode; viewKey: string }) => (
+    <motion.div
+      key={viewKey}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      style={{ width: '100%' }}
+    >
+      {children}
+    </motion.div>
+  );
+
+  // Stable wrapper for token selection that doesn't animate on token changes
+  const StableTokenWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div style={{ width: '100%' }}>
+      {children}
+    </div>
+  );
+
+  // Reusable action button component
+  const ActionButton = ({ onClick, children, disabled }: { onClick: () => void; children: React.ReactNode; disabled?: boolean }) => (
+    <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, mb: 2 }}>
+      <Button
+        variant="contained"
+        sx={styles.activateButton}
+        onClick={onClick}
+        fullWidth
+        disabled={disabled}
+      >
+        <Typography sx={styles.buttonText}>{children}</Typography>
+      </Button>
+    </Box>
+  );
+
 
   // Initialize the view based on user's situation
   useEffect(() => {
@@ -50,6 +234,13 @@ export default function PaymentOptionsModal({
       }
     }
   }, [hasGoldenToken, hasTokens, currentView]);
+
+  // Fetch initial quote when component loads or selected token changes
+  useEffect(() => {
+    if (selectedToken && currentView === 'token') {
+      fetchTokenQuote(selectedToken);
+    }
+  }, [selectedToken, currentView]);
 
   return (
     <AnimatePresence>
@@ -90,14 +281,7 @@ export default function PaymentOptionsModal({
                 <AnimatePresence mode="wait">
                   {/* Golden Token Option */}
                   {currentView === 'golden' && (
-                    <motion.div
-                      key="golden"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ width: '100%' }}
-                    >
+                    <MotionWrapper viewKey="golden">
                       <Box sx={styles.paymentCard}>
                         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 0, mt: 2 }}>
                           <Typography sx={styles.paymentTitle}>Use Golden Token</Typography>
@@ -114,93 +298,37 @@ export default function PaymentOptionsModal({
                           />
                         </Box>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, mt: 1 }}>
-                          <Button
-                            variant="contained"
-                            sx={styles.activateButton}
-                            onClick={() => handleSelectPayment('token')}
-                            fullWidth
-                          >
-                            <Typography sx={styles.buttonText}>Enter Dungeon</Typography>
-                          </Button>
-                        </Box>
+                        <ActionButton onClick={() => handleSelectPayment('golden')}>
+                          Enter Dungeon
+                        </ActionButton>
                       </Box>
-                    </motion.div>
+                    </MotionWrapper>
                   )}
 
                   {/* Token Payment Option */}
                   {currentView === 'token' && (
                     <motion.div
-                      key="token"
+                      key="token-view"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                       style={{ width: '100%' }}
                     >
-                      <Box sx={styles.paymentCard}>
-                        <Box sx={styles.cardHeader}>
-                          <Box sx={styles.iconContainer}>
-                            <TokenIcon sx={{ fontSize: 28, color: '#d0c98d' }} />
-                          </Box>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography sx={styles.paymentTitle}>Pay with Crypto</Typography>
-                            <Typography sx={styles.paymentSubtitle}>Select any token in your controller wallet</Typography>
-                          </Box>
-                        </Box>
-
-                        <Box sx={styles.sectionContainer} pb={2} mt={1}>
-                          <FormControl fullWidth sx={styles.selectControl}>
-                            <Select
-                              value={selectedToken}
-                              onChange={(e) => setSelectedToken(e.target.value)}
-                              sx={styles.cyberpunkSelect}
-                            >
-                              {userTokens.map((token) => (
-                                <MenuItem key={token.symbol} value={token.symbol} sx={styles.selectItem}>
-                                  <Box sx={styles.tokenRow}>
-                                    <Box sx={styles.tokenLeft}>
-                                      <Typography sx={styles.tokenIcon}>{token.icon}</Typography>
-                                      <Typography sx={styles.tokenName}>{token.symbol}</Typography>
-                                    </Box>
-                                    <Typography sx={styles.tokenBalance}>{token.balance}</Typography>
-                                  </Box>
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </Box>
-
-                        <Box sx={styles.costDisplay}>
-                          <Typography sx={styles.costText}>
-                            Cost: {selectedToken === 'ETH' ? '0.001' : selectedToken === 'LORDS' ? '100' : '5'} {selectedToken}
-                          </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, mb: 2 }}>
-                          <Button
-                            variant="contained"
-                            sx={styles.activateButton}
-                            onClick={() => handleSelectPayment('token')}
-                            fullWidth
-                          >
-                            <Typography sx={styles.buttonText}>Enter Dungeon</Typography>
-                          </Button>
-                        </Box>
-                      </Box>
+                      <TokenSelectionContent 
+                        userTokens={userTokens}
+                        selectedToken={selectedToken}
+                        tokenQuote={tokenQuote}
+                        onTokenChange={handleTokenChange}
+                        onSelectPayment={() => handleSelectPayment('token')}
+                        styles={styles}
+                      />
                     </motion.div>
                   )}
 
                   {/* Credit Card Option */}
                   {currentView === 'credit' && (
-                    <motion.div
-                      key="credit"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ width: '100%' }}
-                    >
+                    <MotionWrapper viewKey="credit">
                       <Box sx={styles.paymentCard}>
                         <Box sx={[styles.cardHeader, { py: 1, pt: 2 }]}>
                           <Box sx={styles.iconContainer}>
@@ -229,18 +357,11 @@ export default function PaymentOptionsModal({
                           </Box>
                         </Box>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, mb: 2 }}>
-                          <Button
-                            variant="contained"
-                            sx={styles.activateButton}
-                            onClick={() => handleSelectPayment('token')}
-                            fullWidth
-                          >
-                            <Typography sx={styles.buttonText}>Continue</Typography>
-                          </Button>
-                        </Box>
+                        <ActionButton onClick={() => handleSelectPayment('credit')}>
+                          Continue
+                        </ActionButton>
                       </Box>
-                    </motion.div>
+                    </MotionWrapper>
                   )}
                 </AnimatePresence>
               </Box>
@@ -248,7 +369,7 @@ export default function PaymentOptionsModal({
               {/* Footer links */}
               <Box sx={styles.footer}>
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  {currentView === 'golden' || currentView === 'credit' && (
+                  {(currentView === 'golden' || currentView === 'credit') && (
                     <Link
                       component="button"
                       onClick={() => setCurrentView('token')}
@@ -401,40 +522,6 @@ const styles = {
     letterSpacing: 0.5,
     lineHeight: 1.2,
   },
-  priceDisplay: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    ml: 'auto',
-  },
-  freeText: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: '#FFD700',
-    letterSpacing: 0.5,
-  },
-  cryptoPrice: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: '#d0c98d',
-    letterSpacing: 0.5,
-  },
-  cryptoSymbol: {
-    fontSize: 11,
-    color: '#FFD700',
-    opacity: 0.7,
-  },
-  fiatPrice: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: '#d0c98d',
-    letterSpacing: 0.5,
-  },
-  fiatCurrency: {
-    fontSize: 11,
-    color: '#FFD700',
-    opacity: 0.7,
-  },
   selectControl: {
     '& .MuiOutlinedInput-root': {
       background: 'rgba(0, 0, 0, 0.3)',
@@ -494,20 +581,8 @@ const styles = {
     color: '#FFD700',
     opacity: 0.7,
   },
-  tokenCost: {
-    fontSize: 13,
-    fontWeight: 600,
-    color: '#d0c98d',
-  },
   sectionContainer: {
     px: 2
-  },
-  sectionLabel: {
-    fontSize: 13,
-    color: '#FFD700',
-    opacity: 0.8,
-    mb: 1,
-    letterSpacing: 0.5,
   },
   costDisplay: {
     px: 3,
@@ -516,7 +591,7 @@ const styles = {
     textAlign: 'center',
   },
   costText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 600,
     color: '#d0c98d',
     letterSpacing: 0.5,
@@ -569,19 +644,12 @@ const styles = {
     },
     transition: 'all 0.2s ease',
   },
-  buttonContent: {
-    position: 'relative',
-    zIndex: 2,
-  },
   buttonText: {
     fontSize: 13,
     fontWeight: 600,
     letterSpacing: 0.5,
     color: '#1a2f1a',
     textAlign: 'center',
-  },
-  buttonGlow: {
-    display: 'none',
   },
   footer: {
     p: 2,

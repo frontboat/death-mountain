@@ -63,19 +63,19 @@ export function decodeHexByteArray(byteArray: string[]): string {
   // Skip the first byte if it's a length prefix (like 0x1a6)
   // Start from index 1 to get the actual data
   const dataBytes = byteArray.slice(1);
-  
+
   // Convert hex byte array to string
   const hexString = dataBytes.map((byte: string) => {
     // Remove '0x' prefix and ensure 2 characters
     const cleanByte = byte.replace('0x', '').padStart(2, '0');
     return cleanByte;
   }).join('');
-  
+
   // Convert hex to string using browser-compatible method
-  const decodedString = hexString.match(/.{1,2}/g)?.map((byte: string) => 
+  const decodedString = hexString.match(/.{1,2}/g)?.map((byte: string) =>
     String.fromCharCode(parseInt(byte, 16))
   ).join('') || '';
-  
+
   return decodedString;
 }
 
@@ -85,13 +85,13 @@ export function extractImageFromTokenURI(tokenURI: string): string | null {
     if (tokenURI.startsWith('data:application/json;base64,')) {
       // Extract the base64 part
       const base64Data = tokenURI.replace('data:application/json;base64,', '');
-      
+
       // Clean the base64 string - remove any invalid characters
       const cleanBase64 = base64Data.replace(/[^A-Za-z0-9+/=]/g, '');
-      
+
       // Add padding if needed
       const paddedBase64 = cleanBase64 + '='.repeat((4 - cleanBase64.length % 4) % 4);
-      
+
       // Decode base64 to string
       const jsonString = atob(paddedBase64);
       // Parse the JSON
@@ -104,4 +104,36 @@ export function extractImageFromTokenURI(tokenURI: string): string | null {
     console.error('Error extracting image from token URI:', error);
     return null;
   }
+}
+
+export function parseBalances(
+  results: { id: number; jsonrpc: string; result: [string, string] }[],
+  tokens: { name: string; address: string; displayDecimals: number; decimals?: number; }[],
+): Record<string, string> {
+  function toBigIntSmart(v: string | number | bigint): bigint {
+    const s = String(v);
+    return s.startsWith("0x") ? BigInt(s) : BigInt(s);
+  }
+
+  function uint256ToBigInt([low, high]: [string, string]): bigint {
+    return (toBigIntSmart(high) << 128n) + toBigIntSmart(low);
+  }
+
+  function formatBalance(raw: bigint, tokenDecimals = 18, showDecimals = 4): string {
+    const base = 10n ** BigInt(tokenDecimals);
+    const intPart = raw / base;
+    const fracPart = raw % base;
+    const frac = fracPart.toString().padStart(tokenDecimals, "0").slice(0, showDecimals);
+    return `${intPart}${showDecimals > 0 ? "." + frac : ""}`;
+  }
+
+  const out: Record<string, string> = {};
+  for (let i = 0; i < results.length; i++) {
+    const token = tokens[i];
+    const raw = uint256ToBigInt(results[i].result);
+    const tokenDecimals = token.decimals ?? 18;
+    const shownDecimals = token.displayDecimals;
+    out[token.name] = formatBalance(raw, tokenDecimals, shownDecimals);
+  }
+  return out;
 }

@@ -1,11 +1,64 @@
 import { useDojoConfig } from "@/contexts/starknet";
 import { Adventurer } from "@/types/game";
+import { NETWORKS } from "@/utils/networkConfig";
+import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
+import { useAccount } from "@starknet-react/core";
 import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
-import { decodeHexByteArray } from "@/utils/utils";
 
 export const useStarknetApi = () => {
   const dojoConfig = useDojoConfig();
+  const { address } = useAccount();
+
+  const getTokenBalances = async (tokens: any[]): Promise<Record<string, string>> => {
+    const calls = tokens.map((token, i) => ({
+      id: i + 1,
+      jsonrpc: "2.0",
+      method: "starknet_call",
+      params: [
+        {
+          contract_address: token.address,
+          entry_point_selector: "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
+          calldata: [address]
+        },
+        "pending"
+      ]
+    }));
+
+    const response = await fetch(dojoConfig.rpcUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(calls),
+    });
+
+    const data = await response.json();
+    return parseBalances(data || [], tokens);
+  }
+
+  const getGoldenPassCooldowns = async (tokenIds: number[]): Promise<number[]> => {
+    const calls = tokenIds.map((tokenId, i) => ({
+      id: i + 1,
+      jsonrpc: "2.0",
+      method: "starknet_call",
+      params: [
+        {
+          contract_address: import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS,
+          entry_point_selector: "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
+          calldata: [num.toHex(tokenId)]
+        },
+        "pending"
+      ]
+    }));
+
+    const response = await fetch(dojoConfig.rpcUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(calls),
+    });
+
+    const data = await response.json();
+    return data;
+  }
 
   const getAdventurer = async (adventurerId: number): Promise<Adventurer | null> => {
     try {
@@ -116,12 +169,12 @@ export const useStarknetApi = () => {
       });
 
       const data = await response.json();
-      
+
       if (data?.result && Array.isArray(data.result)) {
         const decodedString = decodeHexByteArray(data.result);
         return decodedString;
       }
-      
+
       return data?.result;
     } catch (error) {
       console.log('error', error)
@@ -162,5 +215,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getAdventurer, getBeastTokenURI, createBurnerAccount };
+  return { getAdventurer, getBeastTokenURI, createBurnerAccount, getTokenBalances };
 };

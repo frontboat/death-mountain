@@ -19,6 +19,8 @@ export interface NetworkConfig {
     rpcUrl: string;
   }>;
   tokens: Tokens;
+  paymentTokens: any[];
+  goldenToken: string;
 }
 
 export enum ChainId {
@@ -55,6 +57,35 @@ export const NETWORKS = {
     },
     manifest: manifest_sepolia,
     vrf: true,
+    goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+    paymentTokens: [
+      {
+        name: "ETH",
+        address: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        displayDecimals: 4,
+      },
+      {
+        name: "STRK",
+        address: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        displayDecimals: 2,
+      },
+      {
+        name: "USDC",
+        address: "0x0468ce7715f7aea17b1632736877c36371c3b1354eb9611e8bb9035c0563963f",
+        displayDecimals: 2,
+        decimals: 6,
+      },
+      {
+        name: "DNG40",
+        address: "0x0468ce7715f7aea17b1632736877c36371c3b1354eb9611e8bb9035c0563963f",
+        displayDecimals: 0,
+      },
+      {
+        name: "LORD",
+        address: "0x064fd80fcb41d00214430574a0aa19d21cc5d6452aeb4996f31b6e9ba4f466a0",
+        displayDecimals: 2,
+      },
+    ],
   },
   WP_PG_SLOT: {
     chainId: ChainId.WP_PG_SLOT,
@@ -69,6 +100,8 @@ export const NETWORKS = {
     },
     manifest: manifest_slot,
     vrf: false,
+    paymentTokens: [],
+    goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
   },
 };
 
@@ -152,6 +185,8 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     policies,
     chains: [{ rpcUrl: network.rpcUrl }],
     tokens: network.tokens,
+    paymentTokens: network.paymentTokens,
+    goldenToken: network.goldenToken,
   };
 }
 
