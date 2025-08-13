@@ -1,7 +1,7 @@
 {
   "world": {
     "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
-    "address": "0x38f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d",
+    "address": "0x29f11cefb67df8a3962ba60816800ccf196f9497ae781bb4bc8589f8e245753",
     "seed": "DNC",
     "name": "Provable Games",
     "entrypoints": [
@@ -1328,8 +1328,13 @@
   },
   "contracts": [
     {
+<<<<<<< HEAD
       "address": "0x39309ae0beab7a6694589e6ec0e75c2e658ac43449704a24b1d1883d1e288a3",
       "class_hash": "0x78ca3be0dd588acc34ea00867e5946f2cc8de144d016b817161139acd1c0718",
+=======
+      "address": "0x20fd21d6bfce809959f266e427244ebc4e6470fb41324608cab460085245c72",
+      "class_hash": "0x5acc9993f40b542e4fc167a5ace9047dc2776fc36f1a07b966e0142388a0edb",
+>>>>>>> next
       "abi": [
         {
           "type": "impl",
@@ -2442,8 +2447,13 @@
       ]
     },
     {
+<<<<<<< HEAD
       "address": "0x3a3110175c256bd02c5b89d600a82e15c691568bf8da1ffe06ffbfb3cc7a292",
       "class_hash": "0x59bfaa756313d362c6ad9661695de20da6242ab792e146488bc1aca00a615dd",
+=======
+      "address": "0x53436827646567f4a6137ac91f7603ee98a52eacda32fe59c601a48344fb4d0",
+      "class_hash": "0x7406e9437f9b405c8152eb138b61818e66ce4f8a7526a22902e6fe631c75566",
+>>>>>>> next
       "abi": [
         {
           "type": "impl",
@@ -3168,8 +3178,13 @@
       ]
     },
     {
+<<<<<<< HEAD
       "address": "0x1c6591aee12e667200d16832c30e2439cdb80220e131f97108a98e5d508f912",
       "class_hash": "0x5ab9e72086683e432dceb41ff11a2f59aaf139f2058ea9fb6afbd0b7061b8d1",
+=======
+      "address": "0x89e0eccd76c3a7acc221f008ce5eff5fb067e86c1a37be06d2ff201ee4cd4a",
+      "class_hash": "0x56cd9da765d0bf4342c6d2ddd14716cdbae39ff701987f40e0f04dd40f15b70",
+>>>>>>> next
       "abi": [
         {
           "type": "impl",
@@ -3557,8 +3572,13 @@
       ]
     },
     {
+<<<<<<< HEAD
       "address": "0x28f822883acaa344d04b5d15ec28557f94f32b126b6aab0aff887471e6b986a",
       "class_hash": "0x1180b1358f6a576edf17b2f2e4544f299489d80a577da07ef4790551e9daa44",
+=======
+      "address": "0x5eecb8d59907fb3bbc44a6618e4f5b7a7d9e8dcfcb8eaa7d64dd32ef8260aaf",
+      "class_hash": "0x54fbd3cc638c4ba0ba84d4101ae88e03c89e6998badd412f3c7eff45d106814",
+>>>>>>> next
       "abi": [
         {
           "type": "impl",
@@ -4215,7 +4235,7 @@
       ],
       "init_calldata": [
         "0x065d2AB17338b5AffdEbAF95E2D79834B5f30Bac596fF55563c62C3c98700150",
-        "0x01fd7f186c0bb99f8d128f1eb40dbe3c7657df381957417f8c9a40804c005545"
+        "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4"
       ],
       "tag": "ls_0_0_6-game_token_systems",
       "selector": "0x3275bafbab55269a16cca4d314e63204f9b04ff98cdd996cb517f11b27cc8d1",
@@ -4227,7 +4247,11 @@
       ]
     },
     {
+<<<<<<< HEAD
       "address": "0x663755e1f40377de4cbe6ff8c70b69ccbadec279ddc87a7ff90e41d23adcc0",
+=======
+      "address": "0x775b72184867dc97ecd399c1dfec3d60822408f352b8ff4ccb3d967a400f07e",
+>>>>>>> next
       "class_hash": "0x23cdb494302994de197966707c72df5708f2516f5205ed398dacb4c16fc4bcc",
       "abi": [
         {
@@ -4734,8 +4758,13 @@
       ]
     },
     {
+<<<<<<< HEAD
       "address": "0x26feb6f69f7b0dffaf46443ebac716b0f315c3470c807d23a9e99e2ae0f722",
       "class_hash": "0x7588c8c7805d7f55b4a7208def0e67cfac7d15cd250df01fe4990fb1b506fd3",
+=======
+      "address": "0x1776642194d3b29859e6e309314ac6e4888ba56d67954b9d6e5db65e4427650",
+      "class_hash": "0x4b68cbca8f4e749e2f0e2be0e911c3d6101e0966fc4796447b48fc468cc518d",
+>>>>>>> next
       "abi": [
         {
           "type": "impl",
@@ -5063,8 +5092,13 @@
       ]
     },
     {
+<<<<<<< HEAD
       "address": "0x1ec2d10c38fdbaeac2e14c854f70cbbf798f815741aeafb313d7ec8e7c88126",
       "class_hash": "0x43016c5723e9206f7bc9fceb903d57f0b4596c0653f2c461991b7b2a5e08dae",
+=======
+      "address": "0x3b8c69c6e3c405ec645bf977aca95b2d2978fe50632806ce4c2f4ce38aa5797",
+      "class_hash": "0x6422f872b8709ab4736e950bf6a85d093f9a4868d14fe33677912e2ee957813",
+>>>>>>> next
       "abi": [
         {
           "type": "impl",
