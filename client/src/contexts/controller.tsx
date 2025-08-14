@@ -22,6 +22,7 @@ export interface ControllerContext {
   playerName: string;
   isPending: boolean;
   tokenBalances: Record<string, string>;
+  goldenPassIds: number[];
   openProfile: () => void;
   login: () => void;
   logout: () => void;
@@ -38,7 +39,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { createBurnerAccount, getTokenBalances } = useStarknetApi();
+  const { createBurnerAccount, getTokenBalances, goldenPassReady } = useStarknetApi();
   const { getGameTokens } = useGameTokens();
 
   const [burner, setBurner] = useState<Account | null>(null);
@@ -54,14 +55,15 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     async function fetchTokenBalances() {
-      // @ts-ignore
-      const balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN].paymentTokens);
+      const balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].paymentTokens);
       setTokenBalances(balances);
 
-      // @ts-ignore
-      const gameTokens = await getGameTokens(address, NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN].goldenToken);
-      console.log('gameTokens', gameTokens);
-      setGoldenPassIds(gameTokens);
+      let goldenTokenAddress = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].goldenToken;
+      const allTokens = await getGameTokens(address!, goldenTokenAddress);
+      if (allTokens.length > 0) {
+        const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
+        setGoldenPassIds(cooldowns);
+      }
     }
 
     if (address) {
@@ -118,6 +120,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         playerName: userName || "Adventurer",
         isPending: isConnecting || isPending || creatingBurner,
         tokenBalances,
+        goldenPassIds,
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
         login: () =>

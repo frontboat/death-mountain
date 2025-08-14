@@ -35,29 +35,36 @@ export const useStarknetApi = () => {
     return parseBalances(data || [], tokens);
   }
 
-  const getGoldenPassCooldowns = async (tokenIds: number[]): Promise<number[]> => {
-    const calls = tokenIds.map((tokenId, i) => ({
-      id: i + 1,
-      jsonrpc: "2.0",
-      method: "starknet_call",
-      params: [
-        {
-          contract_address: import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS,
-          entry_point_selector: "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
-          calldata: [num.toHex(tokenId)]
-        },
-        "pending"
-      ]
-    }));
+  const goldenPassReady = async (goldenPassAddress: string, tokenIds: number[]): Promise<number[]> => {
+    try {
+      const calls = tokenIds.map((tokenId, i) => ({
+        id: i + 1,
+        jsonrpc: "2.0",
+        method: "starknet_call",
+        params: [
+          {
+            contract_address: import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS,
+            entry_point_selector: "0x02f6ca94ed3ceec9e8b907a11317d8d624f94cf62d9c8112c658fd4d9f02b2d8",
+            calldata: [goldenPassAddress, num.toHex(tokenId)]
+          },
+          "pending"
+        ]
+      }));
 
-    const response = await fetch(dojoConfig.rpcUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(calls),
-    });
+      const response = await fetch(dojoConfig.rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(calls),
+      });
 
-    const data = await response.json();
-    return data;
+      const data = await response.json();
+
+      // Filter token IDs where the response is true (0x1)
+      return tokenIds.filter((_, index) => data[index]?.result?.[0] === "0x1");
+    } catch (error) {
+      console.error('Error in goldenPassReady:', error);
+      return [];
+    }
   }
 
   const getAdventurer = async (adventurerId: number): Promise<Adventurer | null> => {
@@ -215,5 +222,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getAdventurer, getBeastTokenURI, createBurnerAccount, getTokenBalances };
+  return { getAdventurer, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady };
 };

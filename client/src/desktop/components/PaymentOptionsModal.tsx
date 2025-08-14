@@ -1,18 +1,19 @@
+import { getSwapQuote } from '@/api/ekubo';
+import { useController } from '@/contexts/controller';
+import { NETWORKS } from '@/utils/networkConfig';
+import { formatAmount } from '@/utils/utils';
 import CloseIcon from '@mui/icons-material/Close';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import TokenIcon from '@mui/icons-material/Token';
 import { Box, Button, FormControl, IconButton, Link, MenuItem, Select, Typography } from '@mui/material';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState, useMemo, useCallback, memo } from 'react';
-import { useController } from '@/contexts/controller';
-import { NETWORKS } from '@/utils/networkConfig';
-import { getSwapQuote } from '@/api/ekubo';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
+let DUNGEON_TICKET_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_TICKET;
 interface PaymentOptionsModalProps {
   open: boolean;
   onClose: () => void;
-  hasGoldenToken?: boolean;
   onSelectPayment: (type: 'golden' | 'token' | 'credit', tokenSymbol?: string) => void;
 }
 
@@ -26,13 +27,13 @@ interface TokenSelectionProps {
 }
 
 // Memoized token selection component
-const TokenSelectionContent = memo(({ 
-  userTokens, 
-  selectedToken, 
-  tokenQuote, 
-  onTokenChange, 
+const TokenSelectionContent = memo(({
+  userTokens,
+  selectedToken,
+  tokenQuote,
+  onTokenChange,
   onSelectPayment,
-  styles 
+  styles
 }: TokenSelectionProps) => (
   <Box sx={styles.paymentCard}>
     <Box sx={styles.cardHeader}>
@@ -65,7 +66,6 @@ const TokenSelectionContent = memo(({
             <MenuItem key={token.symbol} value={token.symbol} sx={styles.selectItem}>
               <Box sx={styles.tokenRow}>
                 <Box sx={styles.tokenLeft}>
-                  <Typography sx={styles.tokenIcon}>{token.icon}</Typography>
                   <Typography sx={styles.tokenName}>{token.symbol}</Typography>
                 </Box>
                 <Typography sx={styles.tokenBalance}>{token.balance}</Typography>
@@ -104,15 +104,14 @@ const TokenSelectionContent = memo(({
   </Box>
 ));
 
-TokenSelectionContent.displayName = 'TokenSelectionContent';
+
 
 export default function PaymentOptionsModal({
   open,
   onClose,
-  hasGoldenToken = true,
   onSelectPayment
 }: PaymentOptionsModalProps) {
-  const { tokenBalances } = useController();
+  const { tokenBalances, goldenPassIds } = useController();
 
   // Get payment tokens from network config
   const paymentTokens = useMemo(() => {
@@ -124,31 +123,30 @@ export default function PaymentOptionsModal({
   const userTokens = useMemo(() => {
     return paymentTokens.map((token: any) => ({
       symbol: token.name,
-      balance: tokenBalances[token.name] || '0',
-      icon: token.name === 'ETH' ? '⟠' : token.name === 'LORD' ? '👑' : token.name === 'USDC' ? '💵' : '🪙',
+      balance: tokenBalances[token.name] || 0,
       address: token.address,
       decimals: token.decimals || 18,
       displayDecimals: token.displayDecimals || 4
-    }));
+    })).filter((token: any) => Number(token.balance) > 0 && token.address !== DUNGEON_TICKET_ADDRESS);
   }, [paymentTokens, tokenBalances]);
 
-  const [selectedToken, setSelectedToken] = useState('LORD');
+  const [selectedToken, setSelectedToken] = useState('');
   const [currentView, setCurrentView] = useState<'golden' | 'token' | 'credit' | null>(null);
   const [tokenQuote, setTokenQuote] = useState<{ amount: string; loading: boolean; error?: string }>({
     amount: '',
     loading: false
   });
 
-  // Get dungeon ticket address
-  const dungeonTicketAddress = useMemo(() => {
-    const dungeonToken = paymentTokens.find((t: any) => t.name === 'DNG40');
-    return dungeonToken?.address;
-  }, [paymentTokens]);
+  useEffect(() => {
+    if (userTokens.length > 0 && !selectedToken) {
+      setSelectedToken(userTokens[0].symbol);
+    }
+  }, [userTokens]);
 
   const fetchTokenQuote = useCallback(async (tokenSymbol: string) => {
     const selectedTokenData = userTokens.find((t: any) => t.symbol === tokenSymbol);
 
-    if (!selectedTokenData?.address || !dungeonTicketAddress) {
+    if (!selectedTokenData?.address || !DUNGEON_TICKET_ADDRESS) {
       setTokenQuote({ amount: '', loading: false, error: 'Token not supported' });
       return;
     }
@@ -156,12 +154,10 @@ export default function PaymentOptionsModal({
     setTokenQuote({ amount: '', loading: true });
 
     try {
-      // Get quote for 1 dungeon ticket (reverse the quote to get guaranteed price)
-      const quote = await getSwapQuote(-1e18, dungeonTicketAddress, selectedTokenData.address);
-
-      if (quote && quote.total > 0) {
-        // Calculate amount: multiply by -1 and divide by token decimals to get price of 1 dungeon ticket
-        const amount = ((quote.total * -1) / Math.pow(10, selectedTokenData.decimals)).toFixed(selectedTokenData.displayDecimals);
+      const quote = await getSwapQuote(-1e18, DUNGEON_TICKET_ADDRESS, selectedTokenData.address);
+      if (quote) {
+        const rawAmount = (quote.total * -1 / Math.pow(10, selectedTokenData.decimals || 18));
+        const amount = formatAmount(rawAmount);
         setTokenQuote({ amount, loading: false });
       } else {
         setTokenQuote({ amount: '', loading: false, error: 'No quote available' });
@@ -170,7 +166,7 @@ export default function PaymentOptionsModal({
       console.error('Error fetching quote:', error);
       setTokenQuote({ amount: '', loading: false, error: 'Failed to get quote' });
     }
-  }, [userTokens, dungeonTicketAddress]);
+  }, [userTokens]);
 
   const handleSelectPayment = (type: 'golden' | 'token' | 'credit') => {
     onSelectPayment(type, type === 'token' ? selectedToken : undefined);
@@ -181,9 +177,6 @@ export default function PaymentOptionsModal({
     setSelectedToken(tokenSymbol);
     fetchTokenQuote(tokenSymbol);
   }, [fetchTokenQuote]);
-
-  // Determine what to show based on user's situation
-  const hasTokens = userTokens && userTokens.length > 0 && userTokens.some((t: any) => parseFloat(t.balance) > 0);
 
   // Reusable motion wrapper component - only animates on view changes, not token changes
   const MotionWrapper = ({ children, viewKey }: { children: React.ReactNode; viewKey: string }) => (
@@ -197,13 +190,6 @@ export default function PaymentOptionsModal({
     >
       {children}
     </motion.div>
-  );
-
-  // Stable wrapper for token selection that doesn't animate on token changes
-  const StableTokenWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div style={{ width: '100%' }}>
-      {children}
-    </div>
   );
 
   // Reusable action button component
@@ -225,15 +211,15 @@ export default function PaymentOptionsModal({
   // Initialize the view based on user's situation
   useEffect(() => {
     if (currentView === null) {
-      if (hasGoldenToken) {
+      if (goldenPassIds.length > 0) {
         setCurrentView('golden');
-      } else if (hasTokens) {
+      } else if (userTokens && userTokens.length > 0 && userTokens.some((t: any) => parseFloat(t.balance) > 0)) {
         setCurrentView('token');
       } else {
         setCurrentView('credit');
       }
     }
-  }, [hasGoldenToken, hasTokens, currentView]);
+  }, [currentView]);
 
   // Fetch initial quote when component loads or selected token changes
   useEffect(() => {
@@ -315,7 +301,7 @@ export default function PaymentOptionsModal({
                       transition={{ duration: 0.2, ease: "easeOut" }}
                       style={{ width: '100%' }}
                     >
-                      <TokenSelectionContent 
+                      <TokenSelectionContent
                         userTokens={userTokens}
                         selectedToken={selectedToken}
                         tokenQuote={tokenQuote}

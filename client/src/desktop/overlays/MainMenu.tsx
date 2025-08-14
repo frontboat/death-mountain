@@ -211,14 +211,13 @@ export default function MainMenu() {
         <StatisticsModal open={showStats} onClose={() => setShowStats(false)} />
       </Box>
 
-      <PaymentOptionsModal
+      {showPaymentOptions && <PaymentOptionsModal
         open={showPaymentOptions}
         onClose={() => setShowPaymentOptions(false)}
-        hasGoldenToken={true}
         onSelectPayment={(type, token) => {
           setShowPaymentOptions(false);
         }}
-      />
+      />}
     </>
   );
 }

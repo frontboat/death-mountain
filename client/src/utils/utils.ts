@@ -137,3 +137,30 @@ export function parseBalances(
   }
   return out;
 }
+
+// Utility function to format numbers with appropriate decimal places
+export const formatAmount = (value: number): string => {
+  if (value === 0) return '0';
+
+  const absValue = Math.abs(value);
+
+  if (absValue < 0.000001) {
+    // For very small numbers, show up to 8 decimal places
+    return value.toFixed(10).replace(/\.?0+$/, '');
+  } else if (absValue < 0.001) {
+    // For small numbers, show up to 5 decimal places
+    return value.toFixed(5).replace(/\.?0+$/, '');
+  } else if (absValue < 1) {
+    // For numbers less than 1, show up to 4 decimal places
+    return value.toFixed(4).replace(/\.?0+$/, '');
+  } else if (absValue < 10) {
+    // For single digit numbers, show 2 decimal places
+    return value.toFixed(2).replace(/\.?0+$/, '');
+  } else if (absValue < 100) {
+    // For double digit numbers, show 1 decimal place
+    return value.toFixed(1).replace(/\.?0+$/, '');
+  } else {
+    // For larger numbers, show no decimal places
+    return Math.round(value).toString();
+  }
+};
