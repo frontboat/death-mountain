@@ -28,9 +28,9 @@ function Header() {
 
 
       <Box sx={styles.headerButtons}>
-        <Box sx={styles.networkContainer}>
+        {/* <Box sx={styles.networkContainer}>
           <Network />
-        </Box>
+        </Box> */}
 
         <WalletConnect />
 

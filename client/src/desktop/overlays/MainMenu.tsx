@@ -136,7 +136,7 @@ export default function MainMenu() {
             </Button> */}
 
             <Box sx={styles.bottom}>
-              <Network />
+              {/* <Network /> */}
               <WalletConnect />
 
               {/* {currentNetworkConfig.name === "Beast Mode" && <Stack spacing={0.5} sx={{ width: '100%' }}>
