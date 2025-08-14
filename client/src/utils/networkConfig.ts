@@ -71,7 +71,7 @@ export const NETWORKS = {
       },
       {
         name: "USDC",
-        address: "0x0468ce7715f7aea17b1632736877c36371c3b1354eb9611e8bb9035c0563963f",
+        address: "0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080",
         displayDecimals: 2,
         decimals: 6,
       },
@@ -79,11 +79,6 @@ export const NETWORKS = {
         name: "DNG40",
         address: "0x0468ce7715f7aea17b1632736877c36371c3b1354eb9611e8bb9035c0563963f",
         displayDecimals: 0,
-      },
-      {
-        name: "LORD",
-        address: "0x064fd80fcb41d00214430574a0aa19d21cc5d6452aeb4996f31b6e9ba4f466a0",
-        displayDecimals: 2,
       },
     ],
   },
