@@ -47,9 +47,9 @@ export const NETWORKS = {
     name: "Beast Mode",
     status: "online",
     namespace: "ls_0_0_5",
-    slot: "pg-sepolia-2",
+    slot: "pg-sepolia-3",
     rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
-    torii: "https://api.cartridge.gg/x/pg-sepolia-2/torii",
+    torii: "https://api.cartridge.gg/x/pg-sepolia-3/torii",
     tokens: {
       erc20: [],
     },
