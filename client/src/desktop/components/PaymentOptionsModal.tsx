@@ -1,5 +1,7 @@
-import { getSwapQuote } from '@/api/ekubo';
+import ROUTER_ABI from '@/abi/router-abi.json';
+import { generateSwapCalls, getSwapQuote } from '@/api/ekubo';
 import { useController } from '@/contexts/controller';
+import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { NETWORKS } from '@/utils/networkConfig';
 import { formatAmount } from '@/utils/utils';
 import CloseIcon from '@mui/icons-material/Close';
@@ -7,14 +9,15 @@ import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import TokenIcon from '@mui/icons-material/Token';
 import { Box, Button, FormControl, IconButton, Link, MenuItem, Select, Typography } from '@mui/material';
+import { useProvider } from '@starknet-react/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { Contract } from 'starknet';
 
 let DUNGEON_TICKET_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_TICKET;
 interface PaymentOptionsModalProps {
   open: boolean;
   onClose: () => void;
-  onSelectPayment: (type: 'golden' | 'token' | 'credit', tokenSymbol?: string) => void;
 }
 
 interface TokenSelectionProps {
@@ -22,8 +25,8 @@ interface TokenSelectionProps {
   selectedToken: string;
   tokenQuote: { amount: string; loading: boolean; error?: string };
   onTokenChange: (tokenSymbol: string) => void;
-  onSelectPayment: () => void;
   styles: any;
+  useDungeonTicket: () => void;
 }
 
 // Memoized token selection component
@@ -32,7 +35,7 @@ const TokenSelectionContent = memo(({
   selectedToken,
   tokenQuote,
   onTokenChange,
-  onSelectPayment,
+  useDungeonTicket,
   styles
 }: TokenSelectionProps) => (
   <Box sx={styles.paymentCard}>
@@ -94,7 +97,7 @@ const TokenSelectionContent = memo(({
       <Button
         variant="contained"
         sx={styles.activateButton}
-        onClick={onSelectPayment}
+        onClick={useDungeonTicket}
         fullWidth
         disabled={tokenQuote.loading || !!tokenQuote.error}
       >
@@ -109,9 +112,18 @@ const TokenSelectionContent = memo(({
 export default function PaymentOptionsModal({
   open,
   onClose,
-  onSelectPayment
 }: PaymentOptionsModalProps) {
-  const { tokenBalances, goldenPassIds } = useController();
+  const { buyGame } = useSystemCalls();
+  const { tokenBalances, goldenPassIds, playerName, openProfile } = useController();
+
+  // Use the provider from StarknetConfig
+  const { provider } = useProvider();
+
+  const routerContract = useMemo(() => new Contract(
+    ROUTER_ABI,
+    NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].ekuboRouter,
+    provider
+  ), [provider]);
 
   // Get payment tokens from network config
   const paymentTokens = useMemo(() => {
@@ -168,8 +180,31 @@ export default function PaymentOptionsModal({
     }
   }, [userTokens]);
 
-  const handleSelectPayment = (type: 'golden' | 'token' | 'credit') => {
-    onSelectPayment(type, type === 'token' ? selectedToken : undefined);
+  const useGoldenToken = () => {
+    buyGame({
+      paymentType: 'Golden Pass',
+      goldenPass: {
+        address: NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].goldenToken,
+        tokenId: goldenPassIds[0]
+      }
+    }, playerName, []);
+  };
+
+  const useDungeonTicket = async () => {
+    const selectedTokenData = userTokens.find((t: any) => t.symbol === selectedToken);
+    const quote = await getSwapQuote(-1e18, DUNGEON_TICKET_ADDRESS, selectedTokenData.address);
+
+    let tokenSwapData = {
+      tokenAddress: DUNGEON_TICKET_ADDRESS,
+      minimumAmount: 1,
+      quote: quote
+    }
+    const calls = generateSwapCalls(routerContract, selectedTokenData.address, tokenSwapData);
+
+
+    buyGame({
+      paymentType: 'Ticket',
+    }, playerName, calls);
   };
 
   // Handle token selection change
@@ -284,7 +319,7 @@ export default function PaymentOptionsModal({
                           />
                         </Box>
 
-                        <ActionButton onClick={() => handleSelectPayment('golden')}>
+                        <ActionButton onClick={useGoldenToken}>
                           Enter Dungeon
                         </ActionButton>
                       </Box>
@@ -306,8 +341,8 @@ export default function PaymentOptionsModal({
                         selectedToken={selectedToken}
                         tokenQuote={tokenQuote}
                         onTokenChange={handleTokenChange}
-                        onSelectPayment={() => handleSelectPayment('token')}
                         styles={styles}
+                        useDungeonTicket={useDungeonTicket}
                       />
                     </motion.div>
                   )}
@@ -343,7 +378,7 @@ export default function PaymentOptionsModal({
                           </Box>
                         </Box>
 
-                        <ActionButton onClick={() => handleSelectPayment('credit')}>
+                        <ActionButton onClick={openProfile}>
                           Continue
                         </ActionButton>
                       </Box>

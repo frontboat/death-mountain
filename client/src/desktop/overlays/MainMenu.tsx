@@ -51,7 +51,7 @@ export default function MainMenu() {
       return;
     }
 
-    let gameId = await buyGame({ paymentType: 'Ticket' }, playerName);
+    let gameId = await buyGame({ paymentType: 'Ticket' }, playerName, []);
     navigate(`/survivor/play?id=${gameId}`);
   };
 
@@ -214,9 +214,6 @@ export default function MainMenu() {
       {showPaymentOptions && <PaymentOptionsModal
         open={showPaymentOptions}
         onClose={() => setShowPaymentOptions(false)}
-        onSelectPayment={(type, token) => {
-          setShowPaymentOptions(false);
-        }}
       />}
     </>
   );

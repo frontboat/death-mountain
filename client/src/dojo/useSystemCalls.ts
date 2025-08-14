@@ -73,11 +73,12 @@ export const useSystemCalls = () => {
    * @param name The name of the game
    * @param settingsId The settings ID for the game
    */
-  const buyGame = async (payment: Payment, name: string) => {
+  const buyGame = async (payment: Payment, name: string, preCalls: any[]) => {
     let paymentData = payment.paymentType === 'Ticket' ? 0 : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
 
     try {
       let tx = await account!.execute([
+        ...preCalls,
         {
           contractAddress: DUNGEON_TICKET,
           entrypoint: "approve",

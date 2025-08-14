@@ -21,6 +21,7 @@ export interface NetworkConfig {
   tokens: Tokens;
   paymentTokens: any[];
   goldenToken: string;
+  ekuboRouter: string;
 }
 
 export enum ChainId {
@@ -43,6 +44,7 @@ export const NETWORKS = {
   //   },
   //   manifest: manifest_sepolia,
   //   vrf: true,
+  //   ekuboRouter: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
   // },
   SN_SEPOLIA: {
     chainId: ChainId.SN_SEPOLIA,
@@ -58,6 +60,7 @@ export const NETWORKS = {
     manifest: manifest_sepolia,
     vrf: true,
     goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+    ekuboRouter: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
     paymentTokens: [
       {
         name: "ETH",
@@ -97,6 +100,7 @@ export const NETWORKS = {
     vrf: false,
     paymentTokens: [],
     goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+    ekuboRouter: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
   },
 };
 
@@ -182,6 +186,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     tokens: network.tokens,
     paymentTokens: network.paymentTokens,
     goldenToken: network.goldenToken,
+    ekuboRouter: network.ekuboRouter,
   };
 }
 
