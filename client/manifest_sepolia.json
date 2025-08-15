@@ -1329,7 +1329,7 @@
   "contracts": [
     {
       "address": "0x25d684f534006eac237d725f92e7b2c22d33cd14934377e106d6b2dca40b4f6",
-      "class_hash": "0x78ca3be0dd588acc34ea00867e5946f2cc8de144d016b817161139acd1c0718",
+      "class_hash": "0x6f36406ee67065feba87f97303837ab520e586cae131fa72fa3d75c698854d9",
       "abi": [
         {
           "type": "impl",
@@ -2084,6 +2084,26 @@
               "outputs": [
                 {
                   "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "add_stat_boosts",
+              "inputs": [
+                {
+                  "name": "adventurer",
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                },
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
                 }
               ],
               "state_mutability": "view"
@@ -3169,7 +3189,7 @@
     },
     {
       "address": "0x6e30b065b176edac4acf9082c6d0e0113c3693c305aef7ccda97766522ed63d",
-      "class_hash": "0x5ab9e72086683e432dceb41ff11a2f59aaf139f2058ea9fb6afbd0b7061b8d1",
+      "class_hash": "0x21f81a167bbf70db3e88ad61225fd08c58a79101fa5b4afe95cb510927b84ca",
       "abi": [
         {
           "type": "impl",
