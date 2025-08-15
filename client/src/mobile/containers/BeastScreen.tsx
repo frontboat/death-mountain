@@ -1,3 +1,4 @@
+import { STARTING_HEALTH } from '@/constants/game';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
@@ -140,7 +141,7 @@ export default function BeastScreen() {
 
   const fleePercentage = ability_based_percentage(adventurer!.xp, adventurer!.stats.dexterity);
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
-  const maxHealth = gameSettings?.adventurer.health! + (adventurer!.stats.vitality * 15);
+  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
 
   const hasNewItemsEquipped = useMemo(() => {
     if (!adventurer?.equipment || !adventurerState?.equipment) return false;
