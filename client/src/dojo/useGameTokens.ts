@@ -134,9 +134,27 @@ export const useGameTokens = () => {
     return data.map((token: any) => parseInt(token.token_id.split(":")[1], 16))
   }
 
+  const countBeasts = async () => {
+    let beast_address = import.meta.env.VITE_PUBLIC_BEASTS_ADDRESS;
+    let url = `${SQL_ENDPOINT}/sql?query=
+      SELECT COUNT(*) as count FROM token_balances
+      WHERE contract_address = "${beast_address.replace(/^0x0+/, "0x")}"`
+
+    const sql = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    let data = await sql.json()
+    return data[0].count
+  }
+
   return {
     fetchMetadata,
     fetchAdventurerData,
     getGameTokens,
+    countBeasts,
   };
 };

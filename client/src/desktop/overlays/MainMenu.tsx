@@ -2,6 +2,7 @@ import { useController } from '@/contexts/controller';
 import { useDynamicConnector } from '@/contexts/starknet';
 import discordIcon from '@/desktop/assets/images/discord.png';
 import AdventurersList from '@/desktop/components/AdventurersList';
+import BeastsCollected from '@/desktop/components/BeastsCollected';
 import PaymentOptionsModal from '@/desktop/components/PaymentOptionsModal';
 import Settings from '@/desktop/components/Settings';
 import { getMenuLeftOffset } from '@/utils/utils';
@@ -138,43 +139,10 @@ export default function MainMenu() {
               </Button> */}
 
               <Box sx={styles.bottom}>
+                {currentNetworkConfig.name === "Beast Mode" && <BeastsCollected />}
+
                 <Network />
                 <WalletConnect />
-
-                {/* {currentNetworkConfig.name === "Beast Mode" && <Stack spacing={0.5} sx={{ width: '100%' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-                    <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 500, letterSpacing: 0.5 }}>
-                      Beasts Collected
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.8rem', color: '#d0c98d', fontVariantNumeric: 'tabular-nums' }}>
-                      4,686 / 93,150
-                    </Typography>
-                  </Box>
-                  <Box sx={{
-                    width: '99%',
-                    height: 12,
-                    borderRadius: 6,
-                    border: '2px solid #d0c98d50', // gold border
-                    background: '#16281a', // dark green background
-                    display: 'flex',
-                    alignItems: 'center',
-                    overflow: 'hidden',
-                  }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={4686 / 93150 * 100}
-                      sx={{
-                        width: '100%',
-                        height: '100%',
-                        background: 'transparent',
-                        '& .MuiLinearProgress-bar': {
-                          background: '#ffe082', // yellow progress
-                          borderRadius: 6,
-                        },
-                      }}
-                    />
-                  </Box>
-                </Stack>} */}
 
                 <Box sx={styles.bottomRow}>
                   <Typography sx={styles.alphaVersion}>
