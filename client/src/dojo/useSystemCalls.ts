@@ -75,8 +75,8 @@ export const useSystemCalls = () => {
    * @param name The name of the game
    * @param settingsId The settings ID for the game
    */
-  const buyGame = async (payment: Payment, name: string, preCalls: any[]) => {
-    let paymentData = payment.paymentType === 'Ticket' ? 0 : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
+  const buyGame = async (account: any, payment: Payment, name: string, preCalls: any[], callback: () => void) => {
+    let paymentData = payment.paymentType === 'Ticket' ? [0] : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
 
     try {
       let tx = await account!.execute([
@@ -94,13 +94,15 @@ export const useSystemCalls = () => {
           contractAddress: DUNGEON_ADDRESS,
           entrypoint: "buy_game",
           calldata: [
-            paymentData,
+            ...paymentData,
             byteArray.byteArrayFromString(name),
             account!.address, // send game to this address
             false, // soulbound
           ],
         },
       ]);
+
+      callback();
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,

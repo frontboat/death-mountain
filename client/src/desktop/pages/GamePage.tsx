@@ -80,7 +80,12 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
-    if (!sdk || isPending || mode === "entering") return;
+    if (!sdk || isPending) return;
+
+    if (mode === "entering") {
+      setVideoQueue([streamIds.start]);
+      return;
+    }
 
     if (mode === "real" && dojoConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
       setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);

@@ -152,7 +152,7 @@ mod game_systems {
                 let packed = game_libs.adventurer.pack_adventurer(adventurer);
                 world.write_model(@AdventurerPacked { adventurer_id, packed });
             } else {
-                let mut adventurer = game_settings.adventurer;
+                let mut adventurer = game_libs.adventurer.add_stat_boosts(game_settings.adventurer, game_settings.bag);
                 adventurer.increment_action_count();
 
                 let (beast_seed, market_seed) = _get_random_seed(

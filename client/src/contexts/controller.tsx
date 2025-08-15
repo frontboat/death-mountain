@@ -18,6 +18,7 @@ import { useGameTokens } from "@/dojo/useGameTokens";
 import { useNavigate } from "react-router-dom";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { Payment } from "@/types/game";
+import { useGameStore } from "@/stores/gameStore";
 
 export interface ControllerContext {
   account: any;
@@ -40,6 +41,7 @@ const ControllerContext = createContext<ControllerContext>(
 // Create a provider component
 export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const navigate = useNavigate();
+  const { setShowOverlay } = useGameStore();
   const { account, address, isConnecting } = useAccount();
   const { buyGame } = useSystemCalls();
   const { connector, connectors, connect, isPending } = useConnect();
@@ -93,11 +95,13 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   }, [connector]);
 
   const enterDungeon = async (payment: Payment, txs: any[]) => {
-    navigate(`/survivor/play?mode=entering`);
-    let gameId = await buyGame(payment, userName || "Adventurer", txs);
+    let gameId = await buyGame(account, payment, userName || "Adventurer", txs, () => {
+      navigate(`/survivor/play?mode=entering`);
+    });
 
     if (gameId) {
-      navigate(`/survivor/play?id=${gameId}`);
+      navigate(`/survivor/play?id=${gameId}`, { replace: true });
+      setShowOverlay(false);
       fetchTokenBalances();
     } else {
       navigate(`/`, { replace: true });
