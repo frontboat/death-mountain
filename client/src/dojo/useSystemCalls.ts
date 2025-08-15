@@ -112,8 +112,6 @@ export const useSystemCalls = () => {
       );
 
       const gameId = parseInt(tokenMetadataEvent.data[1], 16);
-
-      navigate(`/survivor/play?id=${gameId}`);
       return gameId;
     } catch (error) {
       console.error("Error buying game:", error);

@@ -2,10 +2,8 @@ import { useController } from '@/contexts/controller';
 import { useDynamicConnector } from '@/contexts/starknet';
 import discordIcon from '@/desktop/assets/images/discord.png';
 import AdventurersList from '@/desktop/components/AdventurersList';
-import Settings from '@/desktop/components/Settings';
 import PaymentOptionsModal from '@/desktop/components/PaymentOptionsModal';
-import { useSystemCalls } from '@/dojo/useSystemCalls';
-import { ChainId } from '@/utils/networkConfig';
+import Settings from '@/desktop/components/Settings';
 import { getMenuLeftOffset } from '@/utils/utils';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -22,15 +20,15 @@ import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Network from '../components/Network';
+import PriceIndicator from '../components/PriceIndicator';
 import WalletConnect from '../components/WalletConnect';
 import StatisticsModal from './StatisticsModal';
 
 export default function MainMenu() {
   const navigate = useNavigate();
   const { account } = useAccount();
-  const { login, playerName } = useController();
+  const { login } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { buyGame } = useSystemCalls();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -45,19 +43,9 @@ export default function MainMenu() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleBuyGame = async () => {
-    if (!account) {
-      login();
-      return;
-    }
-
-    let gameId = await buyGame({ paymentType: 'Ticket' }, playerName, []);
-    navigate(`/survivor/play?id=${gameId}`);
-  };
-
   const handleStartGame = () => {
     if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
-      handleBuyGame();
+      setShowPaymentOptions(true);
     } else {
       navigate(`/survivor/play`);
     }
@@ -90,14 +78,14 @@ export default function MainMenu() {
                 </Typography>
               </Box>
 
-              {/* <PriceIndicator /> */}
+              <PriceIndicator />
 
               <Button
                 variant="outlined"
                 fullWidth
                 size="large"
-                onClick={() => setShowPaymentOptions(true)} //handleStartGame()} //setShowPaymentOptions(true)
-                sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px', mt: 2 }}
+                onClick={handleStartGame}
+                sx={{ px: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '36px' }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <TokenIcon sx={{ fontSize: 20, mr: 1 }} />

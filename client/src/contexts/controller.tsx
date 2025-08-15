@@ -59,18 +59,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   );
 
   useEffect(() => {
-    async function fetchTokenBalances() {
-      const balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].paymentTokens);
-      setTokenBalances(balances);
-
-      let goldenTokenAddress = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].goldenToken;
-      const allTokens = await getGameTokens(address!, goldenTokenAddress);
-      if (allTokens.length > 0) {
-        const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
-        setGoldenPassIds(cooldowns);
-      }
-    }
-
     if (address) {
       fetchTokenBalances();
     }
@@ -107,7 +95,13 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const enterDungeon = async (payment: Payment, txs: any[]) => {
     navigate(`/survivor/play?mode=entering`);
     let gameId = await buyGame(payment, userName || "Adventurer", txs);
-    navigate(`/survivor/play?id=${gameId}`);
+
+    if (gameId) {
+      navigate(`/survivor/play?id=${gameId}`);
+      fetchTokenBalances();
+    } else {
+      navigate(`/`, { replace: true });
+    }
   }
 
   const createBurner = async () => {
@@ -119,6 +113,18 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     }
     setCreatingBurner(false);
   };
+
+  async function fetchTokenBalances() {
+    const balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].paymentTokens);
+    setTokenBalances(balances);
+
+    let goldenTokenAddress = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].goldenToken;
+    const allTokens = await getGameTokens(address!, goldenTokenAddress);
+    if (allTokens.length > 0) {
+      const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
+      setGoldenPassIds(cooldowns);
+    }
+  }
 
   return (
     <ControllerContext.Provider
