@@ -102,11 +102,7 @@ export const generateSwapCalls = (ROUTER_CONTRACT: RouterContract, purchaseToken
 
   if (splits.length === 1) {
     const split = splits[0];
-
-    if (split.route.length === 1) {
-      throw new Error("unexpected single hop route");
-    }
-
+    
     swapCalls = [
       {
         contractAddress: ROUTER_CONTRACT.address,
