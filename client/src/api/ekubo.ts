@@ -63,7 +63,6 @@ export const getSwapQuote = async (amount: number, token: string, otherToken: st
 }
 
 export const generateSwapCalls = (ROUTER_CONTRACT: RouterContract, purchaseToken: string, tokenQuote: TokenQuote): SwapCall[] => {
-  console.log("generateSwapCalls", ROUTER_CONTRACT, purchaseToken, tokenQuote);
   let totalQuoteSum = 0n;
 
   if (tokenQuote.quote && tokenQuote.quote.splits.length > 0) {

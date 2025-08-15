@@ -1,7 +1,6 @@
 import ROUTER_ABI from '@/abi/router-abi.json';
 import { generateSwapCalls, getSwapQuote } from '@/api/ekubo';
 import { useController } from '@/contexts/controller';
-import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { NETWORKS } from '@/utils/networkConfig';
 import { formatAmount } from '@/utils/utils';
 import CloseIcon from '@mui/icons-material/Close';
@@ -26,7 +25,7 @@ interface TokenSelectionProps {
   tokenQuote: { amount: string; loading: boolean; error?: string };
   onTokenChange: (tokenSymbol: string) => void;
   styles: any;
-  useDungeonTicket: () => void;
+  buyDungeonTicket: () => void;
 }
 
 // Memoized token selection component
@@ -35,7 +34,7 @@ const TokenSelectionContent = memo(({
   selectedToken,
   tokenQuote,
   onTokenChange,
-  useDungeonTicket,
+  buyDungeonTicket,
   styles
 }: TokenSelectionProps) => (
   <Box sx={styles.paymentCard}>
@@ -97,7 +96,7 @@ const TokenSelectionContent = memo(({
       <Button
         variant="contained"
         sx={styles.activateButton}
-        onClick={useDungeonTicket}
+        onClick={buyDungeonTicket}
         fullWidth
         disabled={tokenQuote.loading || !!tokenQuote.error}
       >
@@ -113,8 +112,7 @@ export default function PaymentOptionsModal({
   open,
   onClose,
 }: PaymentOptionsModalProps) {
-  const { buyGame } = useSystemCalls();
-  const { tokenBalances, goldenPassIds, playerName, openProfile } = useController();
+  const { tokenBalances, goldenPassIds, openProfile, enterDungeon } = useController();
 
   // Use the provider from StarknetConfig
   const { provider } = useProvider();
@@ -131,7 +129,6 @@ export default function PaymentOptionsModal({
     return (network as any)?.paymentTokens || [];
   }, []);
 
-  // Create user tokens list with balances and icons
   const userTokens = useMemo(() => {
     return paymentTokens.map((token: any) => ({
       symbol: token.name,
@@ -142,8 +139,13 @@ export default function PaymentOptionsModal({
     })).filter((token: any) => Number(token.balance) > 0 && token.address !== DUNGEON_TICKET_ADDRESS);
   }, [paymentTokens, tokenBalances]);
 
+  const dungeonTicketCount = useMemo(() => {
+    const dungeonTicketToken = paymentTokens.find((token: any) => token.address === DUNGEON_TICKET_ADDRESS);
+    return dungeonTicketToken ? Number(tokenBalances[dungeonTicketToken.name]) : 0;
+  }, [paymentTokens, tokenBalances]);
+
   const [selectedToken, setSelectedToken] = useState('');
-  const [currentView, setCurrentView] = useState<'golden' | 'token' | 'credit' | null>(null);
+  const [currentView, setCurrentView] = useState<'golden' | 'dungeon' | 'token' | 'credit' | null>(null);
   const [tokenQuote, setTokenQuote] = useState<{ amount: string; loading: boolean; error?: string }>({
     amount: '',
     loading: false
@@ -181,16 +183,20 @@ export default function PaymentOptionsModal({
   }, [userTokens]);
 
   const useGoldenToken = () => {
-    buyGame({
+    enterDungeon({
       paymentType: 'Golden Pass',
       goldenPass: {
         address: NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].goldenToken,
         tokenId: goldenPassIds[0]
       }
-    }, playerName, []);
+    }, []);
   };
 
-  const useDungeonTicket = async () => {
+  const useDungeonTicket = () => {
+    enterDungeon({ paymentType: 'Ticket' }, []);
+  };
+
+  const buyDungeonTicket = async () => {
     const selectedTokenData = userTokens.find((t: any) => t.symbol === selectedToken);
     const quote = await getSwapQuote(-1e18, DUNGEON_TICKET_ADDRESS, selectedTokenData.address);
 
@@ -201,10 +207,7 @@ export default function PaymentOptionsModal({
     }
     const calls = generateSwapCalls(routerContract, selectedTokenData.address, tokenSwapData);
 
-
-    buyGame({
-      paymentType: 'Ticket',
-    }, playerName, calls);
+    enterDungeon({ paymentType: 'Ticket' }, calls);
   };
 
   // Handle token selection change
@@ -248,6 +251,8 @@ export default function PaymentOptionsModal({
     if (currentView === null) {
       if (goldenPassIds.length > 0) {
         setCurrentView('golden');
+      } else if (dungeonTicketCount >= 1) {
+        setCurrentView('dungeon');
       } else if (userTokens && userTokens.length > 0 && userTokens.some((t: any) => parseFloat(t.balance) > 0)) {
         setCurrentView('token');
       } else {
@@ -326,6 +331,38 @@ export default function PaymentOptionsModal({
                     </MotionWrapper>
                   )}
 
+                  {/* Dungeon Ticket Option */}
+                  {currentView === 'dungeon' && (
+                    <MotionWrapper viewKey="dungeon">
+                      <Box sx={styles.paymentCard}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 0, mt: 2 }}>
+                          <Typography sx={styles.paymentTitle}>Use Dungeon Ticket</Typography>
+                        </Box>
+
+                        <Box sx={styles.goldenTokenContainer}>
+                          <img
+                            src={'/images/dungeon_ticket.png'}
+                            alt="Dungeon Ticket"
+                            style={{
+                              width: '130px',
+                              height: '130px',
+                            }}
+                          />
+                        </Box>
+
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                          <Typography sx={styles.ticketCount}>
+                            You have {dungeonTicketCount} ticket{dungeonTicketCount > 1 ? 's' : ''}
+                          </Typography>
+                        </Box>
+
+                        <ActionButton onClick={useDungeonTicket}>
+                          Enter Dungeon
+                        </ActionButton>
+                      </Box>
+                    </MotionWrapper>
+                  )}
+
                   {/* Token Payment Option */}
                   {currentView === 'token' && (
                     <motion.div
@@ -342,7 +379,7 @@ export default function PaymentOptionsModal({
                         tokenQuote={tokenQuote}
                         onTokenChange={handleTokenChange}
                         styles={styles}
-                        useDungeonTicket={useDungeonTicket}
+                        buyDungeonTicket={buyDungeonTicket}
                       />
                     </motion.div>
                   )}
@@ -390,15 +427,57 @@ export default function PaymentOptionsModal({
               {/* Footer links */}
               <Box sx={styles.footer}>
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  {(currentView === 'golden' || currentView === 'credit') && (
-                    <Link
-                      component="button"
-                      onClick={() => setCurrentView('token')}
-                      sx={styles.footerLink}
-                    >
-                      Pay with crypto in your wallet
-                    </Link>
+                  {/* Golden token view - show next available option */}
+                  {currentView === 'golden' && (
+                    dungeonTicketCount >= 1 ? (
+                      <Link
+                        component="button"
+                        onClick={() => setCurrentView('dungeon')}
+                        sx={styles.footerLink}
+                      >
+                        Use dungeon ticket instead
+                      </Link>
+                    ) : userTokens.length > 0 ? (
+                      <Link
+                        component="button"
+                        onClick={() => setCurrentView('token')}
+                        sx={styles.footerLink}
+                      >
+                        Pay with crypto in your wallet
+                      </Link>
+                    ) : (
+                      <Link
+                        component="button"
+                        onClick={() => setCurrentView('credit')}
+                        sx={styles.footerLink}
+                      >
+                        Pay with credit card or other wallet
+                      </Link>
+                    )
                   )}
+                  
+                  {/* Dungeon ticket view - show next available option */}
+                  {currentView === 'dungeon' && (
+                    userTokens.length > 0 ? (
+                      <Link
+                        component="button"
+                        onClick={() => setCurrentView('token')}
+                        sx={styles.footerLink}
+                      >
+                        Pay with crypto in your wallet
+                      </Link>
+                    ) : (
+                      <Link
+                        component="button"
+                        onClick={() => setCurrentView('credit')}
+                        sx={styles.footerLink}
+                      >
+                        Pay with credit card or other wallet
+                      </Link>
+                    )
+                  )}
+                  
+                  {/* Token view - always show credit card option */}
                   {currentView === 'token' && (
                     <Link
                       component="button"
@@ -407,6 +486,35 @@ export default function PaymentOptionsModal({
                     >
                       Pay with credit card or other wallet
                     </Link>
+                  )}
+                  
+                  {/* Credit card view - show previous available option */}
+                  {currentView === 'credit' && (
+                    userTokens.length > 0 ? (
+                      <Link
+                        component="button"
+                        onClick={() => setCurrentView('token')}
+                        sx={styles.footerLink}
+                      >
+                        Pay with crypto in your wallet
+                      </Link>
+                    ) : dungeonTicketCount >= 1 ? (
+                      <Link
+                        component="button"
+                        onClick={() => setCurrentView('dungeon')}
+                        sx={styles.footerLink}
+                      >
+                        Use dungeon ticket instead
+                      </Link>
+                    ) : goldenPassIds.length > 0 ? (
+                      <Link
+                        component="button"
+                        onClick={() => setCurrentView('golden')}
+                        sx={styles.footerLink}
+                      >
+                        Use golden token instead
+                      </Link>
+                    ) : null
                   )}
                 </Box>
               </Box>
@@ -645,6 +753,12 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  ticketCount: {
+    fontSize: 14,
+    color: '#FFD700',
+    opacity: 0.9,
+    letterSpacing: 0.5,
   },
   activateButton: {
     background: '#d0c98d',

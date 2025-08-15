@@ -6,8 +6,10 @@ import { useGameStore } from "@/stores/gameStore";
 import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
+import { useNavigate } from "react-router-dom";
 
 export const useSystemCalls = () => {
+  const navigate = useNavigate();
   const { getBeastTokenURI } = useStarknetApi();
   const { setCollectableTokenURI } = useGameStore();
   const { account } = useController();
@@ -111,6 +113,7 @@ export const useSystemCalls = () => {
 
       const gameId = parseInt(tokenMetadataEvent.data[1], 16);
 
+      navigate(`/survivor/play?id=${gameId}`);
       return gameId;
     } catch (error) {
       console.error("Error buying game:", error);

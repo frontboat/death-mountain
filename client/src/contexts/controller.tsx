@@ -15,6 +15,9 @@ import {
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
+import { useNavigate } from "react-router-dom";
+import { useSystemCalls } from "@/dojo/useSystemCalls";
+import { Payment } from "@/types/game";
 
 export interface ControllerContext {
   account: any;
@@ -26,6 +29,7 @@ export interface ControllerContext {
   openProfile: () => void;
   login: () => void;
   logout: () => void;
+  enterDungeon: (payment: Payment, txs: any[]) => void;
 }
 
 // Create a context
@@ -35,13 +39,14 @@ const ControllerContext = createContext<ControllerContext>(
 
 // Create a provider component
 export const ControllerProvider = ({ children }: PropsWithChildren) => {
+  const navigate = useNavigate();
   const { account, address, isConnecting } = useAccount();
+  const { buyGame } = useSystemCalls();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig } = useDynamicConnector();
   const { createBurnerAccount, getTokenBalances, goldenPassReady } = useStarknetApi();
   const { getGameTokens } = useGameTokens();
-
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
   const [creatingBurner, setCreatingBurner] = useState(false);
@@ -99,6 +104,12 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (connector) getUsername();
   }, [connector]);
 
+  const enterDungeon = async (payment: Payment, txs: any[]) => {
+    navigate(`/survivor/play?mode=entering`);
+    let gameId = await buyGame(payment, userName || "Adventurer", txs);
+    navigate(`/survivor/play?id=${gameId}`);
+  }
+
   const createBurner = async () => {
     setCreatingBurner(true);
     let account = await createBurnerAccount(demoRpcProvider);
@@ -128,6 +139,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
             connector: connectors.find((conn) => conn.id === "controller"),
           }),
         logout: () => disconnect(),
+        enterDungeon,
       }}
     >
       {children}
