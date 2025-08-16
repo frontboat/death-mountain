@@ -46,6 +46,11 @@ export default function MainMenu() {
 
   const handleStartGame = () => {
     if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
+      if (!account) {
+        login();
+        return;
+      }
+
       setShowPaymentOptions(true);
     } else {
       navigate(`/survivor/play`);
@@ -79,7 +84,7 @@ export default function MainMenu() {
                 </Typography>
               </Box>
 
-              <PriceIndicator />
+              {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />}
 
               <Button
                 variant="outlined"

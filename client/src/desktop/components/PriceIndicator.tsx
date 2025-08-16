@@ -18,7 +18,7 @@ export default function PriceIndicator() {
         background: 'rgba(24, 40, 24, 0.3)',
         boxSizing: 'border-box',
       }}>
-        <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 500, letterSpacing: 0.5 }}>
+        <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: 0.5 }}>
           Game Price
         </Typography>
         <Typography sx={{ fontSize: '0.85rem', color: '#808080', fontStyle: 'italic' }}>
@@ -44,7 +44,7 @@ export default function PriceIndicator() {
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 500, letterSpacing: 0.5 }}>
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: 0.5 }}>
               Game Price
             </Typography>
             <Tooltip
@@ -64,7 +64,7 @@ export default function PriceIndicator() {
                       The cost to start a new game.
                     </Typography>
 
-                    <Typography sx={styles.tooltipLabel}>
+                    <Typography sx={styles.tooltipLabel} color="secondary">
                       Game Fee Distribution:
                     </Typography>
 
@@ -98,10 +98,10 @@ export default function PriceIndicator() {
                 },
               }}
             >
-              <Box sx={styles.infoIcon}>i</Box>
+              <Box sx={[styles.infoIcon, { borderColor: 'text.primary' }]}>i</Box>
             </Tooltip>
           </Box>
-          <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
             ${currentPrice.toFixed(2)}
           </Typography>
         </Box>
@@ -136,7 +136,7 @@ export default function PriceIndicator() {
     }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 500, letterSpacing: 0.5 }}>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: 0.5 }}>
             Game Price
           </Typography>
           <Tooltip
@@ -156,7 +156,7 @@ export default function PriceIndicator() {
                     The cost to start a new game.
                   </Typography>
 
-                  <Typography sx={styles.tooltipLabel}>
+                  <Typography sx={styles.tooltipLabel} color="secondary">
                     Current Status:
                   </Typography>
 
@@ -169,7 +169,7 @@ export default function PriceIndicator() {
                               pricePosition <= 95 ? '- Price is high' : '- Price is very high'}
                   </Typography>
 
-                  <Typography sx={styles.tooltipLabel}>
+                  <Typography sx={styles.tooltipLabel} color="secondary">
                     Game Fee Distribution:
                   </Typography>
 
@@ -203,10 +203,12 @@ export default function PriceIndicator() {
               },
             }}
           >
-            <Box sx={styles.infoIcon}>i</Box>
+            <Box sx={[styles.infoIcon, { borderColor: 'text.primary' }]}>
+              i
+            </Box>
           </Tooltip>
         </Box>
-        <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
           ${currentPrice.toFixed(2)}
         </Typography>
       </Box>
@@ -229,7 +231,7 @@ export default function PriceIndicator() {
           height: 12,
           borderRadius: '50%',
           background: '#ffffff',
-          border: '2px solid #d0c98d',
+          border: '2px solid text.primary',
           boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
           zIndex: 2,
         }} />
@@ -258,7 +260,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: '10px',
-    color: '#d0c98d',
+    color: 'text.primary',
     cursor: 'help',
   },
   tooltipContainer: {
@@ -279,7 +281,6 @@ const styles = {
     padding: '2px 0',
   },
   tooltipTypeText: {
-    color: '#d0c98d',
     fontSize: '0.9rem',
     fontWeight: 'bold',
   },
@@ -298,7 +299,6 @@ const styles = {
     flexDirection: 'column',
   },
   tooltipLabel: {
-    color: '#d7c529',
     fontSize: '0.7rem',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
@@ -324,7 +324,6 @@ const styles = {
   feeHighlightText: {
     fontSize: '0.8rem',
     fontWeight: 600,
-    color: '#d0c98d',
     letterSpacing: '0.3px',
     lineHeight: '1.0',
   },

@@ -7,7 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import TokenIcon from '@mui/icons-material/Token';
-import { Box, Button, FormControl, IconButton, Link, MenuItem, Select, Typography } from '@mui/material';
+import { Box, Button, FormControl, IconButton, Link, Menu, MenuItem, Select, Typography } from '@mui/material';
 import { useProvider } from '@starknet-react/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
@@ -36,36 +36,90 @@ const TokenSelectionContent = memo(({
   onTokenChange,
   buyDungeonTicket,
   styles
-}: TokenSelectionProps) => (
-  <Box sx={styles.paymentCard}>
-    <Box sx={styles.cardHeader}>
-      <Box sx={styles.iconContainer}>
-        <TokenIcon sx={{ fontSize: 28, color: '#d0c98d' }} />
-      </Box>
-      <Box sx={{ flex: 1 }}>
-        <Typography sx={styles.paymentTitle}>Pay with Crypto</Typography>
-        <Typography sx={styles.paymentSubtitle}>Select any token in your controller wallet</Typography>
-      </Box>
-    </Box>
+}: TokenSelectionProps) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const selectedTokenData = userTokens.find((t: any) => t.symbol === selectedToken);
 
-    <Box sx={styles.sectionContainer} pb={2} mt={1}>
-      <FormControl fullWidth sx={styles.selectControl}>
-        <Select
-          value={selectedToken}
-          onChange={(e) => onTokenChange(e.target.value)}
-          sx={styles.cyberpunkSelect}
-          MenuProps={{
-            PaperProps: {
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleTokenSelect = (tokenSymbol: string) => {
+    onTokenChange(tokenSymbol);
+    handleClose();
+  };
+
+  return (
+    <Box sx={{ ...styles.paymentCard, position: 'relative', overflow: 'visible' }}>
+      <Box sx={styles.cardHeader}>
+        <Box sx={styles.iconContainer}>
+          <TokenIcon sx={{ fontSize: 28, color: '#d0c98d' }} />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={styles.paymentTitle}>Pay with Crypto</Typography>
+          <Typography sx={styles.paymentSubtitle}>Select any token in your controller wallet</Typography>
+        </Box>
+      </Box>
+
+      <Box sx={styles.sectionContainer} pb={2} mt={1}>
+        <Button
+          variant="outlined"
+          onClick={handleClick}
+          fullWidth
+          sx={styles.mobileSelectButton}
+        >
+          <Box sx={styles.tokenRow}>
+            <Box sx={styles.tokenLeft}>
+              <Typography sx={styles.tokenName}>
+                {selectedTokenData ? selectedTokenData.symbol : 'Select token'}
+              </Typography>
+            </Box>
+            {selectedTokenData && (
+              <Typography sx={styles.tokenBalance}>{selectedTokenData.balance}</Typography>
+            )}
+          </Box>
+        </Button>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleClose}
+          slotProps={{
+            paper: {
               sx: {
-                background: 'rgba(24, 40, 24, 0.95)',
+                mt: 0.5,
+                width: '260px',
+                maxHeight: 300,
+                background: 'rgba(24, 40, 24, 1)',
                 border: '1px solid rgba(208, 201, 141, 0.3)',
-                backdropFilter: 'blur(8px)',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                zIndex: 9999,
               }
             }
           }}
+          sx={{
+            zIndex: 9999,
+          }}
         >
           {userTokens.map((token: any) => (
-            <MenuItem key={token.symbol} value={token.symbol} sx={styles.selectItem}>
+            <MenuItem
+              key={token.symbol}
+              onClick={() => handleTokenSelect(token.symbol)}
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 1,
+                backgroundColor: token.symbol === selectedToken ? 'rgba(208, 201, 141, 0.2)' : 'transparent',
+                '&:hover': {
+                  backgroundColor: token.symbol === selectedToken ? 'rgba(208, 201, 141, 0.3)' : 'rgba(208, 201, 141, 0.1)',
+                }
+              }}
+            >
               <Box sx={styles.tokenRow}>
                 <Box sx={styles.tokenLeft}>
                   <Typography sx={styles.tokenName}>{token.symbol}</Typography>
@@ -74,37 +128,37 @@ const TokenSelectionContent = memo(({
               </Box>
             </MenuItem>
           ))}
-        </Select>
-      </FormControl>
-    </Box>
+        </Menu>
+      </Box>
 
-    <Box sx={styles.costDisplay}>
-      <Typography sx={styles.costText}>
-        {tokenQuote.loading ? (
-          'Loading quote...'
-        ) : tokenQuote.error ? (
-          `Error: ${tokenQuote.error}`
-        ) : tokenQuote.amount ? (
-          `Cost: ${tokenQuote.amount} ${selectedToken}`
-        ) : (
-          'Loading...'
-        )}
-      </Typography>
-    </Box>
+      <Box sx={styles.costDisplay}>
+        <Typography sx={styles.costText}>
+          {tokenQuote.loading ? (
+            'Loading quote...'
+          ) : tokenQuote.error ? (
+            `Error: ${tokenQuote.error}`
+          ) : tokenQuote.amount ? (
+            `Cost: ${tokenQuote.amount} ${selectedToken}`
+          ) : (
+            'Loading...'
+          )}
+        </Typography>
+      </Box>
 
-    <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, mb: 2 }}>
-      <Button
-        variant="contained"
-        sx={styles.activateButton}
-        onClick={buyDungeonTicket}
-        fullWidth
-        disabled={tokenQuote.loading || !!tokenQuote.error}
-      >
-        <Typography sx={styles.buttonText}>Enter Dungeon</Typography>
-      </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, mb: 2 }}>
+        <Button
+          variant="contained"
+          sx={styles.activateButton}
+          onClick={buyDungeonTicket}
+          fullWidth
+          disabled={tokenQuote.loading || !!tokenQuote.error}
+        >
+          <Typography sx={styles.buttonText}>Enter Dungeon</Typography>
+        </Button>
+      </Box>
     </Box>
-  </Box>
-));
+  );
+});
 
 
 
@@ -130,7 +184,7 @@ export default function PaymentOptionsModal({
   }, []);
 
   const userTokens = useMemo(() => {
-    return paymentTokens.map((token: any) => ({
+    return [...paymentTokens, ...paymentTokens, ...paymentTokens, ...paymentTokens, ...paymentTokens].map((token: any) => ({
       symbol: token.name,
       balance: tokenBalances[token.name] || 0,
       address: token.address,
@@ -341,11 +395,17 @@ export default function PaymentOptionsModal({
 
                         <Box sx={styles.goldenTokenContainer}>
                           <img
-                            src={'/images/dungeon_ticket.png'}
+                            src="/images/dungeon_ticket.png"
                             alt="Dungeon Ticket"
                             style={{
                               width: '130px',
                               height: '130px',
+                              objectFit: 'contain',
+                              display: 'block',
+                            }}
+                            onError={(e) => {
+                              console.error('Failed to load dungeon ticket image');
+                              e.currentTarget.style.display = 'none';
                             }}
                           />
                         </Box>
@@ -390,7 +450,7 @@ export default function PaymentOptionsModal({
                       <Box sx={styles.paymentCard}>
                         <Box sx={[styles.cardHeader, { py: 1, pt: 2 }]}>
                           <Box sx={styles.iconContainer}>
-                            <SportsEsportsOutlinedIcon sx={{ fontSize: 28, color: '#d0c98d' }} />
+                            <SportsEsportsOutlinedIcon sx={{ fontSize: 28, color: 'text.primary' }} />
                           </Box>
                           <Box>
                             <Typography sx={styles.paymentTitle}>Cartridge</Typography>
@@ -401,14 +461,14 @@ export default function PaymentOptionsModal({
                         <Box sx={styles.sectionContainer} pb={1}>
                           <Box sx={styles.paymentOption} mb={0.5}>
                             <Box sx={styles.optionHeader} mb={0.5}>
-                              <CreditCardIcon sx={{ fontSize: 18, color: '#d0c98d', mr: 1 }} />
+                              <CreditCardIcon sx={{ fontSize: 18, color: 'text.primary', mr: 1 }} />
                               <Typography sx={styles.optionTitle}>Credit Card</Typography>
                             </Box>
                             <Typography sx={styles.optionDescription}>Traditional payment method</Typography>
                           </Box>
                           <Box sx={styles.paymentOption}>
                             <Box sx={styles.optionHeader} mb={0.5}>
-                              <TokenIcon sx={{ fontSize: 18, color: '#d0c98d', mr: 1 }} />
+                              <TokenIcon sx={{ fontSize: 18, color: 'text.primary', mr: 1 }} />
                               <Typography sx={styles.optionTitle}>Crypto</Typography>
                             </Box>
                             <Typography sx={styles.optionDescription}>multiple blockchain networks</Typography>
@@ -455,7 +515,7 @@ export default function PaymentOptionsModal({
                       </Link>
                     )
                   )}
-                  
+
                   {/* Dungeon ticket view - show next available option */}
                   {currentView === 'dungeon' && (
                     userTokens.length > 0 ? (
@@ -476,7 +536,7 @@ export default function PaymentOptionsModal({
                       </Link>
                     )
                   )}
-                  
+
                   {/* Token view - always show credit card option */}
                   {currentView === 'token' && (
                     <Link
@@ -487,7 +547,7 @@ export default function PaymentOptionsModal({
                       Pay with credit card or other wallet
                     </Link>
                   )}
-                  
+
                   {/* Credit card view - show previous available option */}
                   {currentView === 'credit' && (
                     userTokens.length > 0 ? (
@@ -541,8 +601,8 @@ const styles = {
     backdropFilter: 'blur(8px)',
   },
   modal: {
-    minWidth: 420,
-    maxWidth: 460,
+    width: '420px',
+    maxWidth: '90dvw',
     p: 0,
     borderRadius: 3,
     background: 'linear-gradient(145deg, #1a2f1a 0%, #0f1f0f 100%)',
@@ -588,9 +648,7 @@ const styles = {
     fontSize: 22,
     fontWeight: 700,
     letterSpacing: 1.5,
-    color: '#d0c98d',
     textShadow: '0 2px 8px rgba(208, 201, 141, 0.3)',
-    fontFamily: 'Cinzel, Georgia, serif',
   },
   titleUnderline: {
     width: 80,
@@ -612,14 +670,9 @@ const styles = {
     background: 'rgba(24, 40, 24, 0.6)',
     border: '2px solid rgba(208, 201, 141, 0.3)',
     borderRadius: 2,
-    overflow: 'hidden',
+    overflow: 'visible',
     position: 'relative',
     backdropFilter: 'blur(4px)',
-    '&:hover': {
-      borderColor: 'rgba(208, 201, 141, 0.5)',
-      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-    },
-    transition: 'all 0.3s ease',
   },
   cardHeader: {
     display: 'flex',
@@ -640,7 +693,6 @@ const styles = {
   paymentTitle: {
     fontSize: 16,
     fontWeight: 600,
-    color: '#d0c98d',
     letterSpacing: 0.5,
     mb: 0.5,
   },
@@ -651,6 +703,23 @@ const styles = {
     letterSpacing: 0.5,
     lineHeight: 1.2,
   },
+  mobileSelectButton: {
+    height: '48px',
+    textTransform: 'none',
+    fontWeight: 500,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '12px 16px',
+    background: 'rgba(0, 0, 0, 0.4)',
+    border: '1px solid rgba(208, 201, 141, 0.3)',
+    borderRadius: 1,
+    color: 'inherit',
+    '&:hover': {
+      borderColor: 'rgba(208, 201, 141, 0.5)',
+      background: 'rgba(0, 0, 0, 0.5)',
+    },
+  },
   selectControl: {
     '& .MuiOutlinedInput-root': {
       background: 'rgba(0, 0, 0, 0.3)',
@@ -660,7 +729,6 @@ const styles = {
     background: 'rgba(0, 0, 0, 0.4)',
     border: '1px solid rgba(208, 201, 141, 0.3)',
     borderRadius: 1,
-    color: '#d0c98d',
     '& .MuiSelect-select': {
       py: 1.5,
       fontSize: 14,
@@ -673,12 +741,10 @@ const styles = {
     },
     '&.Mui-focused': {
       borderColor: '#d0c98d',
-      boxShadow: '0 0 10px rgba(208, 201, 141, 0.2)',
     },
   },
   selectItem: {
     background: 'rgba(24, 40, 24, 0.8)',
-    color: '#d0c98d',
     '&:hover': {
       background: 'rgba(208, 201, 141, 0.1)',
     },
@@ -703,7 +769,6 @@ const styles = {
   tokenName: {
     fontSize: 14,
     fontWeight: 600,
-    color: '#d0c98d',
   },
   tokenBalance: {
     fontSize: 11,
@@ -722,7 +787,6 @@ const styles = {
   costText: {
     fontSize: 14,
     fontWeight: 600,
-    color: '#d0c98d',
     letterSpacing: 0.5,
   },
   paymentOption: {
@@ -739,7 +803,6 @@ const styles = {
   optionTitle: {
     fontSize: 14,
     fontWeight: 600,
-    color: '#d0c98d',
     letterSpacing: 0.3,
   },
   optionDescription: {
@@ -798,7 +861,7 @@ const styles = {
     letterSpacing: 0.5,
     transition: 'color 0.2s',
     '&:hover': {
-      color: '#d0c98d',
+      color: 'text.primary',
       textDecoration: 'underline',
     },
   },

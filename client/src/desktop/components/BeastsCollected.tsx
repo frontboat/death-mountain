@@ -24,10 +24,10 @@ export default function BeastsCollected() {
   return (
     <Stack spacing={0.5} sx={{ width: '100%', mb: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-        <Typography sx={{ fontSize: '0.85rem', color: '#d0c98d', fontWeight: 500, letterSpacing: 0.5 }}>
+        <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: 0.5 }}>
           Beasts Collected
         </Typography>
-        <Typography sx={{ fontSize: '0.8rem', color: '#d0c98d', fontVariantNumeric: 'tabular-nums' }}>
+        <Typography sx={{ fontSize: '0.8rem', fontVariantNumeric: 'tabular-nums' }}>
           {collected.toLocaleString()} / {total.toLocaleString()}
         </Typography>
       </Box>
