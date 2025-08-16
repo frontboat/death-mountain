@@ -6,7 +6,7 @@ import { getEventTitle } from '@/utils/events';
 import { ItemUtils } from '@/utils/loot';
 import { Box, Button, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import BeastCollectedPopup from '../components/BeastCollectedPopup';
+import BeastCollectedPopup from '../../components/BeastCollectedPopup';
 import Adventurer from './Adventurer';
 import InventoryOverlay from './Inventory';
 import MarketOverlay from './Market';

@@ -399,7 +399,7 @@ const styles = {
     },
   },
   menuPaper: {
-    backgroundColor: 'rgba(17, 17, 17, 0.95)',
+    backgroundColor: 'rgba(17, 17, 17, 1)',
     border: '1px solid #083e22',
     '& .MuiMenuItem-root': {
       color: '#d0c98d',

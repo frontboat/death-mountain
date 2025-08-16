@@ -103,7 +103,6 @@ export default function GamePage() {
     }
 
     if (!account) {
-      forceUpdate();
       return;
     }
 

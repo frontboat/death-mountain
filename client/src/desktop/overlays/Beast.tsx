@@ -158,7 +158,7 @@ const styles = {
     width: 80,
     height: 80,
     borderRadius: '50%',
-    background: 'rgba(24, 40, 24, 1)',
+    background: 'rgba(0, 0, 0, 1)',
     border: '3px solid #083e22',
     boxShadow: '0 0 8px rgba(0,0,0,0.6)',
     zIndex: 100,

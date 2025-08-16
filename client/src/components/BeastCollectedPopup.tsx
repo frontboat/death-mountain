@@ -70,9 +70,10 @@ const styles = {
     justifyContent: 'center',
   },
   card: {
-    minWidth: 370,
-    maxWidth: 440,
+    width: 370,
+    maxWidth: '98dvw',
     p: 4,
+    boxSizing: 'border-box',
     borderRadius: 4,
     background: 'repeating-linear-gradient(135deg, #181818 0px, #181818 8px, #1a1a1a 16px, #181818 24px)',
     border: '2px solid rgba(255, 224, 130, 0.25)',

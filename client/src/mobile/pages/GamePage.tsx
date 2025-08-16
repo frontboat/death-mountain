@@ -77,6 +77,11 @@ export default function GamePage() {
   useEffect(() => {
     if (!sdk || isPending) return;
 
+    if (mode === "entering") {
+      setLoadingProgress(45);
+      return;
+    }
+
     if (mode === "real" && dojoConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
       setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
       return;
@@ -93,7 +98,6 @@ export default function GamePage() {
     }
 
     if (!account) {
-      forceUpdate();
       return;
     }
 

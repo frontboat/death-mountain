@@ -1,14 +1,14 @@
 import { useController } from '@/contexts/controller';
 import { useDynamicConnector } from '@/contexts/starknet';
-import BeastsCollected from '@/desktop/components/BeastsCollected';
-import PriceIndicator from '@/desktop/components/PriceIndicator';
+import BeastsCollected from '@/components/BeastsCollected';
+import PriceIndicator from '@/components/PriceIndicator';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Box, Button, Typography } from '@mui/material';
 import { useAccount } from '@starknet-react/core';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameTokensList from '../components/GameTokensList';
-import PaymentOptionsModal from '@/desktop/components/PaymentOptionsModal';
+import PaymentOptionsModal from '@/components/PaymentOptionsModal';
 
 export default function LandingPage() {
   const { account } = useAccount();

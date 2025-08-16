@@ -252,14 +252,14 @@ export default function PaymentOptionsModal({
 
   const buyDungeonTicket = async () => {
     const selectedTokenData = userTokens.find((t: any) => t.symbol === selectedToken);
-    const quote = await getSwapQuote(-1e18, DUNGEON_TICKET_ADDRESS, selectedTokenData.address);
+    const quote = await getSwapQuote(-1e18, DUNGEON_TICKET_ADDRESS, selectedTokenData!.address);
 
     let tokenSwapData = {
       tokenAddress: DUNGEON_TICKET_ADDRESS,
       minimumAmount: 1,
       quote: quote
     }
-    const calls = generateSwapCalls(routerContract, selectedTokenData.address, tokenSwapData);
+    const calls = generateSwapCalls(routerContract, selectedTokenData!.address, tokenSwapData);
 
     enterDungeon({ paymentType: 'Ticket' }, calls);
   };
