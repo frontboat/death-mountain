@@ -16,7 +16,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
   const tier = ItemUtils.getItemTier(item.id);
   const type = ItemUtils.getItemType(item.id);
   const metadata = ItemUtils.getMetadata(item.id);
-  const xpToNextLevel = calculateNextLevelXP(level);
+  const xpToNextLevel = calculateNextLevelXP(level, true);
   const specials = ItemUtils.getSpecials(item.id, level, itemSpecialsSeed);
   const specialName = specials.suffix ? `"${specials.prefix} ${specials.suffix}"` : null;
 
@@ -81,7 +81,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
         </Box>
         <LinearProgress
           variant="determinate"
-          value={calculateProgress(item.xp)}
+          value={calculateProgress(item.xp, true)}
           sx={styles.xpBar}
         />
       </Box>

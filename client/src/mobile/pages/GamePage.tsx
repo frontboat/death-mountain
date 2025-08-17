@@ -107,7 +107,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, controllerAddress, isPending, sdk, update, dojoConfig.chainId]);
+  }, [game_id, controllerAddress, isPending, sdk, account, dojoConfig.chainId]);
 
   useEffect(() => {
     setActiveNavItem("GAME");

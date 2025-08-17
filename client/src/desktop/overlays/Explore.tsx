@@ -11,6 +11,7 @@ import Adventurer from './Adventurer';
 import InventoryOverlay from './Inventory';
 import MarketOverlay from './Market';
 import TipsOverlay from './Tips';
+import SettingsOverlay from './Settings';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue } = useGameDirector();
@@ -159,6 +160,7 @@ export default function ExploreOverlay() {
 
       <InventoryOverlay onStatsChange={handleStatsChange} />
       <TipsOverlay />
+      <SettingsOverlay />
 
       {adventurer?.stat_upgrades_available! === 0 && <MarketOverlay />}
 

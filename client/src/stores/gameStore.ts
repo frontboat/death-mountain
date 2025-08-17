@@ -22,6 +22,7 @@ interface GameState {
   quest: Quest | null;
   showInventory: boolean;
   showOverlay: boolean;
+  showSettings: boolean;
   collectable: Beast | null;
   collectableTokenURI: string | null;
   collectableCount: number;
@@ -46,6 +47,7 @@ interface GameState {
   undoEquipment: () => void;
   setShowInventory: (show: boolean) => void;
   setShowOverlay: (show: boolean) => void;
+  setShowSettings: (show: boolean) => void;
   setCollectable: (data: Beast | null) => void;
   setCollectableTokenURI: (tokenURI: string | null) => void;
   incrementBeastsCollected: () => void;
@@ -68,6 +70,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   quest: null,
   showInventory: false,
   showOverlay: true,
+  showSettings: false,
   collectable: null,
   collectableTokenURI: null,
   collectableCount: 0,
@@ -93,6 +96,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       quest: null,
       showInventory: false,
       showOverlay: true,
+      showSettings: false,
       collectable: null,
       collectableTokenURI: null,
       collectableCount: 0,
@@ -195,6 +199,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setShowInventory: (show: boolean) => set({ showInventory: show }),
   setShowOverlay: (show: boolean) => set({ showOverlay: show }),
+  setShowSettings: (show: boolean) => set({ showSettings: show }),
   setCollectable: (data: Beast | null) => set({ collectable: data, collectableTokenURI: null }),
   setCollectableTokenURI: (tokenURI: string | null) => set({ collectableTokenURI: tokenURI }),
   incrementBeastsCollected: () => set({ collectableCount: get().collectableCount + 1 }),

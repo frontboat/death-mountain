@@ -154,13 +154,13 @@ export default function MainMenu() {
                     Provable Games
                   </Typography>
                   <Box sx={styles.socialButtons}>
-                    <IconButton size="small" sx={styles.socialButton} onClick={() => window.open('https://x.com/lootsurvivor', '_blank')}>
+                    <IconButton size="small" sx={styles.socialButton} onClick={() => window.open('https://x.com/LootSurvivor', '_blank')}>
                       <XIcon sx={{ fontSize: 20 }} />
                     </IconButton>
-                    <IconButton size="small" sx={styles.socialButton} onClick={() => window.open('https://discord.com/channels/884211910222970891/1249816798971560117', '_blank')}>
+                    <IconButton size="small" sx={styles.socialButton} onClick={() => window.open('https://discord.gg/DQa4z9jXnY', '_blank')}>
                       <img src={discordIcon} alt="Discord" style={{ width: 20, height: 20 }} />
                     </IconButton>
-                    <IconButton size="small" sx={styles.socialButton} onClick={() => window.open('https://github.com/provable-games/loot-survivor-2', '_blank')}>
+                    <IconButton size="small" sx={styles.socialButton} onClick={() => window.open('https://github.com/provable-games/death-mountain', '_blank')}>
                       <GitHubIcon sx={{ fontSize: 20 }} />
                     </IconButton>
                   </Box>

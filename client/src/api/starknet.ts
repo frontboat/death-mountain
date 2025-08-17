@@ -1,6 +1,5 @@
 import { useDojoConfig } from "@/contexts/starknet";
 import { Adventurer } from "@/types/game";
-import { NETWORKS } from "@/utils/networkConfig";
 import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useAccount } from "@starknet-react/core";
@@ -80,7 +79,7 @@ export const useStarknetApi = () => {
           params: [
             {
               contract_address: getContractByName(dojoConfig.manifest, dojoConfig.namespace, "adventurer_systems")?.address,
-              entry_point_selector: "0x3d3148be1dfdfcfcd22f79afe7aee5a3147ef412bfb2ea27949e7f8c8937a7",
+              entry_point_selector: "0x26f44ef7459c56b4f89ce027528afd605332b95a2875631deb3d1be2cbafea5",
               calldata: [num.toHex(adventurerId)],
             },
             "pending",
@@ -142,7 +141,7 @@ export const useStarknetApi = () => {
           },
         },
         item_specials_seed: parseInt(data?.result[28], 16),
-        action_count: parseInt(data?.result[28], 16),
+        action_count: parseInt(data?.result[29], 16),
       }
 
       return adventurer;

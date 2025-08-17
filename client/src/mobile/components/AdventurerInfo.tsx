@@ -15,7 +15,6 @@ export default function AdventurerInfo() {
   const nextLevelXP = calculateNextLevelXP(level);
   const xpToNextLevel = nextLevelXP - (adventurer?.xp || 0);
   const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
-  console.log(level, progress, nextLevelXP, xpToNextLevel, maxHealth)
 
   return (
     <>

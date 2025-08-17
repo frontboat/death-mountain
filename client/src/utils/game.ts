@@ -9,13 +9,17 @@ export const calculateLevel = (xp: number) => {
   return Math.floor(Math.sqrt(xp));
 };
 
-export const calculateNextLevelXP = (currentLevel: number) => {
+export const calculateNextLevelXP = (currentLevel: number, item: boolean = false) => {
+  if (item) {
+    return Math.min(400, (currentLevel + 1) ** 2);
+  }
+
   return (currentLevel + 1) ** 2;
 };
 
-export const calculateProgress = (xp: number) => {
+export const calculateProgress = (xp: number, item: boolean = false) => {
   const currentLevel = calculateLevel(xp);
-  const nextLevelXP = calculateNextLevelXP(currentLevel);
+  const nextLevelXP = calculateNextLevelXP(currentLevel, item);
   const currentLevelXP = currentLevel ** 2;
   return ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
 };
