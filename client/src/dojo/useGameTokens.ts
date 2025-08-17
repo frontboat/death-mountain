@@ -122,7 +122,6 @@ export const useGameTokens = () => {
       WHERE account_address = "${accountAddress.replace(/^0x0+/, "0x")}" AND contract_address = "${tokenAddress.replace(/^0x0+/, "0x")}"
       LIMIT 10000`
 
-    console.log('url', url);
     const sql = await fetch(url, {
       method: "GET",
       headers: {
