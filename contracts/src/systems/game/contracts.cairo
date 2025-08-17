@@ -57,7 +57,6 @@ mod game_systems {
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
     use game_components_minigame::libs::{assert_token_ownership, post_action, pre_action};
-    use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
     use starknet::{ContractAddress, get_tx_info};
     use super::VRF_ENABLED;
 
@@ -141,6 +140,7 @@ mod game_systems {
                             health: beast.starting_health,
                             level: beast.combat_spec.level,
                             specials: beast.combat_spec.specials,
+                            is_collectable: false,
                         },
                     ),
                 );
@@ -152,7 +152,7 @@ mod game_systems {
                 let packed = game_libs.adventurer.pack_adventurer(adventurer);
                 world.write_model(@AdventurerPacked { adventurer_id, packed });
             } else {
-                let mut adventurer = game_settings.adventurer;
+                let mut adventurer = game_libs.adventurer.add_stat_boosts(game_settings.adventurer, game_settings.bag);
                 adventurer.increment_action_count();
 
                 let (beast_seed, market_seed) = _get_random_seed(
@@ -192,6 +192,7 @@ mod game_systems {
                                 health: beast.starting_health,
                                 level: beast.combat_spec.level,
                                 specials: beast.combat_spec.specials,
+                                is_collectable: false,
                             },
                         ),
                     );
@@ -767,6 +768,19 @@ mod game_systems {
                 // save seed to get correct beast
                 _save_seed(ref world, adventurer_id, 0, explore_seed);
 
+                let is_collectable = if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+                    game_libs
+                        .beast
+                        .is_beast_collectable(
+                            adventurer_id,
+                            ImplBeast::get_beast_hash(
+                                beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                            ),
+                        )
+                } else {
+                    false
+                };
+
                 // emit beast event
                 _emit_game_event(
                     ref world,
@@ -779,6 +793,7 @@ mod game_systems {
                             health: beast.starting_health,
                             level: beast.combat_spec.level,
                             specials: beast.combat_spec.specials,
+                            is_collectable,
                         },
                     ),
                 );

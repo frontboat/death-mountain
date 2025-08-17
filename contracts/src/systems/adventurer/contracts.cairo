@@ -20,6 +20,7 @@ pub trait IAdventurerSystems<T> {
     fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
     fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
+    fn add_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
     fn remove_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
     fn pack_adventurer(self: @T, adventurer: Adventurer) -> felt252;
     fn get_discovery(
@@ -148,6 +149,18 @@ mod adventurer_systems {
 
         fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> ByteArray {
             _get_adventurer_name(self.world(@DEFAULT_NS()), adventurer_id)
+        }
+
+        fn add_stat_boosts(self: @ContractState, mut adventurer: Adventurer, bag: Bag) -> Adventurer {
+            if adventurer.equipment.has_specials() {
+                let item_stat_boosts = _get_stat_boosts(adventurer);
+                adventurer.stats.apply_stats(item_stat_boosts);
+            }
+            if bag.has_specials() {
+                let bag_stat_boosts = _get_bag_stat_boosts(adventurer, bag);
+                adventurer.stats.apply_stats(bag_stat_boosts);
+            }
+            adventurer
         }
 
         fn remove_stat_boosts(self: @ContractState, mut adventurer: Adventurer, bag: Bag) -> Adventurer {
