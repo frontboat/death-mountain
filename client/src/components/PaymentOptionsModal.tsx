@@ -184,7 +184,7 @@ export default function PaymentOptionsModal({
   }, []);
 
   const userTokens = useMemo(() => {
-    return [...paymentTokens, ...paymentTokens, ...paymentTokens, ...paymentTokens, ...paymentTokens].map((token: any) => ({
+    return paymentTokens.map((token: any) => ({
       symbol: token.name,
       balance: tokenBalances[token.name] || 0,
       address: token.address,
