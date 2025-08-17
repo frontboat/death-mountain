@@ -16,7 +16,7 @@ import WalletConnect from '../components/WalletConnect';
 
 export default function SettingsOverlay() {
   const { gameId, showSettings, setShowSettings, setAdventurer } = useGameStore();
-  const { playing, setPlaying, volume, setVolume } = useSound();
+  const { volume, setVolume, muted, setMuted } = useSound();
   const { getAdventurer } = useStarknetApi();
   const navigate = useNavigate();
   const [unstuckLoading, setUnstuckLoading] = useState(false);
@@ -85,19 +85,19 @@ export default function SettingsOverlay() {
                 <Box sx={styles.soundControl}>
                   <IconButton
                     size="small"
-                    onClick={() => setPlaying(!playing)}
-                    sx={{ color: playing ? '#d0c98d' : '#666', padding: '4px' }}
+                    onClick={() => setMuted(!muted)}
+                    sx={{ color: !muted ? '#d0c98d' : '#666', padding: '4px' }}
                   >
-                    {playing ? (
-                      <VolumeUpIcon sx={{ fontSize: 22 }} />
-                    ) : (
+                    {muted ? (
                       <VolumeOffIcon sx={{ fontSize: 22 }} />
+                    ) : (
+                      <VolumeUpIcon sx={{ fontSize: 22 }} />
                     )}
                   </IconButton>
                   <Slider
                     value={Math.round(volume * 100)}
                     onChange={handleVolumeChange}
-                    disabled={!playing}
+                    disabled={muted}
                     aria-labelledby="volume-slider"
                     valueLabelDisplay="auto"
                     step={1}

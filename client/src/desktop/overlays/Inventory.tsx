@@ -257,7 +257,7 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
             <Box sx={styles.emptySlot}></Box>
           </Box>
         ))}
-        {!isDropMode && (
+        {(!isDropMode && !beast) && (
           <Box
             sx={styles.dropButtonSlot}
             onClick={onDropModeToggle}
