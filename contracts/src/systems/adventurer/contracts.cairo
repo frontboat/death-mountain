@@ -19,7 +19,7 @@ pub trait IAdventurerSystems<T> {
     fn get_adventurer_verbose(self: @T, adventurer_id: u64) -> AdventurerVerbose;
     fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
-    fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
+    fn get_adventurer_name(self: @T, adventurer_id: u64) -> felt252;
     fn remove_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
     fn pack_adventurer(self: @T, adventurer: Adventurer) -> felt252;
     fn get_discovery(
@@ -103,7 +103,7 @@ mod adventurer_systems {
             let world_storage = self.world(@DEFAULT_NS());
             let adventurer = _load_adventurer(world_storage, adventurer_id);
             let bag: Bag = _load_bag(world_storage, adventurer_id);
-            let name: ByteArray = _get_adventurer_name(world_storage, adventurer_id);
+            let name: felt252 = _get_adventurer_name(world_storage, adventurer_id);
 
             // proceed to create the verbose adventurer
             let equipment_verbose: EquipmentVerbose = adventurer.equipment.into();
@@ -146,7 +146,7 @@ mod adventurer_systems {
             _load_bag(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
-        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> ByteArray {
+        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> felt252 {
             _get_adventurer_name(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
@@ -231,7 +231,7 @@ mod adventurer_systems {
         ImplBag::unpack(bag_packed.packed)
     }
 
-    fn _get_adventurer_name(world: WorldStorage, adventurer_id: u64) -> ByteArray {
+    fn _get_adventurer_name(world: WorldStorage, adventurer_id: u64) -> felt252 {
         let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
         let game_token = IGameTokenSystemsDispatcher { contract_address: game_token_address };
         let player_name = game_token.player_name(adventurer_id);

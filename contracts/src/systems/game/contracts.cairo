@@ -1814,7 +1814,7 @@ mod tests {
 
         let adventurer_id = minigame_dispatcher
             .mint_game(
-                Option::Some("player1"), // player_name
+                Option::Some('player1'), // player_name
                 Option::Some(0), // settings_id
                 Option::None, // start
                 Option::None, // end

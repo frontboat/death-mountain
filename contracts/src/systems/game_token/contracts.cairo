@@ -5,7 +5,7 @@ use death_mountain::models::market::ItemPurchase;
 #[starknet::interface]
 pub trait IGameTokenSystems<T> {
     fn create_objective(ref self: T, score: u32);
-    fn player_name(ref self: T, adventurer_id: u64) -> ByteArray;
+    fn player_name(ref self: T, adventurer_id: u64) -> felt252;
 }
 
 #[dojo::contract]
@@ -195,7 +195,7 @@ mod game_token_systems {
             world.write_model(@ScoreObjectiveCount { key: VERSION, count: objective_count + 1 })
         }
 
-        fn player_name(ref self: ContractState, adventurer_id: u64) -> ByteArray {
+        fn player_name(ref self: ContractState, adventurer_id: u64) -> felt252 {
             self.minigame.get_player_name(adventurer_id)
         }
     }
