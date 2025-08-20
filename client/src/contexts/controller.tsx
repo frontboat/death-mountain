@@ -50,7 +50,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (
       localStorage.getItem("burner") &&
-      localStorage.getItem("burner_version") === "3"
+      localStorage.getItem("burner_version") === "4"
     ) {
       let burner = JSON.parse(localStorage.getItem("burner") as string);
       setBurner(
