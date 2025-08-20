@@ -16,7 +16,7 @@ const equipMessage = "Equipping items";
 
 export default function CombatOverlay() {
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment, setShowBeastRewards } = useGameStore();
+  const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment } = useGameStore();
 
   const [untilDeath, setUntilDeath] = useState(false);
   const [attackInProgress, setAttackInProgress] = useState(false);
@@ -66,7 +66,6 @@ export default function CombatOverlay() {
   }, [actionFailed]);
 
   const handleAttack = () => {
-    setShowBeastRewards(true);
     setAttackInProgress(true);
     setCombatLog(attackMessage);
     executeGameAction({ type: 'attack', untilDeath });
