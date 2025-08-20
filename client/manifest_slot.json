@@ -1,7 +1,7 @@
 {
   "world": {
     "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
-    "address": "0x5c481ab75ac721fd6fb8b66af6c04327484dd66c10379d7a73561642275f8c7",
+    "address": "0x51b471d552deb71dcc6122cc79efdb2ad8feffa57d33e6077fb3acd33496b4a",
     "seed": "pg-slot-10",
     "name": "Provable Games",
     "entrypoints": [
@@ -1328,7 +1328,7 @@
   },
   "contracts": [
     {
-      "address": "0x54f135ec0a93822ad1c2a936fbf18697ac4658cb16fb25c87cdca617f10b972",
+      "address": "0x5fe615cad59b15191e34ac99492a8d1c7591ec29c14a3de02543e8afbd61187",
       "class_hash": "0x6fdc849dda0a438f652741e098cf4bad1d48fd1767142f28cc472a922521c7b",
       "abi": [
         {
@@ -2456,13 +2456,10 @@
       "init_calldata": [],
       "tag": "ls_0_0_6-adventurer_systems",
       "selector": "0x7dca5b501edea3aa6614822e167c8b6d1fc7a154873a44b4dfb4dd054f2577f",
-      "systems": [
-        "record_item_drop",
-        "upgrade"
-      ]
+      "systems": ["record_item_drop", "upgrade"]
     },
     {
-      "address": "0x55b87f2bd59c78edacc80e06f649f35e84c6bc5d97097fe18478e6b2f1cfb62",
+      "address": "0x452844ce80b8f6b248dbec8d3dffff6600dd7e1919370e8017de67ad750e728",
       "class_hash": "0x59bfaa756313d362c6ad9661695de20da6242ab792e146488bc1aca00a615dd",
       "abi": [
         {
@@ -3188,7 +3185,7 @@
       ]
     },
     {
-      "address": "0x50daece4ccc345f5c2e4fb984a4689f0db8d9a55322766ef3f7f92dcc21107e",
+      "address": "0x3679c2af35dff69d448b9fbb9cae33b2de2da8a47ef5d791306b64e3f1cd4f8",
       "class_hash": "0x21f81a167bbf70db3e88ad61225fd08c58a79101fa5b4afe95cb510927b84ca",
       "abi": [
         {
@@ -3577,7 +3574,7 @@
       ]
     },
     {
-      "address": "0x6e0fc2f8ecbb849c257fa40bcdd9e9871dc696b18ba663b0d0ca7e30c54ec0d",
+      "address": "0x51d6b5ff3cb2fdc76f24a55f516ebf7885f8d5663915f3f5decdc7bd464a845",
       "class_hash": "0x64bc959b111c32ded56686e01ece880e9ead1fbba109d29a67b6d1e8b097286",
       "abi": [
         {
@@ -4253,20 +4250,15 @@
       ],
       "init_calldata": [
         "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-        "0x034d5e4b96868a166d9279d4cc28515c2d6de1ecac3355ec4f4c1a642569e76f",
+        "0x07fb67dae8765fe214b68fcd20d14b5d4784cedde759840559314f539aa04e32",
         "1"
       ],
       "tag": "ls_0_0_6-game_token_systems",
       "selector": "0x3275bafbab55269a16cca4d314e63204f9b04ff98cdd996cb517f11b27cc8d1",
-      "systems": [
-        "dojo_init",
-        "create_objective",
-        "player_name",
-        "upgrade"
-      ]
+      "systems": ["dojo_init", "create_objective", "player_name", "upgrade"]
     },
     {
-      "address": "0x73770abc10c7565b1eed1a8424cacc160496bda853cc1139e36e97004171a2e",
+      "address": "0x2e9f99e0c732d2e4a3cf09f6ca6fda50663bed0e7b9fe32b14f956d0401bff0",
       "class_hash": "0x23cdb494302994de197966707c72df5708f2516f5205ed398dacb4c16fc4bcc",
       "abi": [
         {
@@ -4768,12 +4760,10 @@
       "init_calldata": [],
       "tag": "ls_0_0_6-loot_systems",
       "selector": "0x1c3d3aeaba78a58ce38d83d97504e0b133378f235507f6661abc023d336cf7a",
-      "systems": [
-        "upgrade"
-      ]
+      "systems": ["upgrade"]
     },
     {
-      "address": "0x628aaf116d6926b50df83455601aad0b77971c27b629bca74755ec6f396adc1",
+      "address": "0x227463ce459c1b45382e2523a7ab2f89990cc5c3d0eec69448e6bab7d17c743",
       "class_hash": "0x30fb384375add0bb606e7da48f1ca035c3ba94e16262f6ac2d95026b1a57f07",
       "abi": [
         {
@@ -5097,12 +5087,10 @@
       "init_calldata": [],
       "tag": "ls_0_0_6-renderer_systems",
       "selector": "0x13035cca5e7838361aca6e76778503ec71a77e08e4adbb82189aac5244e4d67",
-      "systems": [
-        "upgrade"
-      ]
+      "systems": ["upgrade"]
     },
     {
-      "address": "0x456e9a6398864d7690410b25dc025f2f957e26c822cc8d700798afb38fb1288",
+      "address": "0x764f91f901714f0784ee408e182e4184a62a036b3a893c806f5fcff8f33db7e",
       "class_hash": "0x33cc26c8153398a8d63ae7ec31641be78d015800bd7b7506d0bebdf9cbb07d8",
       "abi": [
         {
@@ -5789,11 +5777,7 @@
       "init_calldata": [],
       "tag": "ls_0_0_6-settings_systems",
       "selector": "0x23f0baec88d43f5fcfeb0a1886f339ba888fcf54925d02d8e3c75ca0e01cf0b",
-      "systems": [
-        "dojo_init",
-        "add_settings",
-        "upgrade"
-      ]
+      "systems": ["dojo_init", "add_settings", "upgrade"]
     }
   ],
   "libraries": [],

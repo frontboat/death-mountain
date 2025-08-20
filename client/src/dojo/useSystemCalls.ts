@@ -3,6 +3,7 @@ import { useDojoConfig } from "@/contexts/starknet";
 import { GameSettingsData, ItemPurchase, Stats } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
+import { stringToFelt } from "@/utils/utils";
 
 export const useSystemCalls = () => {
   const { account } = useController();
@@ -73,10 +74,7 @@ export const useSystemCalls = () => {
           contractAddress: GAME_TOKEN_ADDRESS,
           entrypoint: "mint_game",
           calldata: CallData.compile([
-            new CairoOption(
-              CairoOptionVariant.Some,
-              byteArray.byteArrayFromString(name)
-            ),
+            new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
             new CairoOption(CairoOptionVariant.Some, settingsId),
             1, // start
             1, // end
