@@ -41,7 +41,7 @@ export default function Beast() {
     <>
       {/* Beast Portrait */}
       <Box sx={collectable ? styles.collectablePortraitWrapper : styles.portraitWrapper}>
-        <Box sx={{ position: 'relative', overflow: 'hidden', width: '100%', height: '100%', borderRadius: '50%' }}>
+        {collectable ? <Box sx={{ position: 'relative', overflow: 'hidden', width: '100%', height: '100%', borderRadius: '50%' }}>
           <img src={`/images/beast_portraits/${beast!.baseName.toLowerCase()}.svg`}
             alt="Beast" style={{
               width: '64px',
@@ -77,7 +77,7 @@ export default function Beast() {
               }}
             />
           )}
-        </Box>
+        </Box> : <img src="/images/beast.png" alt="Beast" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />}
 
         <Box sx={[styles.beastLevelCircle, { left: -4 }, collectable && styles.collectableLevelCircle]}>
           <BeastTooltip beastType={beast!.type} beastId={beast!.id} />
