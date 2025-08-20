@@ -8,7 +8,7 @@ rpc_url = "https://api.cartridge.gg/x/pg-slot-3/katana"
 # Default account for katana with seed = 0
 account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
 private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
-world_address = "0x5c481ab75ac721fd6fb8b66af6c04327484dd66c10379d7a73561642275f8c7"
+world_address = "0x51b471d552deb71dcc6122cc79efdb2ad8feffa57d33e6077fb3acd33496b4a"
 
 [namespace]
 default = "ls_0_0_6"
@@ -25,6 +25,6 @@ default = "ls_0_0_6"
 [init_call_args]
 "ls_0_0_6-game_token_systems" = [
     "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-    "0x034d5e4b96868a166d9279d4cc28515c2d6de1ecac3355ec4f4c1a642569e76f", # denshokan_address
+    "0x07fb67dae8765fe214b68fcd20d14b5d4784cedde759840559314f539aa04e32", # denshokan_address
     "1" # Option::None for renderer address
 ]
