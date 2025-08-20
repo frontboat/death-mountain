@@ -58,7 +58,7 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
           const tierColor = tier ? ItemUtils.getTierColor(tier) : undefined;
           const level = item?.id ? calculateLevel(item.xp) : 0;
           const isNameMatch = item?.id && beast ? ItemUtils.isNameMatch(item.id, level, adventurer!.item_specials_seed, beast) : false;
-          const isArmorSlot = ['head', 'chest', 'legs', 'hands', 'waist'].includes(slot.key);
+          const isArmorSlot = ['head', 'chest', 'foot', 'hand', 'waist'].includes(slot.key);
           const isWeaponSlot = slot.key === 'weapon';
           const isNameMatchDanger = isNameMatch && isArmorSlot;
           const isNameMatchPower = isNameMatch && isWeaponSlot;
@@ -68,7 +68,33 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
           return (
             <Tooltip
               key={slot.key}
-              title={item?.id ? <ItemTooltip item={item} itemSpecialsSeed={adventurer?.item_specials_seed || 0} style={styles.tooltipContainer} /> : null}
+              title={item?.id ? (
+                <ItemTooltip item={item} itemSpecialsSeed={adventurer?.item_specials_seed || 0} style={styles.tooltipContainer} />
+              ) : (
+                !item?.id && (
+                  beast && isArmorSlot ? (
+                    <Box sx={styles.tooltipContainer}>
+                      <Box sx={styles.emptySlotTooltipHeader}>
+                        <Typography sx={styles.emptySlotTooltipTitle}>
+                          Empty {slot.label} Slot
+                        </Typography>
+                      </Box>
+                      <Box sx={styles.emptySlotTooltipDivider} />
+                      <Box sx={styles.emptySlotTooltipDamageContainer}>
+                        <Typography sx={styles.emptySlotTooltipDamageText}>
+                          -{Math.floor((6 - beast.tier) * beast.level * 1.5)} health when hit
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Box sx={styles.tooltipContainer}>
+                      <Typography sx={styles.emptySlotTooltipTitle}>
+                        Empty {slot.label} Slot
+                      </Typography>
+                    </Box>
+                  )
+                )
+              )}
               placement="auto-end"
               slotProps={{
                 popper: {
@@ -672,6 +698,7 @@ const styles = {
     borderRadius: '8px',
     padding: '10px',
     zIndex: 1000,
+    minWidth: '220px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
   },
   newItem: {
@@ -752,5 +779,33 @@ const styles = {
   },
   nameMatchPowerGlow: {
     backgroundColor: 'rgba(128, 255, 0, 0.8)',
+  },
+  emptySlotTooltipHeader: {
+    marginBottom: '8px',
+  },
+  emptySlotTooltipTitle: {
+    color: '#d0c98d',
+    fontSize: '0.85rem',
+    fontWeight: 'bold',
+  },
+  emptySlotTooltipDivider: {
+    height: '1px',
+    backgroundColor: '#d7c529',
+    opacity: 0.2,
+    margin: '8px 0',
+  },
+  emptySlotTooltipDamageContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    padding: '6px',
+    borderRadius: '4px',
+    border: '1px solid',
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    borderColor: 'rgba(255, 0, 0, 0.2)',
+  },
+  emptySlotTooltipDamageText: {
+    color: '#ff4444',
+    fontSize: '0.85rem',
   },
 };

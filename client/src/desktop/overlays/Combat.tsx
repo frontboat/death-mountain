@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Adventurer from './Adventurer';
 import Beast from './Beast';
 import InventoryOverlay from './Inventory';
+import SettingsOverlay from './Settings';
 import TipsOverlay from './Tips';
 
 const attackMessage = "Attacking";
@@ -112,6 +113,7 @@ export default function CombatOverlay() {
 
       <InventoryOverlay />
       <TipsOverlay combatStats={combatStats} />
+      <SettingsOverlay />
 
       {/* Combat Buttons */}
       <Box sx={styles.buttonContainer}>
