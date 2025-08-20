@@ -110,12 +110,14 @@ export default function BeastScreen() {
   };
 
   const handleFlee = () => {
+    setShowBeastRewards(false);
     setFleeInProgress(true);
     setCombatLog(fleeMessage);
     executeGameAction({ type: 'flee', untilDeath });
   };
 
   const handleEquipItems = () => {
+    setShowBeastRewards(false);
     setEquipInProgress(true);
     setCombatLog(equipMessage);
     executeGameAction({ type: 'equip' });

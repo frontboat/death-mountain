@@ -383,7 +383,7 @@ export const useSystemCalls = () => {
           calldata: [
             settings.vrf_address,
             settings.name,
-            byteArray.byteArrayFromString("Test Description"),
+            byteArray.byteArrayFromString(`${settings.name} settings`),
             settings.adventurer,
             bag,
             settings.game_seed,
