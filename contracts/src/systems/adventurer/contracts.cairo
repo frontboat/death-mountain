@@ -1,53 +1,72 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType;
-use death_mountain::models::adventurer::adventurer::Adventurer;
+use death_mountain::models::adventurer::adventurer::{Adventurer, AdventurerVerbose};
 use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::adventurer::item::Item;
 use death_mountain::models::adventurer::stats::Stats;
+use death_mountain::models::game::AdventurerEntropy;
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IAdventurerSystems<T> {
+    fn record_item_drop(ref self: T, adventurer_id: u64, item: Item);
     fn generate_starting_stats(self: @T, seed: u64) -> Stats;
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
+    fn get_adventurer_level(self: @T, adventurer_id: u64) -> u8;
+    fn get_adventurer_dungeon(self: @T, adventurer_id: u64) -> ContractAddress;
+    fn get_adventurer_verbose(self: @T, adventurer_id: u64) -> AdventurerVerbose;
+    fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
-    fn get_adventurer_name(self: @T, adventurer_id: u64) -> felt252;
+    fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
     fn remove_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
     fn pack_adventurer(self: @T, adventurer: Adventurer) -> felt252;
     fn get_discovery(
         self: @T, adventurer_level: u8, discovery_type_rnd: u8, amount_rnd1: u8, amount_rnd2: u8,
     ) -> DiscoveryType;
     fn pack_bag(self: @T, bag: Bag) -> felt252;
-    fn get_bag_item(self: @T, bag: Bag, item_id: u8) -> Item;
     fn add_item_to_bag(self: @T, bag: Bag, item: Item) -> Bag;
     fn remove_item_from_bag(self: @T, bag: Bag, item_id: u8) -> (Bag, Item);
     fn add_new_item_to_bag(self: @T, bag: Bag, item_id: u8) -> Bag;
-    fn is_bag_full(self: @T, bag: Bag) -> bool;
     fn bag_contains(self: @T, bag: Bag, item_id: u8) -> (bool, Item);
     fn get_randomness(self: @T, adventurer_xp: u16, seed: u64) -> (u32, u32, u16, u16, u8, u8, u8, u8);
     fn get_battle_randomness(self: @T, xp: u16, action_count: u16, seed: u64) -> (u8, u8, u8, u8);
-    fn get_market(self: @T, seed: u64) -> Array<u8>;
+    fn get_market(self: @T, adventurer_id: u64, seed: u64, market_size: u8) -> Array<u8>;
 }
 
 #[dojo::contract]
 mod adventurer_systems {
-    use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType};
-
-    use death_mountain::constants::world::{DEFAULT_NS};
-    use death_mountain::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
-    use death_mountain::models::adventurer::bag::{Bag, IBag, ImplBag};
-    use death_mountain::models::adventurer::equipment::IEquipment;
+    use death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType;
+    use death_mountain::constants::world::DEFAULT_NS;
+    use death_mountain::models::adventurer::adventurer::{Adventurer, AdventurerVerbose, ImplAdventurer};
+    use death_mountain::models::adventurer::bag::{Bag, BagVerbose, IBag, ImplBag};
+    use death_mountain::models::adventurer::equipment::{EquipmentVerbose, IEquipment, ImplEquipment};
     use death_mountain::models::adventurer::item::Item;
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
-    use death_mountain::models::game::{AdventurerPacked, BagPacked};
+    use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked};
+    use death_mountain::models::game_data::{DroppedItem};
     use death_mountain::models::market::ImplMarket;
+    use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
     use dojo::model::ModelStorage;
-    use dojo::world::WorldStorage;
+    use dojo::world::{WorldStorage, WorldStorageTrait};
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_token::core::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
+    use game_components_token::extensions::minter::interface::{
+        IMinigameTokenMinterDispatcher, IMinigameTokenMinterDispatcherTrait,
+    };
+    use starknet::ContractAddress;
     use super::IAdventurerSystems;
-
-    use tournaments::components::models::game::TokenMetadata;
 
     #[abi(embed_v0)]
     impl AdventurerSystemsImpl of IAdventurerSystems<ContractState> {
+        fn record_item_drop(ref self: ContractState, adventurer_id: u64, item: Item) {
+            let mut world: WorldStorage = self.world(@DEFAULT_NS());
+            let (contract_address, _) = world.dns(@"game_systems").unwrap();
+            assert!(contract_address == starknet::get_caller_address(), "Only game_systems can record item drops");
+            world.write_model(@DroppedItem { adventurer_id, item_id: item.id, item });
+        }
+
         fn generate_starting_stats(self: @ContractState, seed: u64) -> Stats {
             ImplStats::generate_starting_stats(seed)
         }
@@ -75,14 +94,60 @@ mod adventurer_systems {
             _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
+        fn get_adventurer_level(self: @ContractState, adventurer_id: u64) -> u8 {
+            let adventurer: Adventurer = _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id);
+            adventurer.get_level()
+        }
+
+        fn get_adventurer_verbose(self: @ContractState, adventurer_id: u64) -> AdventurerVerbose {
+            let world_storage = self.world(@DEFAULT_NS());
+            let adventurer = _load_adventurer(world_storage, adventurer_id);
+            let bag: Bag = _load_bag(world_storage, adventurer_id);
+            let name: ByteArray = _get_adventurer_name(world_storage, adventurer_id);
+
+            // proceed to create the verbose adventurer
+            let equipment_verbose: EquipmentVerbose = adventurer.equipment.into();
+            let bag_verbose: BagVerbose = bag.into();
+
+            AdventurerVerbose {
+                name,
+                health: adventurer.health,
+                xp: adventurer.xp,
+                level: adventurer.get_level(),
+                gold: adventurer.gold,
+                beast_health: adventurer.beast_health,
+                stat_upgrades_available: adventurer.stat_upgrades_available,
+                stats: adventurer.stats,
+                equipment: equipment_verbose,
+                item_specials_seed: adventurer.item_specials_seed,
+                action_count: adventurer.action_count,
+                bag: bag_verbose,
+            }
+        }
+
+        fn get_adventurer_dungeon(self: @ContractState, adventurer_id: u64) -> ContractAddress {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let token_address = game_token.token_address();
+            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }
+                .token_metadata(adventurer_id);
+            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }
+                .get_minter_address(token_metadata.minted_by);
+            minted_by_address
+        }
+
+        fn get_adventurer_entropy(self: @ContractState, adventurer_id: u64) -> AdventurerEntropy {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            world.read_model(adventurer_id)
+        }
+
         fn get_bag(self: @ContractState, adventurer_id: u64) -> Bag {
             _load_bag(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
-        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> felt252 {
-            let world: WorldStorage = self.world(@DEFAULT_NS());
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.player_name
+        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> ByteArray {
+            _get_adventurer_name(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
         fn remove_stat_boosts(self: @ContractState, mut adventurer: Adventurer, bag: Bag) -> Adventurer {
@@ -111,10 +176,6 @@ mod adventurer_systems {
             ImplBag::pack(bag)
         }
 
-        fn get_bag_item(self: @ContractState, bag: Bag, item_id: u8) -> Item {
-            ImplBag::get_item(bag, item_id)
-        }
-
         fn add_item_to_bag(self: @ContractState, mut bag: Bag, item: Item) -> Bag {
             ImplBag::add_item(ref bag, item);
             bag
@@ -130,10 +191,6 @@ mod adventurer_systems {
             bag
         }
 
-        fn is_bag_full(self: @ContractState, bag: Bag) -> bool {
-            ImplBag::is_full(bag)
-        }
-
         fn bag_contains(self: @ContractState, bag: Bag, item_id: u8) -> (bool, Item) {
             ImplBag::contains(bag, item_id)
         }
@@ -146,9 +203,8 @@ mod adventurer_systems {
             ImplAdventurer::get_battle_randomness(xp, action_count, seed)
         }
 
-        fn get_market(self: @ContractState, seed: u64) -> Array<u8> {
-            let market_size = ImplMarket::get_market_size();
-            ImplMarket::get_available_items(seed, market_size)
+        fn get_market(self: @ContractState, adventurer_id: u64, seed: u64, market_size: u8) -> Array<u8> {
+            ImplMarket::get_available_items(adventurer_id, seed, market_size)
         }
     }
 
@@ -173,6 +229,13 @@ mod adventurer_systems {
     fn _load_bag(world: WorldStorage, adventurer_id: u64) -> Bag {
         let bag_packed: BagPacked = world.read_model(adventurer_id);
         ImplBag::unpack(bag_packed.packed)
+    }
+
+    fn _get_adventurer_name(world: WorldStorage, adventurer_id: u64) -> ByteArray {
+        let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
+        let game_token = IGameTokenSystemsDispatcher { contract_address: game_token_address };
+        let player_name = game_token.player_name(adventurer_id);
+        player_name
     }
 
     fn _get_stat_boosts(adventurer: Adventurer) -> Stats {

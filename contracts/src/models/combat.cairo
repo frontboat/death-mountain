@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use core::num::traits::Sqrt;
 use core::panic_with_felt252;
 use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type, WeaponEffectiveness};
@@ -476,6 +478,26 @@ pub impl ImplCombat of ICombat {
             let scaled_chance: u16 = (adventurer_level.into() * rnd.into()) / 255;
             relevant_stat.into() > scaled_chance
         }
+    }
+
+    fn ability_based_damage_reduction(adventurer_level: u8, relevant_stat: u8) -> u8 {
+        const SCALE: u128 = 1_000_000;
+
+        let mut ratio = SCALE * relevant_stat.into() / adventurer_level.into();
+        if ratio > SCALE {
+            ratio = SCALE;
+        }
+
+        let r2 = ratio * ratio / SCALE;
+        let r3 = r2 * ratio / SCALE;
+        let smooth = 3 * r2 - 2 * r3;
+
+        (100 * smooth / SCALE).try_into().unwrap()
+    }
+
+    fn apply_damage_reduction(damage: u16, damage_reduction: u8) -> u16 {
+        let updated_damage: u32 = damage.into() * (100 - damage_reduction).into() / 100;
+        updated_damage.try_into().unwrap()
     }
 }
 
@@ -1404,5 +1426,36 @@ mod tests {
             ImplCombat::ability_based_avoid_threat(adventurer_level, relevant_stat, rnd) == true,
             'Should avoid, middle ground',
         );
+    }
+
+    #[test]
+    fn test_apply_damage_reduction_edge_cases() {
+        // Test case 1: Minimum damage (0) with minimum damage reduction (0)
+        let result = ImplCombat::apply_damage_reduction(0, 0);
+        assert!(result == 0, "Damage 0 with 0% reduction should be 0");
+
+        // Test case 2: Minimum damage (0) with maximum damage reduction (100)
+        let result = ImplCombat::apply_damage_reduction(0, 100);
+        assert!(result == 0, "Damage 0 with 100% reduction should be 0");
+
+        // Test case 3: Maximum damage (65535) with minimum damage reduction (0)
+        let result = ImplCombat::apply_damage_reduction(65535, 0);
+        assert!(result == 65535, "Damage 65535 with 0% reduction should be 65535");
+
+        // Test case 4: Maximum damage (65535) with maximum damage reduction (100)
+        let result = ImplCombat::apply_damage_reduction(65535, 100);
+        assert!(result == 0, "Damage 65535 with 100% reduction should be 0");
+
+        // Test case 5: Medium damage with 50% reduction
+        let result = ImplCombat::apply_damage_reduction(100, 50);
+        assert!(result == 50, "Damage 100 with 50% reduction should be 50");
+
+        // Test case 6: Medium damage with 25% reduction
+        let result = ImplCombat::apply_damage_reduction(100, 25);
+        assert!(result == 75, "Damage 100 with 25% reduction should be 75");
+
+        // Test case 7: Medium damage with 75% reduction
+        let result = ImplCombat::apply_damage_reduction(100, 75);
+        assert!(result == 25, "Damage 100 with 75% reduction should be 25");
     }
 }

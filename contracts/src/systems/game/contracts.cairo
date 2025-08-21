@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use death_mountain::models::adventurer::stats::Stats;
 use death_mountain::models::market::ItemPurchase;
 
@@ -24,61 +26,96 @@ mod game_systems {
         ITEM_MAX_GREATNESS, ITEM_XP_MULTIPLIER_BEASTS, ITEM_XP_MULTIPLIER_OBSTACLES, MAX_GREATNESS_STAT_BONUS,
         POTION_HEALTH_AMOUNT, STARTING_HEALTH, XP_FOR_DISCOVERIES,
     };
+    use death_mountain::constants::beast::BeastSettings::BEAST_SPECIAL_NAME_LEVEL_UNLOCK;
     use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
     use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
     use death_mountain::constants::game::{MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID, STARTER_BEAST_ATTACK_DAMAGE, messages};
-    use death_mountain::constants::loot::{SUFFIX_UNLOCK_GREATNESS};
-    use death_mountain::constants::world::{DEFAULT_NS};
-
+    use death_mountain::constants::loot::SUFFIX_UNLOCK_GREATNESS;
+    use death_mountain::constants::world::DEFAULT_NS;
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
     use death_mountain::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
-    use death_mountain::models::adventurer::bag::{Bag};
-    use death_mountain::models::adventurer::equipment::{ImplEquipment};
+    use death_mountain::models::adventurer::bag::{Bag, ImplBag};
+    use death_mountain::models::adventurer::equipment::ImplEquipment;
     use death_mountain::models::adventurer::item::{ImplItem, Item};
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
-    use death_mountain::models::beast::{Beast, IBeast};
+    use death_mountain::models::beast::{Beast, IBeast, ImplBeast};
     use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
-    use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked, GameSettings};
     use death_mountain::models::game::{
-        AttackEvent, BeastEvent, BuyItemsEvent, DefeatedBeastEvent, DiscoveryEvent, FledBeastEvent, GameEvent,
-        GameEventDetails, ItemEvent, LevelUpEvent, MarketItemsEvent, ObstacleEvent, StatUpgradeEvent,
+        AdventurerEntropy, AdventurerPacked, AttackEvent, BagPacked, BeastEvent, BuyItemsEvent, DefeatedBeastEvent,
+        DiscoveryEvent, FledBeastEvent, GameEvent, GameEventDetails, GameSettings, ItemEvent, LevelUpEvent,
+        MarketItemsEvent, ObstacleEvent, StatUpgradeEvent, StatsMode,
     };
     use death_mountain::models::market::{ImplMarket, ItemPurchase};
     use death_mountain::models::obstacle::{IObstacle, ImplObstacle};
-    use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
-    use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait};
-    use death_mountain::utils::cartridge::VRFImpl;
-
+    use death_mountain::systems::adventurer::contracts::IAdventurerSystemsDispatcherTrait;
+    use death_mountain::systems::beast::contracts::IBeastSystemsDispatcherTrait;
+    use death_mountain::systems::loot::contracts::ILootSystemsDispatcherTrait;
+    use death_mountain::systems::settings::contracts::{ISettingsSystemsDispatcher, ISettingsSystemsDispatcherTrait};
+    use death_mountain::utils::vrf::VRFImpl;
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_minigame::libs::{assert_token_ownership, post_action, pre_action};
     use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
-    use starknet::{get_tx_info};
+    use starknet::{ContractAddress, get_tx_info};
     use super::VRF_ENABLED;
-    use tournaments::components::libs::lifecycle::{LifecycleAssertionsImpl, LifecycleAssertionsTrait};
-    use tournaments::components::models::game::TokenMetadata;
+
+    // ------------------------------------------ //
+    // ------------ Helper Functions ------------ //
+    // ------------------------------------------ //
+
+    fn _init_game_context(world: WorldStorage) -> GameLibs {
+        ImplGameLibs::new(world)
+    }
+
+    fn _emit_lvl_events(
+        ref world: WorldStorage,
+        adventurer_id: u64,
+        action_count: u16,
+        level: u8,
+        market_seed: u64,
+        game_libs: GameLibs,
+        market_size: u8,
+    ) {
+        _emit_game_event(ref world, adventurer_id, action_count, GameEventDetails::level_up(LevelUpEvent { level }));
+        _emit_game_event(
+            ref world,
+            adventurer_id,
+            action_count,
+            GameEventDetails::market_items(
+                MarketItemsEvent {
+                    items: game_libs.adventurer.get_market(adventurer_id, market_seed, market_size).span(),
+                },
+            ),
+        );
+    }
+
+    fn _emit_events(
+        ref world: WorldStorage, adventurer_id: u64, action_count: u16, mut game_events: Array<GameEventDetails>,
+    ) {
+        while (game_events.len() > 0) {
+            let event = game_events.pop_front().unwrap();
+            _emit_game_event(ref world, adventurer_id, action_count, event);
+        }
+    }
 
     // ------------------------------------------ //
     // ------------ Impl ------------------------ //
     // ------------------------------------------ //
     #[abi(embed_v0)]
     impl GameSystemsImpl of super::IGameSystems<ContractState> {
-        /// @title Start Game
-        ///
-        /// @notice Starts a new game
-        /// @dev Starts a new game with the provided weapon.
         fn start_game(ref self: ContractState, adventurer_id: u64, weapon: u8) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            _validate_start_conditions(world, adventurer_id, @token_metadata);
+            let token_address = _get_token_address(world);
+            assert_token_ownership(token_address, adventurer_id);
+            pre_action(token_address, adventurer_id);
 
-            // get game libaries
+            _assert_game_not_started(world, adventurer_id);
+
             let game_libs = ImplGameLibs::new(world);
 
-            // get game settings
             let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
             // assert provided weapon
@@ -108,30 +145,32 @@ mod game_systems {
                     ),
                 );
 
-                _save_beast_seed(ref world, adventurer_id, adventurer_id);
-                _save_adventurer_no_boosts(ref world, ref adventurer, adventurer_id, game_libs);
+                _save_seed(ref world, adventurer_id, 0, adventurer_id);
+                _emit_game_event(
+                    ref world, adventurer_id, adventurer.action_count, GameEventDetails::adventurer(adventurer),
+                );
+                let packed = game_libs.adventurer.pack_adventurer(adventurer);
+                world.write_model(@AdventurerPacked { adventurer_id, packed });
             } else {
                 let mut adventurer = game_settings.adventurer;
                 adventurer.increment_action_count();
 
-                // get random seed
                 let (beast_seed, market_seed) = _get_random_seed(
-                    world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                    adventurer_id,
+                    adventurer.xp,
+                    game_settings.game_seed,
+                    game_settings.game_seed_until_xp,
+                    game_settings.vrf_address,
                 );
 
-                _emit_game_event(
+                _emit_lvl_events(
                     ref world,
                     adventurer_id,
                     adventurer.action_count,
-                    GameEventDetails::level_up(LevelUpEvent { level: adventurer.get_level() }),
-                );
-                _emit_game_event(
-                    ref world,
-                    adventurer_id,
-                    adventurer.action_count,
-                    GameEventDetails::market_items(
-                        MarketItemsEvent { items: game_libs.adventurer.get_market(market_seed).span() },
-                    ),
+                    adventurer.get_level(),
+                    market_seed,
+                    game_libs,
+                    game_settings.market_size,
                 );
 
                 if game_settings.in_battle {
@@ -139,7 +178,7 @@ mod game_systems {
                     adventurer.beast_health = beast.starting_health;
 
                     // save seed to get correct beast
-                    _save_beast_seed(ref world, adventurer_id, beast_seed);
+                    _save_seed(ref world, adventurer_id, 0, beast_seed);
 
                     // emit beast event
                     _emit_game_event(
@@ -158,106 +197,79 @@ mod game_systems {
                     );
                 }
 
-                _save_market_seed(ref world, adventurer_id, market_seed);
+                _save_seed(ref world, adventurer_id, market_seed, 0);
                 _save_bag(ref world, adventurer_id, adventurer.action_count, game_settings.bag, game_libs);
                 _save_adventurer(ref world, ref adventurer, game_settings.bag, adventurer_id, game_libs);
             }
+            post_action(token_address, adventurer_id)
         }
 
-        /// @title Explore Function
-        ///
-        /// @notice Allows an adventurer to explore
-        ///
-        /// @param adventurer_id A u256 representing the ID of the adventurer.
-        /// @param till_beast A boolean flag indicating if the exploration continues until
-        /// encountering a beast.
         fn explore(ref self: ContractState, adventurer_id: u64, till_beast: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            _assert_token_ownership(world, adventurer_id);
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
+            let token_address = _get_token_address(world);
+            assert_token_ownership(token_address, adventurer_id);
+            pre_action(token_address, adventurer_id);
 
-            // get game libaries
-            let game_libs = ImplGameLibs::new(world);
-
-            // load player assets
+            let game_libs = _init_game_context(world);
             let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
-
-            // use an immutable adventurer for assertions
-            let immutable_adventurer = adventurer.clone();
-
-            // assert action is valid
-            _assert_not_dead(immutable_adventurer);
-            _assert_no_stat_upgrades_available(immutable_adventurer);
-            _assert_not_in_battle(immutable_adventurer);
-
-            // get game settings
+            let orig_adv = adventurer.clone();
+            _assert_not_dead(orig_adv);
+            assert(orig_adv.stat_upgrades_available == 0, messages::STAT_UPGRADES_AVAILABLE);
+            _assert_not_in_battle(orig_adv);
             let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
-
-            // get random seed
             let (explore_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                adventurer_id,
+                adventurer.xp,
+                game_settings.game_seed,
+                game_settings.game_seed_until_xp,
+                game_settings.vrf_address,
             );
 
             // go explore
-            _explore(ref world, ref adventurer, ref bag, adventurer_id, explore_seed, till_beast, game_libs);
+            _explore(
+                ref world, ref adventurer, ref bag, adventurer_id, explore_seed, till_beast, game_libs, game_settings,
+            );
 
             if bag.mutated {
                 _save_bag(ref world, adventurer_id, adventurer.action_count, bag, game_libs);
             }
 
-            // rotate market seed if level up
-            if (immutable_adventurer.get_level() < adventurer.get_level()) {
-                _save_market_seed(ref world, adventurer_id, market_seed);
-                _emit_game_event(
+            if (orig_adv.get_level() < adventurer.get_level()) {
+                _save_seed(ref world, adventurer_id, market_seed, 0);
+                _emit_lvl_events(
                     ref world,
                     adventurer_id,
                     adventurer.action_count,
-                    GameEventDetails::level_up(LevelUpEvent { level: adventurer.get_level() }),
-                );
-                _emit_game_event(
-                    ref world,
-                    adventurer_id,
-                    adventurer.action_count,
-                    GameEventDetails::market_items(
-                        MarketItemsEvent { items: game_libs.adventurer.get_market(market_seed).span() },
-                    ),
+                    adventurer.get_level(),
+                    market_seed,
+                    game_libs,
+                    game_settings.market_size,
                 );
             }
 
-            // save state
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
+
+            post_action(token_address, adventurer_id);
         }
 
-        /// @title Attack Function
-        ///
-        /// @notice Allows an adventurer to attack a beast
-        ///
-        /// @param adventurer_id A u256 representing the ID of the adventurer.
-        /// @param to_the_death A boolean flag indicating if the attack should continue until either
-        /// the adventurer or the beast is defeated.
         fn attack(ref self: ContractState, adventurer_id: u64, to_the_death: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            _assert_token_ownership(world, adventurer_id);
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
+            let token_address = _get_token_address(world);
+            assert_token_ownership(token_address, adventurer_id);
+            pre_action(token_address, adventurer_id);
 
-            // get game libaries
-            let game_libs = ImplGameLibs::new(world);
+            let game_libs = _init_game_context(world);
 
-            // load player assets
             let (mut adventurer, bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
 
-            // use an immutable adventurer for assertions
-            let immutable_adventurer = adventurer.clone();
+            let orig_adv = adventurer.clone();
 
-            // assert action is valid
-            _assert_not_dead(immutable_adventurer);
-            _assert_in_battle(immutable_adventurer);
+            _assert_not_dead(orig_adv);
+            _assert_in_battle(orig_adv);
 
             // get weapon specials
             let weapon_specials = game_libs
@@ -269,7 +281,7 @@ mod game_systems {
                 );
 
             // get previous entropy to fetch correct beast
-            let adventurer_entropy = _load_adventurer_entropy(world, adventurer_id);
+            let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
             // get beast
             let (beast, beast_seed, beast_level_rnd) = _get_beast(
@@ -285,15 +297,18 @@ mod game_systems {
                 specials: weapon_specials,
             };
 
-            // get game settings
             let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
             let (level_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                adventurer_id,
+                adventurer.xp,
+                game_settings.game_seed,
+                game_settings.game_seed_until_xp,
+                game_settings.vrf_address,
             );
 
             let mut game_events: Array<GameEventDetails> = array![];
-            let mut battle_count = 0;
+            let mut battle_count = adventurer.action_count;
             _attack(
                 ref adventurer,
                 ref game_events,
@@ -305,103 +320,68 @@ mod game_systems {
                 to_the_death,
                 beast_level_rnd,
                 game_libs,
+                game_settings,
+                adventurer_id,
             );
 
-            // emit events
-            let mut event_count = 0;
-            while (game_events.len() > 0) {
-                let event = game_events.pop_front().unwrap();
-                match event {
-                    GameEventDetails::defeated_beast(event) => {
-                        _emit_game_event(
-                            ref world, adventurer_id, adventurer.action_count, GameEventDetails::defeated_beast(event),
-                        );
-                    },
-                    GameEventDetails::attack(event) => {
-                        _emit_game_event(
-                            ref world, adventurer_id, adventurer.action_count, GameEventDetails::attack(event),
-                        );
-                    },
-                    GameEventDetails::beast_attack(event) => {
-                        _emit_game_event(
-                            ref world, adventurer_id, adventurer.action_count, GameEventDetails::beast_attack(event),
-                        );
-                    },
-                    _ => {},
-                }
-                event_count += 1;
-            };
+            _emit_events(ref world, adventurer_id, adventurer.action_count, game_events);
 
-            // rotate market seed if level up
-            if (immutable_adventurer.get_level() < adventurer.get_level()) {
-                _save_market_seed(ref world, adventurer_id, market_seed);
-                _emit_game_event(
+            if (orig_adv.get_level() < adventurer.get_level()) {
+                _save_seed(ref world, adventurer_id, market_seed, 0);
+                _emit_lvl_events(
                     ref world,
                     adventurer_id,
                     adventurer.action_count,
-                    GameEventDetails::level_up(LevelUpEvent { level: adventurer.get_level() }),
-                );
-                _emit_game_event(
-                    ref world,
-                    adventurer_id,
-                    adventurer.action_count,
-                    GameEventDetails::market_items(
-                        MarketItemsEvent { items: game_libs.adventurer.get_market(market_seed).span() },
-                    ),
+                    adventurer.get_level(),
+                    market_seed,
+                    game_libs,
+                    game_settings.market_size,
                 );
             }
 
-            // save state
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
+
+            post_action(token_address, adventurer_id);
         }
 
-        /// @title Flee Function
-        ///
-        /// @notice Allows an adventurer to flee from a beast
-        ///
-        /// @param adventurer_id A u256 representing the unique ID of the adventurer.
-        /// @param to_the_death A boolean flag indicating if the flee attempt should continue until
-        /// either the adventurer escapes or is defeated.
         fn flee(ref self: ContractState, adventurer_id: u64, to_the_death: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            _assert_token_ownership(world, adventurer_id);
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
+            let token_address = _get_token_address(world);
+            assert_token_ownership(token_address, adventurer_id);
+            pre_action(token_address, adventurer_id);
 
-            // get game libaries
-            let game_libs = ImplGameLibs::new(world);
+            let game_libs = _init_game_context(world);
 
-            // load player assets
             let (mut adventurer, bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
 
-            // use an immutable adventurer for assertions
-            let immutable_adventurer = adventurer.clone();
+            let orig_adv = adventurer.clone();
 
-            // assert action is valid
-            _assert_not_dead(immutable_adventurer);
-            _assert_in_battle(immutable_adventurer);
-            _assert_not_starter_beast(immutable_adventurer, messages::CANT_FLEE_STARTER_BEAST);
-            _assert_dexterity_not_zero(immutable_adventurer);
+            _assert_not_dead(orig_adv);
+            _assert_in_battle(orig_adv);
+            _assert_not_starter_beast(orig_adv, messages::CANT_FLEE_STARTER_BEAST);
+            assert(orig_adv.stats.dexterity != 0, messages::ZERO_DEXTERITY);
 
             // get previous entropy to fetch correct beast
-            let adventurer_entropy = _load_adventurer_entropy(world, adventurer_id);
+            let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
             // get beast
             let (beast, beast_seed, _) = _get_beast(ref adventurer, adventurer_entropy.beast_seed, game_libs);
 
-            // get game settings
             let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
-            // get random seed
             let (flee_seed, market_seed) = _get_random_seed(
-                world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                adventurer_id,
+                adventurer.xp,
+                game_settings.game_seed,
+                game_settings.game_seed_until_xp,
+                game_settings.vrf_address,
             );
 
             // attempt to flee
             let mut game_events: Array<GameEventDetails> = array![];
-            let mut battle_count = 0;
+            let mut battle_count = adventurer.action_count;
             _flee(
                 ref adventurer,
                 ref game_events,
@@ -411,76 +391,42 @@ mod game_systems {
                 beast,
                 to_the_death,
                 game_libs,
+                game_settings,
+                adventurer_id,
             );
 
-            // emit events
-            while (game_events.len() > 0) {
-                let event = game_events.pop_front().unwrap();
-                match event {
-                    GameEventDetails::fled_beast(event) => {
-                        _emit_game_event(
-                            ref world, adventurer_id, adventurer.action_count, GameEventDetails::fled_beast(event),
-                        );
-                    },
-                    GameEventDetails::flee(event) => {
-                        _emit_game_event(
-                            ref world, adventurer_id, adventurer.action_count, GameEventDetails::flee(event),
-                        );
-                    },
-                    GameEventDetails::beast_attack(event) => {
-                        _emit_game_event(
-                            ref world, adventurer_id, adventurer.action_count, GameEventDetails::beast_attack(event),
-                        );
-                    },
-                    _ => {},
-                }
-            };
+            _emit_events(ref world, adventurer_id, adventurer.action_count, game_events);
 
-            // rotate market seed if level up
-            if (immutable_adventurer.get_level() < adventurer.get_level()) {
-                _save_market_seed(ref world, adventurer_id, market_seed);
-                _emit_game_event(
+            if (orig_adv.get_level() < adventurer.get_level()) {
+                _save_seed(ref world, adventurer_id, market_seed, 0);
+                _emit_lvl_events(
                     ref world,
                     adventurer_id,
                     adventurer.action_count,
-                    GameEventDetails::level_up(LevelUpEvent { level: adventurer.get_level() }),
-                );
-                _emit_game_event(
-                    ref world,
-                    adventurer_id,
-                    adventurer.action_count,
-                    GameEventDetails::market_items(
-                        MarketItemsEvent { items: game_libs.adventurer.get_market(market_seed).span() },
-                    ),
+                    adventurer.get_level(),
+                    market_seed,
+                    game_libs,
+                    game_settings.market_size,
                 );
             }
 
-            // save state
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
+
+            post_action(token_address, adventurer_id);
         }
 
-        /// @title Equip Function
-        ///
-        /// @notice Allows an adventurer to equip items from their bag
-        /// @player Calling this during battle will result in a beast counter-attack
-        ///
-        /// @param adventurer_id A u256 representing the unique ID of the adventurer.
-        /// @param items A u8 array representing the item IDs to equip.
         fn equip(ref self: ContractState, adventurer_id: u64, items: Array<u8>) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            _assert_token_ownership(world, adventurer_id);
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
+            let token_address = _get_token_address(world);
+            assert_token_ownership(token_address, adventurer_id);
+            pre_action(token_address, adventurer_id);
 
-            // get game libaries
-            let game_libs = ImplGameLibs::new(world);
+            let game_libs = _init_game_context(world);
 
-            // load player assets
             let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
 
-            // assert action is valid
             _assert_not_dead(adventurer);
             assert(items.len() != 0, messages::NO_ITEMS);
             assert(items.len() <= 8, messages::TOO_MANY_ITEMS);
@@ -491,17 +437,19 @@ mod game_systems {
             // if the adventurer is equipping an item during battle, the beast will counter attack
             if (adventurer.in_battle()) {
                 // get previous entropy to fetch correct beast
-                let adventurer_entropy = _load_adventurer_entropy(world, adventurer_id);
+                let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
                 // get beast
                 let (beast, beast_seed, _) = _get_beast(ref adventurer, adventurer_entropy.beast_seed, game_libs);
 
-                // get game settings
                 let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
-                // get random seed
                 let (seed, _) = _get_random_seed(
-                    world, adventurer_id, adventurer.xp, game_settings.game_seed, game_settings.game_seed_until_xp,
+                    adventurer_id,
+                    adventurer.xp,
+                    game_settings.game_seed,
+                    game_settings.game_seed_until_xp,
+                    game_settings.vrf_address,
                 );
 
                 // get randomness for combat
@@ -511,7 +459,15 @@ mod game_systems {
 
                 // process beast attack
                 let beast_attack_details = _beast_attack(
-                    ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs,
+                    ref adventurer,
+                    beast,
+                    beast_seed,
+                    beast_crit_hit_rnd,
+                    attack_location_rnd,
+                    false,
+                    game_libs,
+                    game_settings,
+                    adventurer_id,
                 );
 
                 _emit_game_event(
@@ -529,43 +485,37 @@ mod game_systems {
                 GameEventDetails::equip(ItemEvent { items: items.span() }),
             );
 
-            // save state
             // if the bag was mutated, pack and save it
             if bag.mutated {
                 _save_bag(ref world, adventurer_id, adventurer.action_count, bag, game_libs);
             }
 
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
+
+            post_action(token_address, adventurer_id);
         }
 
-        /// @title Drop Function
-        ///
-        /// @notice Allows an adventurer to drop equpped items or items from their bag
-        ///
-        /// @param adventurer_id A u256 representing the unique ID of the adventurer.
-        /// @param items A u8 Array representing the IDs of the items to drop.
         fn drop(ref self: ContractState, adventurer_id: u64, items: Array<u8>) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            _assert_token_ownership(world, adventurer_id);
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
+            let token_address = _get_token_address(world);
+            assert_token_ownership(token_address, adventurer_id);
+            pre_action(token_address, adventurer_id);
 
-            // get game libaries
-            let game_libs = ImplGameLibs::new(world);
+            let game_libs = _init_game_context(world);
 
-            // load player assets
             let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
 
             // assert action is valid (ownership of item is handled in internal function when we
             // iterate over items)
             _assert_not_dead(adventurer);
+            _assert_not_in_battle(adventurer);
             assert(items.len() != 0, messages::NO_ITEMS);
             _assert_not_starter_beast(adventurer, messages::CANT_DROP_DURING_STARTER_BEAST);
 
             // drop items
-            _drop(ref adventurer, ref bag, items.clone(), game_libs);
+            _drop(ref adventurer, ref bag, items.clone(), game_libs, adventurer_id);
 
             _emit_game_event(
                 ref world,
@@ -574,50 +524,58 @@ mod game_systems {
                 GameEventDetails::drop(ItemEvent { items: items.span() }),
             );
 
-            // save state
             // if the bag was mutated, save it
             if bag.mutated {
                 _save_bag(ref world, adventurer_id, adventurer.action_count, bag, game_libs);
             }
 
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
+
+            post_action(token_address, adventurer_id);
         }
 
-        /// @title Buy Items Function
-        /// @notice Allows an adventurer to buy items from the market
-        /// @param adventurer_id A u256 representing the unique ID of the adventurer.
-        /// @param potions A u8 representing the number of potions to purchase
-        /// @param items An array of ItemPurchase detailing the items the adventurer wishes to purchase
         fn buy_items(ref self: ContractState, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            _assert_token_ownership(world, adventurer_id);
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
+            let token_address = _get_token_address(world);
+            assert_token_ownership(token_address, adventurer_id);
+            pre_action(token_address, adventurer_id);
 
-            // get game libaries
-            let game_libs = ImplGameLibs::new(world);
+            let game_libs = _init_game_context(world);
 
-            // load player assets
             let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
 
-            // assert action is valid
             _assert_not_dead(adventurer);
             _assert_not_in_battle(adventurer);
-            _assert_not_selecting_stat_upgrades(adventurer.stat_upgrades_available);
+            assert(adventurer.stat_upgrades_available == 0, messages::MARKET_CLOSED);
+
+            let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
             // if the player is buying items, process purchases
-            let adventurer_entropy = _load_adventurer_entropy(world, adventurer_id);
+            let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
             if (items.len() != 0) {
-                _buy_items(adventurer_entropy.market_seed, ref adventurer, ref bag, items.clone(), game_libs);
+                _buy_items(
+                    adventurer_id,
+                    adventurer_entropy.market_seed,
+                    ref adventurer,
+                    ref bag,
+                    items.clone(),
+                    game_libs,
+                    game_settings.market_size,
+                );
             }
 
             // if the player is buying potions as part of the upgrade, process purchase
             // @dev process potion purchase after items in case item purchases changes item stat
             // boosts
             if potions != 0 {
-                _buy_potions(ref adventurer, potions);
+                let cost = adventurer.charisma_adjusted_potion_price() * potions.into();
+                let health = POTION_HEALTH_AMOUNT.into() * potions.into();
+                _assert_has_enough_gold(adventurer, cost);
+                _assert_not_buying_excess_health(adventurer, health);
+                adventurer.deduct_gold(cost);
+                adventurer.increase_health(health);
             }
 
             if bag.mutated {
@@ -632,39 +590,27 @@ mod game_systems {
             );
 
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
+
+            post_action(token_address, adventurer_id);
         }
 
-        /// @title Upgrade Function
-        ///
-        /// @notice Allows an adventurer to upgrade their stats, purchase potions, and buy new
-        /// items.
-        ///
-        /// @param adventurer_id A u256 representing the unique ID of the adventurer.
-        /// @param potions A u8 representing the number of potions to purchase
-        /// @param stat_upgrades A Stats struct detailing the upgrades the adventurer wants to apply
-        /// to their stats.
-        /// @param items An array of ItemPurchase detailing the items the adventurer wishes to
-        /// purchase during the upgrade.
         fn select_stat_upgrades(ref self: ContractState, adventurer_id: u64, stat_upgrades: Stats) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            _assert_token_ownership(world, adventurer_id);
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
+            let token_address = _get_token_address(world);
+            assert_token_ownership(token_address, adventurer_id);
+            pre_action(token_address, adventurer_id);
 
-            // get game libaries
-            let game_libs = ImplGameLibs::new(world);
+            let game_libs = _init_game_context(world);
 
-            // load player assets
             let (mut adventurer, bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
 
-            let immutable_adventurer = adventurer.clone();
+            let orig_adv = adventurer.clone();
 
-            // assert action is valid
-            _assert_not_dead(immutable_adventurer);
-            _assert_not_in_battle(immutable_adventurer);
-            _assert_valid_stat_selection(immutable_adventurer, stat_upgrades);
+            _assert_not_dead(orig_adv);
+            _assert_not_in_battle(orig_adv);
+            _assert_valid_stat_selection(orig_adv, stat_upgrades);
 
             // reset stat upgrades available
             adventurer.stat_upgrades_available = 0;
@@ -686,13 +632,11 @@ mod game_systems {
             );
 
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
+
+            post_action(token_address, adventurer_id);
         }
     }
 
-    /// @title Reveal Starting Stats
-    /// @notice Reveals and applies starting stats to the adventurer.
-    /// @param adventurer A reference to the Adventurer object.
-    /// @param seed A u64 representing the seed for the adventurer.
     fn reveal_starting_stats(ref adventurer: Adventurer, seed: u64, game_libs: GameLibs) {
         // reveal and apply starting stats
         adventurer.stats = game_libs.adventurer.generate_starting_stats(seed);
@@ -701,13 +645,6 @@ mod game_systems {
         adventurer.health += adventurer.stats.get_max_health() - STARTING_HEALTH.into();
     }
 
-    /// @title Get Beast
-    /// @notice Gets a beast based on the adventurer's xp and beast seed.
-    /// @dev This function is called when a beast is encountered.
-    /// @param adventurer A reference to the adventurer.
-    /// @param beast_seed A u64 representing the seed of the beast.
-    /// @param game_libs A reference to the game libraries.
-    /// @return A tuple containing the beast and the beast seed.
     fn _get_beast(ref adventurer: Adventurer, beast_seed: u64, game_libs: GameLibs) -> (Beast, u32, u16) {
         // generate xp based randomness seeds
         let (beast_seed, _, beast_health_rnd, beast_level_rnd, beast_specials1_rnd, beast_specials2_rnd, _, _) =
@@ -731,24 +668,14 @@ mod game_systems {
         (beast, beast_seed, beast_level_rnd)
     }
 
-    /// @title Process Beast Death
-    /// @notice Processes the death of a beast and emits an event.
-    /// @dev This function is called when a beast is slain.
-    /// @param adventurer A reference to the adventurer.
-    /// @param beast A reference to the Beast object.
-    /// @param beast_seed A u128 representing the seed of the beast.
-    /// @param damage_dealt A u16 representing the damage dealt to the beast.
-    /// @param critical_hit A boolean representing whether the attack was a critical hit.
     fn _process_beast_death(
         ref adventurer: Adventurer,
         ref game_events: Array<GameEventDetails>,
         beast: Beast,
-        beast_seed: u32,
-        damage_dealt: u16,
-        critical_hit: bool,
         item_specials_rnd: u16,
         level_seed: u64,
         game_libs: GameLibs,
+        adventurer_id: u64,
     ) {
         // zero out beast health
         adventurer.beast_health = 0;
@@ -780,57 +707,30 @@ mod game_systems {
                     },
                 ),
             );
-        // // if beast beast level is above collectible threshold
-    // if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() && _network_supports_vrf() {
-    //     // mint beast to owner of the adventurer or controller delegate if set
-    //     _mint_beast(@self, beast, get_caller_address());
-    // }
+
+        // if beast beast level is above collectible threshold
+        if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+            let adventurer_entropy: AdventurerEntropy = game_libs.adventurer.get_adventurer_entropy(adventurer_id);
+            game_libs
+                .beast
+                .add_collectable(
+                    adventurer_entropy.beast_seed,
+                    beast.id,
+                    beast.combat_spec.level,
+                    beast.starting_health,
+                    beast.combat_spec.specials.special2,
+                    beast.combat_spec.specials.special3,
+                    adventurer_id,
+                );
+        }
     }
-
-    /// @title Mint Beast
-    /// @notice Mints a beast and emits an event.
-    /// @dev This function is called when a beast is slain.
-    /// @param self A reference to the ContractState object.
-    /// @param beast A reference to the Beast object.
-    /// @param to_address A ContractAddress representing the address to mint the beast to.
-    // fn _mint_beast(self: @ContractState, beast: Beast, to_address: ContractAddress) {
-    //     let beasts_dispatcher = self._beasts_dispatcher.read();
-
-    //     let is_beast_minted = beasts_dispatcher
-    //         .isMinted(beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3);
-
-    //     let beasts_minter = beasts_dispatcher.getMinter();
-
-    //     if !is_beast_minted && beasts_minter == starknet::get_contract_address() {
-    //         beasts_dispatcher
-    //             .mint(
-    //                 to_address,
-    //                 beast.id,
-    //                 beast.combat_spec.specials.special2,
-    //                 beast.combat_spec.specials.special3,
-    //                 beast.combat_spec.level,
-    //                 beast.starting_health,
-    //             );
-    //     }
-    // }
 
     fn _get_game_settings(world: WorldStorage, game_id: u64) -> GameSettings {
-        let token_metadata: TokenMetadata = world.read_model(game_id);
-        let game_settings: GameSettings = world.read_model(token_metadata.settings_id);
-        game_settings
+        let (settings_systems_address, _) = world.dns(@"settings_systems").unwrap();
+        let settings_systems = ISettingsSystemsDispatcher { contract_address: settings_systems_address };
+        settings_systems.game_settings(game_id)
     }
 
-    /// @title Explore
-    /// @notice Allows the adventurer to explore the world and encounter beasts, obstacles, or
-    /// discoveries.
-    /// @dev This function is called when the adventurer explores the world.
-    /// @param adventurer A reference to the adventurer.
-    /// @param bag A reference to the bag.
-    /// @param adventurer_id A u64 representing the unique ID of the adventurer.
-    /// @param explore_seed A felt252 representing the entropy for the adventurer.
-    /// @param explore_till_beast A bool representing whether to explore until a beast is
-    /// encountered.
-    /// @param game_libs A reference to the game libraries.
     fn _explore(
         ref world: WorldStorage,
         ref adventurer: Adventurer,
@@ -839,6 +739,7 @@ mod game_systems {
         explore_seed: u64,
         explore_till_beast: bool,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) {
         let (rnd1_u32, _, rnd3_u16, rnd4_u16, rnd5_u8, rnd6_u8, rnd7_u8, explore_rnd) = game_libs
             .adventurer
@@ -850,6 +751,7 @@ mod game_systems {
             ExploreResult::Beast(()) => {
                 let (beast, ambush_event) = _beast_encounter(
                     ref adventurer,
+                    adventurer_id,
                     seed: rnd1_u32,
                     health_rnd: rnd3_u16,
                     level_rnd: rnd4_u16,
@@ -859,10 +761,11 @@ mod game_systems {
                     specials1_rnd: rnd5_u8, // use same entropy for crit hit, initial attack location, and beast specials
                     specials2_rnd: rnd6_u8, // to create some fun organic lore for the beast special names
                     game_libs: game_libs,
+                    game_settings: game_settings,
                 );
 
                 // save seed to get correct beast
-                _save_beast_seed(ref world, adventurer_id, explore_seed);
+                _save_seed(ref world, adventurer_id, 0, explore_seed);
 
                 // emit beast event
                 _emit_game_event(
@@ -897,6 +800,7 @@ mod game_systems {
                     dodge_rnd: rnd7_u8,
                     item_specials_rnd: rnd3_u16,
                     game_libs: game_libs,
+                    game_settings: game_settings,
                 );
                 _emit_game_event(
                     ref world, adventurer_id, adventurer.action_count, GameEventDetails::obstacle(obstacle_event),
@@ -920,16 +824,19 @@ mod game_systems {
         // if explore_till_beast is true and adventurer can still explore
         if explore_till_beast && adventurer.can_explore() {
             // Keep exploring
-            _explore(ref world, ref adventurer, ref bag, adventurer_id, explore_seed, explore_till_beast, game_libs);
+            _explore(
+                ref world,
+                ref adventurer,
+                ref bag,
+                adventurer_id,
+                explore_seed,
+                explore_till_beast,
+                game_libs,
+                game_settings,
+            );
         }
     }
 
-    /// @title Process Discovery
-    /// @notice Processes the discovery for the adventurer and emits an event.
-    /// @dev This function is called when the adventurer discovers something.
-    /// @param adventurer A reference to the adventurer.
-    /// @param bag A reference to the bag.
-    /// @param entropy A u128 representing the entropy for the adventurer.
     fn _process_discovery(
         ref adventurer: Adventurer,
         ref bag: Bag,
@@ -957,7 +864,7 @@ mod game_systems {
                 let slot_free = adventurer.equipment.is_slot_free_item_id(item_id, slot);
 
                 // if the bag is full and the slot is not free
-                let inventory_full = game_libs.adventurer.is_bag_full(bag) && slot_free == false;
+                let inventory_full = ImplBag::is_full(bag) && slot_free == false;
 
                 // if item is in adventurers bag, is equipped or inventory is full
                 if item_in_bag || adventurer.equipment.is_equipped(item_id) || inventory_full {
@@ -990,18 +897,9 @@ mod game_systems {
         DiscoveryEvent { discovery_type, xp_reward: XP_FOR_DISCOVERIES.into() }
     }
 
-    /// @title Beast Encounter
-    /// @notice Handles the encounter with a beast and returns the battle details.
-    /// @dev This function is called when the adventurer encounters a beast.
-    /// @param adventurer A reference to the adventurer.
-    /// @param seed A u32 representing the seed for the beast.
-    /// @param beast_health_rnd A u32 representing the random health for the beast.
-    /// @param beast_level_rnd A u32 representing the random level for the beast.
-    /// @param beast_specials_rnd A u32 representing the random specials for the beast.
-    /// @param ambush_rnd A u32 representing the random ambush for the beast.
-    /// @param critical_hit_rnd A u32 representing the random critical hit for the beast.
     fn _beast_encounter(
         ref adventurer: Adventurer,
+        adventurer_id: u64,
         seed: u32,
         health_rnd: u16,
         level_rnd: u16,
@@ -1011,6 +909,7 @@ mod game_systems {
         specials1_rnd: u8,
         specials2_rnd: u8,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) -> (Beast, AttackEvent) {
         let adventurer_level = adventurer.get_level();
 
@@ -1031,24 +930,33 @@ mod game_systems {
         adventurer.beast_health = beast.starting_health;
 
         // check if beast ambushed adventurer
-        let is_ambush = ImplAdventurer::is_ambushed(adventurer_level, adventurer.stats.wisdom, ambush_rnd);
+        let is_ambush = if game_settings.stats_mode == StatsMode::Dodge {
+            ImplAdventurer::is_ambushed(adventurer_level, adventurer.stats.wisdom, ambush_rnd)
+        } else {
+            true
+        };
 
         // if adventurer was ambushed
-        let mut beast_attack_details = _empty_attack_event();
+        let mut beast_attack_details = AttackEvent { damage: 0, location: Slot::None, critical_hit: false };
         if (is_ambush) {
             // process beast attack
             beast_attack_details =
-                _beast_attack(ref adventurer, beast, seed, crit_hit_rnd, dmg_location_rnd, is_ambush, game_libs);
+                _beast_attack(
+                    ref adventurer,
+                    beast,
+                    seed,
+                    crit_hit_rnd,
+                    dmg_location_rnd,
+                    is_ambush,
+                    game_libs,
+                    game_settings,
+                    adventurer_id,
+                );
         }
 
         (beast, beast_attack_details)
     }
 
-    /// @title Obstacle Encounter
-    /// @notice Handles the encounter with an obstacle and returns the battle details.
-    /// @dev This function is called when the adventurer encounters an obstacle.
-    /// @param adventurer A reference to the adventurer.
-    /// @param seed A u32 representing the entropy for the adventurer.
     fn _obstacle_encounter(
         ref adventurer: Adventurer,
         seed: u32,
@@ -1058,6 +966,7 @@ mod game_systems {
         dodge_rnd: u8,
         item_specials_rnd: u16,
         game_libs: GameLibs,
+        game_settings: GameSettings,
     ) -> ObstacleEvent {
         // get adventurer's level
         let adventurer_level = adventurer.get_level();
@@ -1076,7 +985,8 @@ mod game_systems {
         let (combat_result, _) = adventurer.get_obstacle_damage(obstacle, armor, armor_details, crit_hit_rnd);
 
         // pull damage taken out of combat result for easy access
-        let damage_taken = combat_result.total_damage;
+        let mut damage_taken = combat_result.total_damage;
+        damage_taken = ImplCombat::apply_damage_reduction(damage_taken, game_settings.base_damage_reduction);
 
         // get base xp reward for obstacle
         let base_reward = obstacle.get_xp_reward(adventurer_level);
@@ -1085,7 +995,18 @@ mod game_systems {
         let item_xp_reward = base_reward * ITEM_XP_MULTIPLIER_OBSTACLES.into();
 
         // attempt to dodge obstacle
-        let dodged = ImplCombat::ability_based_avoid_threat(adventurer_level, adventurer.stats.intelligence, dodge_rnd);
+        let dodged = if game_settings.stats_mode == StatsMode::Dodge {
+            ImplCombat::ability_based_avoid_threat(adventurer_level, adventurer.stats.intelligence, dodge_rnd)
+        } else {
+            false
+        };
+
+        if (game_settings.stats_mode == StatsMode::Reduction) {
+            let damage_reduction = ImplCombat::ability_based_damage_reduction(
+                adventurer_level, adventurer.stats.intelligence,
+            );
+            damage_taken = ImplCombat::apply_damage_reduction(damage_taken, damage_reduction);
+        }
 
         // create obstacle details for event
         let obstacle_details = ObstacleEvent {
@@ -1098,7 +1019,7 @@ mod game_systems {
         };
 
         // if adventurer did not dodge obstacle
-        if (!dodged) {
+        if (!dodged && damage_taken > 0) {
             // adventurer takes damage
             adventurer.decrease_health(damage_taken);
         }
@@ -1159,13 +1080,6 @@ mod game_systems {
         };
     }
 
-    /// @title Process Item Level Up
-    /// @notice Processes the level up for an item and returns the updated item.
-    /// @dev This function is called when an item levels up.
-    /// @param adventurer A reference to the adventurer.
-    /// @param item A reference to the item.
-    /// @param previous_level A u8 representing the previous level of the item.
-    /// @param new_level A u8 representing the new level of the item.
     fn _process_item_level_up(
         ref adventurer: Adventurer,
         item: Item,
@@ -1226,22 +1140,7 @@ mod game_systems {
         }
     }
 
-    fn _network_supports_vrf() -> bool {
-        let chain_id = get_tx_info().unbox().chain_id;
-        VRF_ENABLED && (chain_id == MAINNET_CHAIN_ID || chain_id == SEPOLIA_CHAIN_ID)
-    }
 
-    /// @notice Executes an adventurer's attack on a beast and manages the consequences of the
-    /// combat @dev This function covers the entire combat process between an adventurer and a
-    /// beast, including generating randomness for combat, handling the aftermath of the attack, and
-    /// any subsequent counter-attacks by the beast.
-    /// @param adventurer The attacking adventurer
-    /// @param weapon_combat_spec The combat specifications of the adventurer's weapon
-    /// @param seed A random value tied to the adventurer to aid in determining certain random
-    /// aspects of the combat @param beast The defending beast
-    /// @param beast_seed The seed associated with the beast
-    /// @param fight_to_the_death Flag to indicate whether the adventurer should continue attacking
-    /// until either they or the beast is defeated
     fn _attack(
         ref adventurer: Adventurer,
         ref game_events: Array<GameEventDetails>,
@@ -1253,6 +1152,8 @@ mod game_systems {
         fight_to_the_death: bool,
         item_specials_seed: u16,
         game_libs: GameLibs,
+        game_settings: GameSettings,
+        adventurer_id: u64,
     ) {
         battle_count = ImplAdventurer::increment_battle_action_count(battle_count);
 
@@ -1280,15 +1181,7 @@ mod game_systems {
         if (combat_result.total_damage >= adventurer.beast_health) {
             // process beast death
             _process_beast_death(
-                ref adventurer,
-                ref game_events,
-                beast,
-                beast_seed,
-                combat_result.total_damage,
-                is_critical_hit,
-                item_specials_seed,
-                level_seed,
-                game_libs,
+                ref adventurer, ref game_events, beast, item_specials_seed, level_seed, game_libs, adventurer_id,
             );
         } else {
             // if beast survived the attack, deduct damage dealt
@@ -1296,7 +1189,15 @@ mod game_systems {
 
             // process beast counter attack
             let _beast_attack_details = _beast_attack(
-                ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs,
+                ref adventurer,
+                beast,
+                beast_seed,
+                beast_crit_hit_rnd,
+                attack_location_rnd,
+                false,
+                game_libs,
+                game_settings,
+                adventurer_id,
             );
 
             game_events.append(GameEventDetails::beast_attack(_beast_attack_details));
@@ -1320,22 +1221,13 @@ mod game_systems {
                     true,
                     item_specials_seed,
                     game_libs,
+                    game_settings,
+                    adventurer_id,
                 );
             }
         }
     }
 
-    /// @title Beast Attack (Internal)
-    /// @notice Handles attacks by a beast on an adventurer
-    /// @dev This function determines a random attack location on the adventurer, retrieves armor
-    /// and specials from that location, processes the beast attack, and deducts the damage from the
-    /// adventurer's health.
-    /// @param adventurer The adventurer being attacked
-    /// @param beast The beast that is attacking
-    /// @param beast_seed The seed associated with the beast
-    /// @param critical_hit_rnd A random value used to determine whether a critical hit was made
-    /// the seed, beast ID, combat specifications of the beast, total damage dealt, whether a
-    /// critical hit was made, and the location of the attack on the adventurer.
     fn _beast_attack(
         ref adventurer: Adventurer,
         beast: Beast,
@@ -1344,6 +1236,8 @@ mod game_systems {
         attack_location_rnd: u8,
         is_ambush: bool,
         game_libs: GameLibs,
+        game_settings: GameSettings,
+        adventurer_id: u64,
     ) -> AttackEvent {
         // beasts attack random location on adventurer
         let attack_location = ImplAdventurer::get_attack_location(attack_location_rnd);
@@ -1358,33 +1252,44 @@ mod game_systems {
         let armor_details = game_libs.loot.get_item(armor.id);
 
         // get critical hit chance
-        let critical_hit_chance = game_libs.beast.get_critical_hit_chance(adventurer.get_level(), is_ambush);
+        let critical_hit_chance = ImplBeast::get_critical_hit_chance(adventurer.get_level(), is_ambush);
 
         // process beast attack
         let (combat_result, _jewlery_armor_bonus) = adventurer
             .defend(beast, armor, armor_specials, armor_details, critical_hit_rnd, critical_hit_chance);
+        let mut damage_taken = combat_result.total_damage;
+
+        // apply base damage reduction to ambush attacks
+        if is_ambush {
+            damage_taken = ImplCombat::apply_damage_reduction(damage_taken, game_settings.base_damage_reduction);
+        }
+
+        if is_ambush && game_settings.stats_mode == StatsMode::Reduction {
+            let damage_reduction = ImplCombat::ability_based_damage_reduction(
+                adventurer.get_level(), adventurer.stats.wisdom,
+            );
+            damage_taken = ImplCombat::apply_damage_reduction(damage_taken, damage_reduction);
+        }
 
         // deduct damage taken from adventurer's health
-        adventurer.decrease_health(combat_result.total_damage);
+        adventurer.decrease_health(damage_taken);
+
+        if adventurer.health == 0 {
+            game_libs
+                .beast
+                .add_kill(
+                    ImplBeast::get_beast_hash(
+                        beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                    ),
+                    adventurer_id,
+                );
+        }
 
         AttackEvent {
-            damage: combat_result.total_damage,
-            location: attack_location,
-            critical_hit: combat_result.critical_hit_bonus > 0,
+            damage: damage_taken, location: attack_location, critical_hit: combat_result.critical_hit_bonus > 0,
         }
     }
 
-    /// @title Flee
-    /// @notice Handles an attempt by the adventurer to flee from a battle with a beast.
-    /// @dev This function is called when the adventurer attempts to flee from a battle with a
-    /// beast.
-    /// @param self A reference to the ContractState object.
-    /// @param adventurer A reference to the adventurer.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @param level_seed A felt252 representing the entropy for the adventurer.
-    /// @param beast_seed A u32 representing the seed for the beast.
-    /// @param beast A reference to the beast that the adventurer is attempting to flee from.
-    /// @param flee_to_the_death A bool representing whether to flee until death.
     fn _flee(
         ref adventurer: Adventurer,
         ref game_events: Array<GameEventDetails>,
@@ -1394,6 +1299,8 @@ mod game_systems {
         beast: Beast,
         flee_to_the_death: bool,
         game_libs: GameLibs,
+        game_settings: GameSettings,
+        adventurer_id: u64,
     ) {
         battle_count = ImplAdventurer::increment_battle_action_count(battle_count);
 
@@ -1403,7 +1310,7 @@ mod game_systems {
             .get_battle_randomness(adventurer.xp, battle_count, flee_seed);
 
         // attempt to flee
-        let fled = game_libs.beast.attempt_flee(adventurer.get_level(), adventurer.stats.dexterity, flee_rnd);
+        let fled = ImplBeast::attempt_flee(adventurer.get_level(), adventurer.stats.dexterity, flee_rnd);
 
         // if adventurer fled
         if (fled) {
@@ -1419,7 +1326,15 @@ mod game_systems {
         } else {
             // if the flee attempt failed, beast counter attacks
             let _beast_attack_details = _beast_attack(
-                ref adventurer, beast, beast_seed, beast_crit_hit_rnd, attack_location_rnd, false, game_libs,
+                ref adventurer,
+                beast,
+                beast_seed,
+                beast_crit_hit_rnd,
+                attack_location_rnd,
+                false,
+                game_libs,
+                game_settings,
+                adventurer_id,
             );
 
             // Save battle events
@@ -1429,21 +1344,22 @@ mod game_systems {
             // if player is still alive and elected to flee till death
             if (flee_to_the_death && adventurer.health != 0) {
                 // reattempt flee
-                _flee(ref adventurer, ref game_events, ref battle_count, flee_seed, beast_seed, beast, true, game_libs);
+                _flee(
+                    ref adventurer,
+                    ref game_events,
+                    ref battle_count,
+                    flee_seed,
+                    beast_seed,
+                    beast,
+                    true,
+                    game_libs,
+                    game_settings,
+                    adventurer_id,
+                );
             }
         }
     }
 
-    /// @title Equip Item
-    /// @notice Equips a specific item to the adventurer, and if there's an item already equipped in
-    /// that slot, it's moved to the bag.
-    /// @dev This function is called when an item is equipped to the adventurer.
-    /// @param self A reference to the ContractState object.
-    /// @param adventurer A reference to the adventurer.
-    /// @param bag A reference to the bag.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @param item The primitive item to be equipped.
-    /// @return The ID of the item that has been unequipped.
     fn _equip_item(ref adventurer: Adventurer, ref bag: Bag, item: Item, game_libs: GameLibs) -> u8 {
         // get the item currently equipped to the slot the item is being equipped to
         let unequipping_item = adventurer.equipment.get_item_at_slot(game_libs.loot.get_slot(item.id));
@@ -1473,18 +1389,6 @@ mod game_systems {
         unequipping_item.id
     }
 
-    /// @title Equip Items
-    /// @notice Equips items to the adventurer and returns the items that were unequipped as a
-    /// result.
-    /// @dev This function is called when items are equipped to the adventurer.
-    /// @param contract_state A reference to the ContractState object.
-    /// @param adventurer A reference to the adventurer.
-    /// @param bag A reference to the bag.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @param items_to_equip An array of u8 representing the items to be equipped.
-    /// @param is_newly_purchased A bool representing whether the items are newly purchased.
-    /// @return An array of u8 representing the items that were unequipped as a result of equipping
-    /// the items.
     fn _equip_items(
         ref adventurer: Adventurer,
         ref bag: Bag,
@@ -1528,16 +1432,7 @@ mod game_systems {
         };
     }
 
-    /// @title Drop Items
-    /// @notice Drops multiple items from the adventurer's possessions, either from equipment or
-    /// bag.
-    /// @dev This function is called when items are dropped from the adventurer's possessions.
-    /// @param adventurer A reference to the adventurer.
-    /// @param bag A reference to the bag.
-    /// @param items An array of u8 representing the items to be dropped.
-    /// @return A tuple containing two boolean values. The first indicates if the adventurer was
-    /// mutated, the second indicates if the bag was mutated.
-    fn _drop(ref adventurer: Adventurer, ref bag: Bag, items: Array<u8>, game_libs: GameLibs) {
+    fn _drop(ref adventurer: Adventurer, ref bag: Bag, items: Array<u8>, game_libs: GameLibs, adventurer_id: u64) {
         // for each item
         let mut i: u32 = 0;
         loop {
@@ -1559,7 +1454,13 @@ mod game_systems {
                 // if the item was providing a stat boosts
                 if item.get_greatness() >= SUFFIX_UNLOCK_GREATNESS {
                     // remove it
-                    _remove_dropped_item_stat_boost(ref adventurer, item, game_libs);
+                    let item_suffix = game_libs.loot.get_suffix(item.id, adventurer.item_specials_seed);
+                    adventurer.stats.remove_suffix_boost(item_suffix);
+                    adventurer.stats.remove_bag_boost(item_suffix);
+                    let max_health = adventurer.stats.get_max_health();
+                    if adventurer.health > max_health {
+                        adventurer.health = max_health;
+                    }
                 }
 
                 // drop the item
@@ -1570,7 +1471,7 @@ mod game_systems {
                 let (item_in_bag, _) = game_libs.adventurer.bag_contains(bag, item_id);
                 if item_in_bag {
                     // get item from the bag
-                    item = game_libs.adventurer.get_bag_item(bag, item_id);
+                    item = ImplBag::get_item(bag, item_id);
 
                     // remove item from the bag (sets mutated to true)
                     let (new_bag, _) = game_libs.adventurer.remove_item_from_bag(bag, item_id);
@@ -1580,31 +1481,23 @@ mod game_systems {
                 }
             }
 
+            game_libs.adventurer.record_item_drop(adventurer_id, item);
+
             i += 1;
         };
     }
 
-    /// @title Buy Items
-    /// @notice Facilitates the purchase of multiple items and returns the items that were
-    /// purchased, equipped, and unequipped.
-    /// @dev This function is called when the adventurer purchases items.
-    /// @param market_seed A felt252 representing the seed for the market.
-    /// @param adventurer A reference to the adventurer.
-    /// @param bag A reference to the bag.
-    /// @param items_to_purchase An array of ItemPurchase representing the items to be purchased.
-    /// @param game_libs A reference to the game libraries.
-    /// @return A tuple containing three arrays: the first contains the items purchased, the second
-    /// contains the items that were equipped as part of the purchase, and the third contains the
-    /// items that were unequipped as a result of equipping the newly purchased items.
     fn _buy_items(
+        adventurer_id: u64,
         market_seed: u64,
         ref adventurer: Adventurer,
         ref bag: Bag,
         items_to_purchase: Array<ItemPurchase>,
         game_libs: GameLibs,
+        market_size: u8,
     ) {
         // get adventurer entropy
-        let market_inventory = game_libs.adventurer.get_market(market_seed);
+        let market_inventory = game_libs.adventurer.get_market(adventurer_id, market_seed, market_size);
 
         // mutable array for returning items that need to be equipped as part of this purchase
         let mut items_to_equip = ArrayTrait::<u8>::new();
@@ -1647,43 +1540,16 @@ mod game_systems {
         }
     }
 
-    /// @title Buy Potions
-    /// @notice Processes the purchase of potions for the adventurer and emits an event.
-    /// @dev This function is called when the adventurer purchases potions.
-    /// @param adventurer A reference to the adventurer.
-    /// @param quantity A u8 representing the number of potions to buy.
-    fn _buy_potions(ref adventurer: Adventurer, quantity: u8) {
-        let cost = adventurer.charisma_adjusted_potion_price() * quantity.into();
-        let health = POTION_HEALTH_AMOUNT.into() * quantity.into();
 
-        // assert adventurer has enough gold to buy the potions
-        _assert_has_enough_gold(adventurer, cost);
-
-        // assert adventurer is not buying more health than they can use
-        _assert_not_buying_excess_health(adventurer, health);
-
-        // deduct cost of potions from adventurers gold balance
-        adventurer.deduct_gold(cost);
-
-        // add health to adventurer
-        adventurer.increase_health(health);
-    }
-
-    /// @title Buy Item
-    /// @notice Buys an item with the item price adjusted for adventurer's charisma.
-    /// @dev This function is called when the adventurer buys an item.
-    /// @param adventurer A reference to the adventurer.
-    /// @param bag A reference to the bag.
-    /// @param item_id A u8 representing the ID of the item to be purchased.
     fn _buy_item(ref adventurer: Adventurer, ref bag: Bag, item_id: u8, game_libs: GameLibs) {
         // create an immutable copy of our adventurer to use for validation
-        let immutable_adventurer = adventurer;
+        let orig_adv = adventurer;
 
         // assert adventurer does not already own the item
-        _assert_item_not_owned(immutable_adventurer, bag, item_id, game_libs);
+        _assert_item_not_owned(orig_adv, bag, item_id, game_libs);
 
         // assert item is valid
-        _assert_valid_item_id(item_id);
+        assert(item_id > 0 && item_id <= 101, messages::INVALID_ITEM_ID);
 
         // get item from item id
         let item = game_libs.loot.get_item(item_id);
@@ -1695,7 +1561,7 @@ mod game_systems {
         let charisma_adjusted_price = adventurer.stats.charisma_adjusted_item_price(base_item_price);
 
         // check adventurer has enough gold to buy the item
-        _assert_has_enough_gold(immutable_adventurer, charisma_adjusted_price);
+        _assert_has_enough_gold(orig_adv, charisma_adjusted_price);
 
         // deduct charisma adjusted cost of item from adventurer's gold balance
         adventurer.deduct_gold(charisma_adjusted_price);
@@ -1705,22 +1571,23 @@ mod game_systems {
     // ------------ Helper Functions ------------ //
     // ------------------------------------------ //
 
-    /// @title Get Random Seed
-    /// @notice Gets a random seed for the adventurer.
-    /// @dev This function is called when a random seed is needed.
-    /// @param world A reference to the WorldStorage object.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @param adventurer_xp A u16 representing the adventurer's XP.
-    /// @return A felt252 representing the random seed.
+    fn _get_token_address(world: WorldStorage) -> ContractAddress {
+        let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+        let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
+        minigame_dispatcher.token_address()
+    }
+
     fn _get_random_seed(
-        world: WorldStorage, adventurer_id: u64, adventurer_xp: u16, game_seed: u64, game_seed_until_xp: u16,
+        adventurer_id: u64, adventurer_xp: u16, game_seed: u64, game_seed_until_xp: u16, vrf_address: ContractAddress,
     ) -> (u64, u64) {
         let mut seed: felt252 = 0;
 
         if game_seed != 0 && (game_seed_until_xp == 0 || game_seed_until_xp > adventurer_xp) {
             seed = ImplAdventurer::get_simple_entropy(adventurer_xp, game_seed);
-        } else if _network_supports_vrf() {
-            seed = VRFImpl::seed();
+        } else if VRF_ENABLED
+            && (get_tx_info().unbox().chain_id == MAINNET_CHAIN_ID
+                || get_tx_info().unbox().chain_id == SEPOLIA_CHAIN_ID) {
+            seed = VRFImpl::seed(vrf_address);
         } else {
             seed = ImplAdventurer::get_simple_entropy(adventurer_xp, adventurer_id);
         }
@@ -1728,30 +1595,18 @@ mod game_systems {
         ImplAdventurer::felt_to_two_u64(seed)
     }
 
-    fn _load_adventurer_entropy(world: WorldStorage, adventurer_id: u64) -> AdventurerEntropy {
-        let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        adventurer_entropy
-    }
 
-    fn _save_market_seed(ref world: WorldStorage, adventurer_id: u64, market_seed: u64) {
-        let mut adventurer_entropy = _load_adventurer_entropy(world, adventurer_id);
-        adventurer_entropy.market_seed = market_seed;
+    fn _save_seed(ref world: WorldStorage, adventurer_id: u64, market_seed: u64, beast_seed: u64) {
+        let mut adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
+        if market_seed != 0 {
+            adventurer_entropy.market_seed = market_seed;
+        }
+        if beast_seed != 0 {
+            adventurer_entropy.beast_seed = beast_seed;
+        }
         world.write_model(@adventurer_entropy);
     }
 
-    fn _save_beast_seed(ref world: WorldStorage, adventurer_id: u64, beast_seed: u64) {
-        let mut adventurer_entropy = _load_adventurer_entropy(world, adventurer_id);
-        adventurer_entropy.beast_seed = beast_seed;
-        world.write_model(@adventurer_entropy);
-    }
-
-    /// @title Save Adventurer
-    /// @notice Saves the adventurer and returns the adventurer.
-    /// @dev This function is called when the adventurer is saved.
-    /// @param self A reference to the ContractState object.
-    /// @param adventurer A reference to the adventurer.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @return The adventurer.
     fn _save_adventurer(
         ref world: WorldStorage, ref adventurer: Adventurer, bag: Bag, adventurer_id: u64, game_libs: GameLibs,
     ) {
@@ -1761,69 +1616,18 @@ mod game_systems {
         world.write_model(@AdventurerPacked { adventurer_id, packed });
     }
 
-    /// @title Save Adventurer No Boosts
-    /// @notice Saves the adventurer without boosts and returns the adventurer.
-    /// @dev This function is called when the adventurer is saved without boosts.
-    /// @param self A reference to the ContractState object.
-    /// @param adventurer A reference to the adventurer.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @return The adventurer.
-    fn _save_adventurer_no_boosts(
-        ref world: WorldStorage, ref adventurer: Adventurer, adventurer_id: u64, game_libs: GameLibs,
-    ) {
-        _emit_game_event(ref world, adventurer_id, adventurer.action_count, GameEventDetails::adventurer(adventurer));
-        let packed = game_libs.adventurer.pack_adventurer(adventurer);
-        world.write_model(@AdventurerPacked { adventurer_id, packed });
-    }
 
-    /// @title Save Bag
-    /// @notice Saves the bag and returns the bag.
-    /// @dev This function is called when the bag is saved.
-    /// @param self A reference to the ContractState object.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @param bag A reference to the bag.
-    /// @param game_libs A reference to the game libraries.
     fn _save_bag(ref world: WorldStorage, adventurer_id: u64, action_count: u16, bag: Bag, game_libs: GameLibs) {
         _emit_game_event(ref world, adventurer_id, action_count, GameEventDetails::bag(bag));
         let packed = game_libs.adventurer.pack_bag(bag);
         world.write_model(@BagPacked { adventurer_id, packed });
     }
 
-    /// @title Apply Item Stat Boost
-    /// @notice Applies the item stat boost to the adventurer.
-    /// @dev This function is called when the item stat boost is applied to the adventurer.
-    /// @param self A reference to the ContractState object.
-    /// @param adventurer A reference to the adventurer.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @param item A reference to the item.
     fn _apply_item_stat_boost(ref adventurer: Adventurer, item: Item, game_libs: GameLibs) {
         let item_suffix = game_libs.loot.get_suffix(item.id, adventurer.item_specials_seed);
         adventurer.stats.apply_suffix_boost(item_suffix);
     }
 
-    /// @title Remove Item Stat Boost from Dropped Item
-    /// @notice Removes the item stat boost from the adventurer.
-    /// @dev This function is called when the item stat boost is removed from the adventurer.
-    /// @param self A reference to the ContractState object.
-    /// @param adventurer A reference to the adventurer.
-    /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @param item A reference to the item.
-    fn _remove_dropped_item_stat_boost(ref adventurer: Adventurer, item: Item, game_libs: GameLibs) {
-        let item_suffix = game_libs.loot.get_suffix(item.id, adventurer.item_specials_seed);
-        adventurer.stats.remove_suffix_boost(item_suffix);
-        adventurer.stats.remove_bag_boost(item_suffix);
-
-        // if the adventurer's health is now above the max health due to a change in Vitality
-        let max_health = adventurer.stats.get_max_health();
-        if adventurer.health > max_health {
-            // lower adventurer's health to max health
-            adventurer.health = max_health;
-        }
-    }
-
-    fn _empty_attack_event() -> AttackEvent {
-        AttackEvent { damage: 0, location: Slot::None, critical_hit: false }
-    }
 
     // ------------------------------------------ //
     // ------------ Assertions ------------------ //
@@ -1832,17 +1636,8 @@ mod game_systems {
     fn _assert_in_battle(adventurer: Adventurer) {
         assert(adventurer.beast_health != 0, messages::NOT_IN_BATTLE);
     }
-    fn _assert_dexterity_not_zero(adventurer: Adventurer) {
-        assert(adventurer.stats.dexterity != 0, messages::ZERO_DEXTERITY);
-    }
     fn _assert_not_in_battle(adventurer: Adventurer) {
         assert(adventurer.beast_health == 0, messages::ACTION_NOT_ALLOWED_DURING_BATTLE);
-    }
-    fn _assert_not_selecting_stat_upgrades(stat_upgrades_available: u8) {
-        assert(stat_upgrades_available == 0, messages::MARKET_CLOSED);
-    }
-    fn _assert_upgrades_available(stat_upgrades_available: u8) {
-        assert(stat_upgrades_available != 0, messages::MARKET_CLOSED);
     }
     fn _assert_item_not_owned(adventurer: Adventurer, bag: Bag, item_id: u8, game_libs: GameLibs) {
         let (item_in_bag, _) = game_libs.adventurer.bag_contains(bag, item_id);
@@ -1850,26 +1645,14 @@ mod game_systems {
             adventurer.equipment.is_equipped(item_id) == false && item_in_bag == false, messages::ITEM_ALREADY_OWNED,
         );
     }
-    fn _assert_valid_item_id(item_id: u8) {
-        assert(item_id > 0 && item_id <= 101, messages::INVALID_ITEM_ID);
-    }
     fn _assert_not_starter_beast(adventurer: Adventurer, message: felt252) {
         assert(adventurer.get_level() > 1, message);
-    }
-    fn _assert_no_stat_upgrades_available(adventurer: Adventurer) {
-        assert(adventurer.stat_upgrades_available == 0, messages::STAT_UPGRADES_AVAILABLE);
     }
     fn _assert_not_dead(self: Adventurer) {
         assert(self.health != 0, messages::DEAD_ADVENTURER);
     }
-    fn _assert_is_dead(self: Adventurer) {
-        assert(self.health == 0, messages::ADVENTURER_IS_ALIVE);
-    }
     fn _assert_valid_starter_weapon(starting_weapon: u8, game_libs: GameLibs) {
         assert(game_libs.loot.is_starting_weapon(starting_weapon) == true, messages::INVALID_STARTING_WEAPON);
-    }
-    fn _assert_zero_luck(stats: Stats) {
-        assert(stats.luck == 0, messages::NON_ZERO_STARTING_LUCK);
     }
     fn _assert_has_enough_gold(adventurer: Adventurer, cost: u16) {
         assert(adventurer.gold >= cost, messages::NOT_ENOUGH_GOLD);
@@ -1897,21 +1680,9 @@ mod game_systems {
         }
     }
     fn _assert_valid_stat_selection(adventurer: Adventurer, stat_upgrades: Stats) {
-        _assert_upgrades_available(adventurer.stat_upgrades_available);
+        assert(adventurer.stat_upgrades_available != 0, messages::MARKET_CLOSED);
         _assert_stat_balance(stat_upgrades, adventurer.stat_upgrades_available);
-        _assert_zero_luck(stat_upgrades);
-    }
-
-    fn _validate_start_conditions(world: WorldStorage, token_id: u64, token_metadata: @TokenMetadata) {
-        _assert_token_ownership(world, token_id);
-        _assert_game_not_started(world, token_id);
-        token_metadata.lifecycle.assert_is_playable(token_id, starknet::get_block_timestamp());
-    }
-
-    fn _assert_token_ownership(world: WorldStorage, token_id: u64) {
-        let (contract_address, _) = world.dns(@"game_token_systems").unwrap();
-        let game_token = IERC721Dispatcher { contract_address };
-        assert(game_token.owner_of(token_id.into()) == starknet::get_caller_address(), 'Not Owner');
+        assert(stat_upgrades.luck == 0, messages::NON_ZERO_STARTING_LUCK);
     }
 
     fn _assert_game_not_started(world: WorldStorage, adventurer_id: u64) {
@@ -1936,37 +1707,37 @@ mod game_systems {
 mod tests {
     use death_mountain::constants::adventurer::{BASE_POTION_PRICE, POTION_HEALTH_AMOUNT};
     use death_mountain::constants::beast::BeastSettings;
-    use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
-    use death_mountain::constants::loot::{ItemId};
-
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
+    use death_mountain::constants::loot::ItemId;
     use death_mountain::constants::world::DEFAULT_NS;
-
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
-    use death_mountain::models::adventurer::adventurer::{IAdventurer, ImplAdventurer};
-    use death_mountain::models::adventurer::stats::{IStat, Stats};
-    use death_mountain::models::game::{AdventurerEntropy};
+    use death_mountain::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
+    use death_mountain::models::adventurer::bag::{Bag, ImplBag};
+    use death_mountain::models::adventurer::equipment::{Equipment};
+    use death_mountain::models::adventurer::item::{Item};
+    use death_mountain::models::adventurer::stats::{IStat, ImplStats, Stats};
     use death_mountain::models::game::{
-        e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings, m_GameSettingsMetadata,
-        m_SettingsCounter,
+        AdventurerEntropy, AdventurerPacked, BagPacked, e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked,
+        m_BagPacked, m_GameSettings, m_GameSettingsMetadata, m_SettingsCounter,
     };
-    use death_mountain::models::market::{ItemPurchase};
+    use death_mountain::models::game_data::m_DroppedItem;
+    use death_mountain::models::market::ItemPurchase;
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
-    use death_mountain::systems::beast::contracts::{beast_systems};
+    use death_mountain::systems::beast::contracts::beast_systems;
     use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
-    use death_mountain::systems::game_token::contracts::{game_token_systems};
+    use death_mountain::systems::game_token::contracts::game_token_systems;
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
-    use death_mountain::systems::renderer::contracts::{renderer_systems};
-    use dojo::model::{ModelStorage};
+    use death_mountain::systems::renderer::contracts::renderer_systems;
+    use death_mountain::systems::settings::contracts::settings_systems;
+    use dojo::model::{ModelStorage, ModelStorageTest, ModelValueStorage};
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
     };
-    use starknet::{contract_address_const};
-    use tournaments::components::interfaces::{IGameTokenDispatcher, IGameTokenDispatcherTrait};
-
-    use tournaments::components::models::game::{
-        m_GameCounter, m_GameMetadata, m_Score, m_Settings, m_SettingsDetails, m_TokenMetadata,
-    };
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_token::interface::{IMinigameTokenMixinDispatcher};
+    use openzeppelin_token::erc721::interface::{IERC721MetadataDispatcher, IERC721MetadataDispatcherTrait};
+    use starknet::{ContractAddress, contract_address_const};
 
     fn namespace_def() -> NamespaceDef {
         let ndef = NamespaceDef {
@@ -1975,20 +1746,16 @@ mod tests {
                 TestResource::Model(m_AdventurerPacked::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_BagPacked::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_AdventurerEntropy::TEST_CLASS_HASH.try_into().unwrap()),
-                TestResource::Model(m_GameMetadata::TEST_CLASS_HASH.try_into().unwrap()),
-                TestResource::Model(m_TokenMetadata::TEST_CLASS_HASH.try_into().unwrap()),
-                TestResource::Model(m_GameCounter::TEST_CLASS_HASH.try_into().unwrap()),
-                TestResource::Model(m_Score::TEST_CLASS_HASH.try_into().unwrap()),
-                TestResource::Model(m_Settings::TEST_CLASS_HASH.try_into().unwrap()),
-                TestResource::Model(m_SettingsDetails::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_SettingsCounter::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_GameSettings::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_GameSettingsMetadata::TEST_CLASS_HASH.try_into().unwrap()),
+                TestResource::Model(m_DroppedItem::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Contract(game_systems::TEST_CLASS_HASH),
                 TestResource::Contract(loot_systems::TEST_CLASS_HASH),
                 TestResource::Contract(renderer_systems::TEST_CLASS_HASH),
                 TestResource::Contract(adventurer_systems::TEST_CLASS_HASH),
                 TestResource::Contract(beast_systems::TEST_CLASS_HASH),
+                TestResource::Contract(settings_systems::TEST_CLASS_HASH),
                 TestResource::Contract(game_token_systems::TEST_CLASS_HASH),
                 TestResource::Event(e_GameEvent::TEST_CLASS_HASH.try_into().unwrap()),
             ]
@@ -1997,7 +1764,10 @@ mod tests {
         ndef
     }
 
-    fn contract_defs() -> Span<ContractDef> {
+    fn contract_defs(denshokan_address: ContractAddress) -> Span<ContractDef> {
+        let mut game_token_init_calldata: Array<felt252> = array![];
+        game_token_init_calldata.append(contract_address_const::<'player1'>().into()); // creator_address
+        game_token_init_calldata.append(denshokan_address.into()); // denshokan_address
         [
             ContractDefTrait::new(@DEFAULT_NS(), @"game_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
@@ -2009,17 +1779,21 @@ mod tests {
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
             ContractDefTrait::new(@DEFAULT_NS(), @"beast_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
+            ContractDefTrait::new(@DEFAULT_NS(), @"settings_systems")
+                .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
             ContractDefTrait::new(@DEFAULT_NS(), @"game_token_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span())
-                .with_init_calldata(array![contract_address_const::<'player1'>().into()].span()),
+                .with_init_calldata(game_token_init_calldata.span()),
         ]
             .span()
     }
 
-    fn deploy_dungeon() -> (dojo::world::WorldStorage, IGameSystemsDispatcher, GameLibs) {
+    fn deploy_dungeon() -> (WorldStorage, IGameSystemsDispatcher, GameLibs, IMinigameTokenMixinDispatcher) {
+        let denshokan_contracts = death_mountain::utils::setup_denshokan::setup();
+
         let ndef = namespace_def();
         let mut world = spawn_test_world([ndef].span());
-        world.sync_perms_and_inits(contract_defs());
+        world.sync_perms_and_inits(contract_defs(denshokan_contracts.denshokan.contract_address));
 
         world.dispatcher.grant_owner(dojo::utils::bytearray_hash(@DEFAULT_NS()), contract_address_const::<'player1'>());
 
@@ -2031,15 +1805,27 @@ mod tests {
         let game_systems_dispatcher = IGameSystemsDispatcher { contract_address: contract_address };
 
         let game_libs = ImplGameLibs::new(world);
-        (world, game_systems_dispatcher, game_libs)
+        (world, game_systems_dispatcher, game_libs, denshokan_contracts.denshokan)
     }
 
     fn new_game(world: WorldStorage, game: IGameSystemsDispatcher) -> u64 {
         let (contract_address, _) = world.dns(@"game_token_systems").unwrap();
-        let game_token_dispatcher = IGameTokenDispatcher { contract_address };
+        let minigame_dispatcher = IMinigameDispatcher { contract_address };
 
-        let adventurer_id = game_token_dispatcher
-            .mint('player1', 0, Option::None, Option::None, contract_address_const::<'player1'>());
+        let adventurer_id = minigame_dispatcher
+            .mint_game(
+                Option::Some("player1"), // player_name
+                Option::Some(0), // settings_id
+                Option::None, // start
+                Option::None, // end
+                Option::None, // objective_ids
+                Option::None, // context
+                Option::None, // client_url
+                Option::None, // renderer_address
+                contract_address_const::<'player1'>(), // to
+                false // soulbound
+            );
+
         game.start_game(adventurer_id, ItemId::Wand);
 
         adventurer_id
@@ -2047,7 +1833,7 @@ mod tests {
 
     #[test]
     fn test_new_game() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // load player assets
@@ -2061,7 +1847,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED'))]
     fn no_explore_during_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // try to explore before defeating start beast
@@ -2070,7 +1856,7 @@ mod tests {
 
     #[test]
     fn defeat_starter_beast() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attack beast
@@ -2087,7 +1873,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Cant flee starter beast', 'ENTRYPOINT_FAILED'))]
     fn cant_flee_starter_beast() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // immediately attempt to flee starter beast
@@ -2098,7 +1884,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Not in battle', 'ENTRYPOINT_FAILED'))]
     fn cant_attack_outside_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, true);
@@ -2109,7 +1895,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Not in battle', 'ENTRYPOINT_FAILED'))]
     fn cant_flee_outside_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, false);
@@ -2118,7 +1904,7 @@ mod tests {
 
     #[test]
     fn game_flow() { // adventurer_id 1 with simple entropy
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attack starter beast
@@ -2157,7 +1943,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Stat upgrade available', 'ENTRYPOINT_FAILED'))]
     fn explore_not_allowed_with_avail_stat_upgrade() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2178,7 +1964,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED'))]
     fn buy_items_during_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
@@ -2189,7 +1975,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market is closed', 'ENTRYPOINT_FAILED'))]
     fn buy_items_with_stat_upgrades() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2199,7 +1985,7 @@ mod tests {
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
         // get valid item from market
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
         let item_id = *market_items.at(0);
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
 
@@ -2211,7 +1997,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item already owned', 'ENTRYPOINT_FAILED'))]
     fn buy_duplicate_item_equipped() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2226,7 +2012,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         // get first item on the market
         let item_id = *market_items.at(3);
@@ -2240,7 +2026,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item already owned', 'ENTRYPOINT_FAILED'))]
     fn buy_duplicate_item_bagged() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2255,7 +2041,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         // try to buy same item but equip one and put one in bag
         let item_id = *market_items.at(0);
@@ -2270,7 +2056,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market item does not exist', 'ENTRYPOINT_FAILED'))]
     fn buy_item_not_on_market() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2291,7 +2077,7 @@ mod tests {
 
     #[test]
     fn buy_and_bag_item() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2305,7 +2091,7 @@ mod tests {
         game.select_stat_upgrades(adventurer_id, stat_upgrades);
 
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
         shopping_cart.append(ItemPurchase { item_id: *market_items.at(0), equip: false });
@@ -2318,7 +2104,7 @@ mod tests {
 
     #[test]
     fn buy_items() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2332,7 +2118,7 @@ mod tests {
         game.select_stat_upgrades(adventurer_id, stat_upgrades);
 
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         let mut purchased_weapon: u8 = 0;
         let mut purchased_chest: u8 = 0;
@@ -2412,7 +2198,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item not in bag', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn equip_not_in_bag() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // initialize an array of items to equip that contains an item not in bag
@@ -2428,7 +2214,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Too many items', 'ENTRYPOINT_FAILED'))]
     fn equip_too_many_items() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // initialize an array of 9 items (too many to equip)
@@ -2451,7 +2237,7 @@ mod tests {
 
     #[test]
     fn equip() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2466,7 +2252,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         let mut purchased_weapon: u8 = 0;
         let mut purchased_chest: u8 = 0;
@@ -2567,7 +2353,7 @@ mod tests {
 
     #[test]
     fn buy_potions() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2608,7 +2394,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Health already full', 'ENTRYPOINT_FAILED'))]
     fn buy_potions_exceed_max_health() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2641,7 +2427,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market is closed', 'ENTRYPOINT_FAILED'))]
     fn cant_buy_potion_with_stat_upgrade() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2656,7 +2442,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED'))]
     fn cant_buy_potion_during_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attempt to immediately buy health before clearing starter beast
@@ -2669,7 +2455,7 @@ mod tests {
 
     #[test]
     fn get_potion_price_underflow() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         let adventurer = game_libs.adventurer.get_adventurer(adventurer_id);
@@ -2701,7 +2487,7 @@ mod tests {
 
     #[test]
     fn drop_item() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2715,7 +2501,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         // get first item on the market
         let purchased_item_id = *market_items.at(0);
@@ -2755,23 +2541,8 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected: ('Cant drop during starter beast', 'ENTRYPOINT_FAILED'))]
-    fn drop_on_starter_beast() {
-        let (world, game, _) = deploy_dungeon();
-        let adventurer_id = new_game(world, game);
-
-        let mut drop_list = ArrayTrait::<u8>::new();
-        drop_list.append(255);
-
-        // try to drop an item the adventurer doesn't own
-        // this should result in a panic 'Item not owned by adventurer'
-        // this test is annotated to expect that panic
-        game.drop(adventurer_id, drop_list);
-    }
-
-    #[test]
     fn upgrade_stats() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2801,7 +2572,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('insufficient stat upgrades', 'ENTRYPOINT_FAILED'))]
     fn upgrade_stats_not_enough_points() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2817,7 +2588,7 @@ mod tests {
 
     #[test]
     fn upgrade_adventurer() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2833,7 +2604,7 @@ mod tests {
 
         // get items from market
         let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
-        let market_items = game_libs.adventurer.get_market(adventurer_entropy.market_seed);
+        let market_items = game_libs.adventurer.get_market(adventurer_id, adventurer_entropy.market_seed, 25);
 
         // buy two items
         let mut items_to_purchase = ArrayTrait::<ItemPurchase>::new();
@@ -2866,9 +2637,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected: ('Cant drop during starter beast', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED'))]
     fn no_dropping_starter_weapon_during_starter_beast() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // try to drop starter weapon during starter beast battle
@@ -2878,7 +2649,7 @@ mod tests {
 
     #[test]
     fn drop_starter_item_after_starter_beast() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast
@@ -2891,7 +2662,7 @@ mod tests {
 
     #[test]
     fn item_level_up() {
-        let (mut world, game, game_libs) = deploy_dungeon();
+        let (mut world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, false);
@@ -2900,5 +2671,659 @@ mod tests {
 
         assert(adventurer.equipment.weapon.xp == 8, 'xp not set correctly');
         assert(adventurer.stat_upgrades_available == 1, 'wrong stats available');
+    }
+
+    #[test]
+    fn denshokan_token_uri() {
+        let (mut world, game, game_libs, denshokan) = deploy_dungeon();
+        let adventurer_id = new_game(world, game);
+        let denshokan_erc721_dispatcher = IERC721MetadataDispatcher { contract_address: denshokan.contract_address };
+        let adventurer = Adventurer {
+            health: 72,
+            xp: 100,
+            stats: Stats { strength: 3, dexterity: 2, vitality: 0, intelligence: 1, wisdom: 5, charisma: 3, luck: 2 },
+            gold: 40,
+            equipment: Equipment {
+                weapon: Item { id: 13, xp: 0 },
+                chest: Item { id: 0, xp: 0 },
+                head: Item { id: 0, xp: 0 },
+                waist: Item { id: 61, xp: 0 },
+                foot: Item { id: 0, xp: 0 },
+                hand: Item { id: 0, xp: 0 },
+                neck: Item { id: 0, xp: 0 },
+                ring: Item { id: 0, xp: 0 },
+            },
+            beast_health: 0,
+            stat_upgrades_available: 0,
+            item_specials_seed: 0,
+            action_count: 0,
+        };
+        let packed_adventurer = game_libs.adventurer.pack_adventurer(adventurer);
+        world.write_model_test(@AdventurerPacked { adventurer_id, packed: packed_adventurer });
+        let bag = Bag {
+            item_1: Item { id: 91, xp: 0 },
+            item_2: Item { id: 31, xp: 0 },
+            item_3: Item { id: 76, xp: 0 },
+            item_4: Item { id: 0, xp: 0 },
+            item_5: Item { id: 0, xp: 0 },
+            item_6: Item { id: 0, xp: 0 },
+            item_7: Item { id: 0, xp: 0 },
+            item_8: Item { id: 0, xp: 0 },
+            item_9: Item { id: 0, xp: 0 },
+            item_10: Item { id: 0, xp: 0 },
+            item_11: Item { id: 0, xp: 0 },
+            item_12: Item { id: 0, xp: 0 },
+            item_13: Item { id: 0, xp: 0 },
+            item_14: Item { id: 0, xp: 0 },
+            item_15: Item { id: 0, xp: 0 },
+            mutated: false,
+        };
+        let packed_bag = game_libs.adventurer.pack_bag(bag);
+        world.write_model_test(@BagPacked { adventurer_id, packed: packed_bag });
+        let token_uri = denshokan_erc721_dispatcher.token_uri(1);
+        println!("Token URI: {}", token_uri);
+    }
+
+    #[test]
+    fn test_get_adventurer_verbose() {
+        let (mut world, _, game_libs, _) = deploy_dungeon();
+        let adventurer_id = 1;
+
+        // Create a test adventurer with specific equipment and stats
+        let test_adventurer = Adventurer {
+            health: 100,
+            xp: 1500,
+            gold: 250,
+            beast_health: 0,
+            stat_upgrades_available: 2,
+            stats: Stats {
+                strength: 5, dexterity: 8, vitality: 6, intelligence: 12, wisdom: 10, charisma: 15, luck: 3,
+            },
+            equipment: Equipment {
+                weapon: Item { id: ItemId::Wand, xp: 100 },
+                chest: Item { id: ItemId::DivineRobe, xp: 50 },
+                head: Item { id: ItemId::Crown, xp: 75 },
+                waist: Item { id: ItemId::DemonhideBelt, xp: 30 },
+                foot: Item { id: ItemId::LeatherBoots, xp: 20 },
+                hand: Item { id: ItemId::LeatherGloves, xp: 15 },
+                neck: Item { id: ItemId::Amulet, xp: 40 },
+                ring: Item { id: ItemId::GoldRing, xp: 60 },
+            },
+            item_specials_seed: 12345,
+            action_count: 150,
+        };
+
+        // Create a test bag with various items
+        let test_bag = Bag {
+            item_1: Item { id: ItemId::Falchion, xp: 80 },
+            item_2: Item { id: ItemId::GhostWand, xp: 120 },
+            item_3: Item { id: ItemId::Grimoire, xp: 200 },
+            item_4: Item { id: ItemId::SilkRobe, xp: 45 },
+            item_5: Item { id: ItemId::LinenGloves, xp: 10 },
+            item_6: Item { id: 0, xp: 0 }, // Empty slot
+            item_7: Item { id: 0, xp: 0 }, // Empty slot
+            item_8: Item { id: 0, xp: 0 }, // Empty slot
+            item_9: Item { id: 0, xp: 0 }, // Empty slot
+            item_10: Item { id: 0, xp: 0 }, // Empty slot
+            item_11: Item { id: 0, xp: 0 }, // Empty slot
+            item_12: Item { id: 0, xp: 0 }, // Empty slot
+            item_13: Item { id: 0, xp: 0 }, // Empty slot
+            item_14: Item { id: 0, xp: 0 }, // Empty slot
+            item_15: Item { id: 0, xp: 0 }, // Empty slot
+            mutated: false,
+        };
+
+        // Stage the adventurer data
+        let packed_adventurer = game_libs.adventurer.pack_adventurer(test_adventurer);
+        world.write_model_test(@AdventurerPacked { adventurer_id, packed: packed_adventurer });
+
+        // Stage the bag data
+        let packed_bag = game_libs.adventurer.pack_bag(test_bag);
+        world.write_model_test(@BagPacked { adventurer_id, packed: packed_bag });
+
+        // Now call get_adventurer_verbose and verify the response
+        let adventurer_verbose = game_libs.adventurer.get_adventurer_verbose(adventurer_id);
+
+        // Verify basic adventurer data
+        assert!(adventurer_verbose.xp == 1500, "incorrect xp. expected 1500, actual {:?}", adventurer_verbose.xp);
+        assert!(adventurer_verbose.level == 38, "incorrect level. expected 38, actual {:?}", adventurer_verbose.level);
+        assert!(adventurer_verbose.gold == 250, "incorrect gold. expected 250, actual {:?}", adventurer_verbose.gold);
+        assert!(
+            adventurer_verbose.health == 100, "incorrect health. expected 100, actual {:?}", adventurer_verbose.health,
+        );
+        assert!(
+            adventurer_verbose.beast_health == 0,
+            "incorrect beast health. expected 0, actual {:?}",
+            adventurer_verbose.beast_health,
+        );
+        assert!(
+            adventurer_verbose.stat_upgrades_available == 2,
+            "incorrect stat upgrades. expected 2, actual {:?}",
+            adventurer_verbose.stat_upgrades_available,
+        );
+        // Note: name is fetched from game_token_systems, not testing it here
+
+        // Verify stats
+        assert!(
+            adventurer_verbose.stats.strength == 5,
+            "incorrect strength. expected 5, actual {:?}",
+            adventurer_verbose.stats.strength,
+        );
+        assert!(
+            adventurer_verbose.stats.dexterity == 8,
+            "incorrect dexterity. expected 8, actual {:?}",
+            adventurer_verbose.stats.dexterity,
+        );
+        assert!(
+            adventurer_verbose.stats.vitality == 6,
+            "incorrect vitality. expected 6, actual {:?}",
+            adventurer_verbose.stats.vitality,
+        );
+        assert!(
+            adventurer_verbose.stats.intelligence == 12,
+            "incorrect intelligence. expected 12, actual {:?}",
+            adventurer_verbose.stats.intelligence,
+        );
+        assert!(
+            adventurer_verbose.stats.wisdom == 10,
+            "incorrect wisdom. expected 10, actual {:?}",
+            adventurer_verbose.stats.wisdom,
+        );
+        assert!(
+            adventurer_verbose.stats.charisma == 15,
+            "incorrect charisma. expected 15, actual {:?}",
+            adventurer_verbose.stats.charisma,
+        );
+        // Note: luck is always 0 in the packed/unpacked stats (by design)
+        assert!(
+            adventurer_verbose.stats.luck == 0,
+            "luck should be 0. expected 0, actual {:?}",
+            adventurer_verbose.stats.luck,
+        );
+
+        // Verify equipment verbose data
+        assert!(
+            adventurer_verbose.equipment.weapon.id == ItemId::Wand,
+            "wrong weapon id. expected {:?}, actual {:?}",
+            ItemId::Wand,
+            adventurer_verbose.equipment.weapon.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.weapon.name == 'Wand',
+            "wrong weapon name. expected {:?}, actual {:?}",
+            'Wand',
+            adventurer_verbose.equipment.weapon.name,
+        );
+        assert!(
+            adventurer_verbose.equipment.weapon.xp == 100,
+            "wrong weapon xp. expected 100, actual {:?}",
+            adventurer_verbose.equipment.weapon.xp,
+        );
+        assert(adventurer_verbose.equipment.weapon.tier == Tier::T5, 'wrong weapon tier');
+        assert(adventurer_verbose.equipment.weapon.item_type == Type::Magic_or_Cloth, 'wrong weapon type');
+        assert(adventurer_verbose.equipment.weapon.slot == Slot::Weapon, 'wrong weapon slot');
+
+        assert!(
+            adventurer_verbose.equipment.chest.id == ItemId::DivineRobe,
+            "wrong chest id. expected {:?}, actual {:?}",
+            ItemId::DivineRobe,
+            adventurer_verbose.equipment.chest.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.chest.xp == 50,
+            "wrong chest xp. expected 50, actual {:?}",
+            adventurer_verbose.equipment.chest.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.chest.name == 'Divine Robe',
+            "wrong chest name. expected {:?}, actual {:?}",
+            'Divine Robe',
+            adventurer_verbose.equipment.chest.name,
+        );
+        assert(adventurer_verbose.equipment.chest.tier == Tier::T1, 'wrong chest tier');
+        assert(adventurer_verbose.equipment.chest.item_type == Type::Magic_or_Cloth, 'wrong chest type');
+        assert(adventurer_verbose.equipment.chest.slot == Slot::Chest, 'wrong chest slot');
+
+        assert!(
+            adventurer_verbose.equipment.head.id == ItemId::Crown,
+            "wrong head id. expected {:?}, actual {:?}",
+            ItemId::Crown,
+            adventurer_verbose.equipment.head.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.head.xp == 75,
+            "wrong head xp. expected 75, actual {:?}",
+            adventurer_verbose.equipment.head.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.head.name == 'Crown',
+            "wrong head name. expected {:?}, actual {:?}",
+            'Crown',
+            adventurer_verbose.equipment.head.name,
+        );
+        assert(adventurer_verbose.equipment.head.tier == Tier::T1, 'wrong head tier');
+        assert(adventurer_verbose.equipment.head.item_type == Type::Magic_or_Cloth, 'wrong head type');
+        assert(adventurer_verbose.equipment.head.slot == Slot::Head, 'wrong head slot');
+
+        assert!(
+            adventurer_verbose.equipment.waist.id == ItemId::DemonhideBelt,
+            "wrong waist id. expected {:?}, actual {:?}",
+            ItemId::DemonhideBelt,
+            adventurer_verbose.equipment.waist.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.waist.xp == 30,
+            "wrong waist xp. expected 30, actual {:?}",
+            adventurer_verbose.equipment.waist.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.waist.name == 'Demonhide Belt',
+            "wrong waist name. expected {:?}, actual {:?}",
+            'Demonhide Belt',
+            adventurer_verbose.equipment.waist.name,
+        );
+        assert(adventurer_verbose.equipment.waist.tier == Tier::T1, 'wrong waist tier');
+        assert(adventurer_verbose.equipment.waist.item_type == Type::Blade_or_Hide, 'wrong waist type');
+        assert(adventurer_verbose.equipment.waist.slot == Slot::Waist, 'wrong waist slot');
+
+        assert!(
+            adventurer_verbose.equipment.foot.id == ItemId::LeatherBoots,
+            "wrong foot id. expected {:?}, actual {:?}",
+            ItemId::LeatherBoots,
+            adventurer_verbose.equipment.foot.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.foot.xp == 20,
+            "wrong foot xp. expected 20, actual {:?}",
+            adventurer_verbose.equipment.foot.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.foot.name == 'Leather Boots',
+            "wrong foot name. expected {:?}, actual {:?}",
+            'Leather Boots',
+            adventurer_verbose.equipment.foot.name,
+        );
+        assert(adventurer_verbose.equipment.foot.tier == Tier::T5, 'wrong foot tier');
+        assert(adventurer_verbose.equipment.foot.item_type == Type::Blade_or_Hide, 'wrong foot type');
+        assert(adventurer_verbose.equipment.foot.slot == Slot::Foot, 'wrong foot slot');
+
+        assert!(
+            adventurer_verbose.equipment.hand.id == ItemId::LeatherGloves,
+            "wrong hand id. expected {:?}, actual {:?}",
+            ItemId::LeatherGloves,
+            adventurer_verbose.equipment.hand.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.hand.xp == 15,
+            "wrong hand xp. expected 15, actual {:?}",
+            adventurer_verbose.equipment.hand.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.hand.name == 'Leather Gloves',
+            "wrong hand name. expected {:?}, actual {:?}",
+            'Leather Gloves',
+            adventurer_verbose.equipment.hand.name,
+        );
+        assert(adventurer_verbose.equipment.hand.tier == Tier::T5, 'wrong hand tier');
+        assert(adventurer_verbose.equipment.hand.item_type == Type::Blade_or_Hide, 'wrong hand type');
+        assert(adventurer_verbose.equipment.hand.slot == Slot::Hand, 'wrong hand slot');
+
+        assert!(
+            adventurer_verbose.equipment.ring.id == ItemId::GoldRing,
+            "wrong ring id. expected {:?}, actual {:?}",
+            ItemId::GoldRing,
+            adventurer_verbose.equipment.ring.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.ring.xp == 60,
+            "wrong ring xp. expected 60, actual {:?}",
+            adventurer_verbose.equipment.ring.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.ring.name == 'Gold Ring',
+            "wrong ring name. expected {:?}, actual {:?}",
+            'Gold Ring',
+            adventurer_verbose.equipment.ring.name,
+        );
+        assert(adventurer_verbose.equipment.ring.tier == Tier::T1, 'wrong ring tier');
+        assert(adventurer_verbose.equipment.ring.item_type == Type::Ring, 'wrong ring type');
+        assert(adventurer_verbose.equipment.ring.slot == Slot::Ring, 'wrong ring slot');
+
+        assert!(
+            adventurer_verbose.equipment.neck.id == ItemId::Amulet,
+            "wrong neck id. expected {:?}, actual {:?}",
+            ItemId::Amulet,
+            adventurer_verbose.equipment.neck.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.neck.xp == 40,
+            "wrong neck xp. expected 40, actual {:?}",
+            adventurer_verbose.equipment.neck.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.neck.name == 'Amulet',
+            "wrong neck name. expected {:?}, actual {:?}",
+            'Amulet',
+            adventurer_verbose.equipment.neck.name,
+        );
+        assert(adventurer_verbose.equipment.neck.tier == Tier::T1, 'wrong neck tier');
+        assert(adventurer_verbose.equipment.neck.item_type == Type::Necklace, 'wrong neck type');
+        assert(adventurer_verbose.equipment.neck.slot == Slot::Neck, 'wrong neck slot');
+
+        // Verify bag verbose data
+        assert!(
+            adventurer_verbose.bag.item_1.id == ItemId::Falchion,
+            "wrong bag item 1 id. expected {:?}, actual {:?}",
+            ItemId::Falchion,
+            adventurer_verbose.bag.item_1.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_1.xp == 80,
+            "wrong bag item 1 xp. expected 80, actual {:?}",
+            adventurer_verbose.bag.item_1.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_1.name == 'Falchion',
+            "wrong bag item 1 name. expected {:?}, actual {:?}",
+            'Falchion',
+            adventurer_verbose.bag.item_1.name,
+        );
+        assert(adventurer_verbose.bag.item_1.tier == Tier::T2, 'wrong bag item 1 tier');
+        assert(adventurer_verbose.bag.item_1.item_type == Type::Blade_or_Hide, 'wrong bag item 1 type');
+        assert(adventurer_verbose.bag.item_1.slot == Slot::Weapon, 'wrong bag item 1 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_2.id == ItemId::GhostWand,
+            "wrong bag item 2 id. expected {:?}, actual {:?}",
+            ItemId::GhostWand,
+            adventurer_verbose.bag.item_2.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_2.xp == 120,
+            "wrong bag item 2 xp. expected 120, actual {:?}",
+            adventurer_verbose.bag.item_2.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_2.name == 'Ghost Wand',
+            "wrong bag item 2 name. expected {:?}, actual {:?}",
+            'Ghost Wand',
+            adventurer_verbose.bag.item_2.name,
+        );
+        assert(adventurer_verbose.bag.item_2.tier == Tier::T1, 'wrong bag item 2 tier');
+        assert(adventurer_verbose.bag.item_2.item_type == Type::Magic_or_Cloth, 'wrong bag item 2 type');
+        assert(adventurer_verbose.bag.item_2.slot == Slot::Weapon, 'wrong bag item 2 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_3.id == ItemId::Grimoire,
+            "wrong bag item 3 id. expected {:?}, actual {:?}",
+            ItemId::Grimoire,
+            adventurer_verbose.bag.item_3.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_3.xp == 200,
+            "wrong bag item 3 xp. expected 200, actual {:?}",
+            adventurer_verbose.bag.item_3.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_3.name == 'Grimoire',
+            "wrong bag item 3 name. expected {:?}, actual {:?}",
+            'Grimoire',
+            adventurer_verbose.bag.item_3.name,
+        );
+        assert(adventurer_verbose.bag.item_3.tier == Tier::T1, 'wrong bag item 3 tier');
+        assert(adventurer_verbose.bag.item_3.item_type == Type::Magic_or_Cloth, 'wrong bag item 3 type');
+        assert(adventurer_verbose.bag.item_3.slot == Slot::Weapon, 'wrong bag item 3 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_4.id == ItemId::SilkRobe,
+            "wrong bag item 4 id. expected {:?}, actual {:?}",
+            ItemId::SilkRobe,
+            adventurer_verbose.bag.item_4.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_4.xp == 45,
+            "wrong bag item 4 xp. expected 45, actual {:?}",
+            adventurer_verbose.bag.item_4.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_4.name == 'Silk Robe',
+            "wrong bag item 4 name. expected {:?}, actual {:?}",
+            'Silk Robe',
+            adventurer_verbose.bag.item_4.name,
+        );
+        assert(adventurer_verbose.bag.item_4.tier == Tier::T2, 'wrong bag item 4 tier');
+        assert(adventurer_verbose.bag.item_4.item_type == Type::Magic_or_Cloth, 'wrong bag item 4 type');
+        assert(adventurer_verbose.bag.item_4.slot == Slot::Chest, 'wrong bag item 4 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_5.id == ItemId::LinenGloves,
+            "wrong bag item 5 id. expected {:?}, actual {:?}",
+            ItemId::LinenGloves,
+            adventurer_verbose.bag.item_5.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_5.xp == 10,
+            "wrong bag item 5 xp. expected 10, actual {:?}",
+            adventurer_verbose.bag.item_5.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_5.name == 'Linen Gloves',
+            "wrong bag item 5 name. expected {:?}, actual {:?}",
+            'Linen Gloves',
+            adventurer_verbose.bag.item_5.name,
+        );
+        assert(adventurer_verbose.bag.item_5.tier == Tier::T4, 'wrong bag item 5 tier');
+        assert(adventurer_verbose.bag.item_5.item_type == Type::Magic_or_Cloth, 'wrong bag item 5 type');
+        assert(adventurer_verbose.bag.item_5.slot == Slot::Hand, 'wrong bag item 5 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_6.id == 0,
+            "wrong bag item 6 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_6.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_6.xp == 0,
+            "wrong bag item 6 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_6.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_6.name == 0,
+            "wrong bag item 6 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_6.name,
+        );
+        assert(adventurer_verbose.bag.item_6.tier == Tier::None, 'wrong bag item 6 tier');
+        assert(adventurer_verbose.bag.item_6.item_type == Type::None, 'wrong bag item 6 type');
+        assert(adventurer_verbose.bag.item_6.slot == Slot::None, 'wrong bag item 6 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_7.id == 0,
+            "wrong bag item 7 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_7.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_7.xp == 0,
+            "wrong bag item 7 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_7.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_7.name == 0,
+            "wrong bag item 7 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_7.name,
+        );
+        assert(adventurer_verbose.bag.item_7.tier == Tier::None, 'wrong bag item 7 tier');
+        assert(adventurer_verbose.bag.item_7.item_type == Type::None, 'wrong bag item 7 type');
+        assert(adventurer_verbose.bag.item_7.slot == Slot::None, 'wrong bag item 7 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_8.id == 0,
+            "wrong bag item 8 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_8.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_8.xp == 0,
+            "wrong bag item 8 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_8.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_8.name == 0,
+            "wrong bag item 8 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_8.name,
+        );
+        assert(adventurer_verbose.bag.item_8.tier == Tier::None, 'wrong bag item 8 tier');
+        assert(adventurer_verbose.bag.item_8.item_type == Type::None, 'wrong bag item 8 type');
+        assert(adventurer_verbose.bag.item_8.slot == Slot::None, 'wrong bag item 8 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_9.id == 0,
+            "wrong bag item 9 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_9.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_9.xp == 0,
+            "wrong bag item 9 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_9.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_9.name == 0,
+            "wrong bag item 9 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_9.name,
+        );
+        assert(adventurer_verbose.bag.item_9.tier == Tier::None, 'wrong bag item 9 tier');
+        assert(adventurer_verbose.bag.item_9.item_type == Type::None, 'wrong bag item 9 type');
+        assert(adventurer_verbose.bag.item_9.slot == Slot::None, 'wrong bag item 9 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_10.id == 0,
+            "wrong bag item 10 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_10.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_10.xp == 0,
+            "wrong bag item 10 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_10.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_10.name == 0,
+            "wrong bag item 10 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_10.name,
+        );
+        assert(adventurer_verbose.bag.item_10.tier == Tier::None, 'wrong bag item 10 tier');
+        assert(adventurer_verbose.bag.item_10.item_type == Type::None, 'wrong bag item 10 type');
+        assert(adventurer_verbose.bag.item_10.slot == Slot::None, 'wrong bag item 10 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_11.id == 0,
+            "wrong bag item 11 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_11.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_11.xp == 0,
+            "wrong bag item 11 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_11.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_11.name == 0,
+            "wrong bag item 11 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_11.name,
+        );
+        assert(adventurer_verbose.bag.item_11.tier == Tier::None, 'wrong bag item 11 tier');
+        assert(adventurer_verbose.bag.item_11.item_type == Type::None, 'wrong bag item 11 type');
+        assert(adventurer_verbose.bag.item_11.slot == Slot::None, 'wrong bag item 11 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_12.id == 0,
+            "wrong bag item 12 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_12.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_12.xp == 0,
+            "wrong bag item 12 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_12.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_12.name == 0,
+            "wrong bag item 12 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_12.name,
+        );
+        assert(adventurer_verbose.bag.item_12.tier == Tier::None, 'wrong bag item 12 tier');
+        assert(adventurer_verbose.bag.item_12.item_type == Type::None, 'wrong bag item 12 type');
+        assert(adventurer_verbose.bag.item_12.slot == Slot::None, 'wrong bag item 12 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_13.id == 0,
+            "wrong bag item 13 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_13.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_13.xp == 0,
+            "wrong bag item 13 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_13.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_13.name == 0,
+            "wrong bag item 13 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_13.name,
+        );
+        assert(adventurer_verbose.bag.item_13.tier == Tier::None, 'wrong bag item 13 tier');
+        assert(adventurer_verbose.bag.item_13.item_type == Type::None, 'wrong bag item 13 type');
+        assert(adventurer_verbose.bag.item_13.slot == Slot::None, 'wrong bag item 13 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_14.id == 0,
+            "wrong bag item 14 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_14.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_14.xp == 0,
+            "wrong bag item 14 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_14.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_14.name == 0,
+            "wrong bag item 14 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_14.name,
+        );
+        assert(adventurer_verbose.bag.item_14.tier == Tier::None, 'wrong bag item 14 tier');
+        assert(adventurer_verbose.bag.item_14.item_type == Type::None, 'wrong bag item 14 type');
+        assert(adventurer_verbose.bag.item_14.slot == Slot::None, 'wrong bag item 14 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_15.id == 0,
+            "wrong bag item 15 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_15.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_15.xp == 0,
+            "wrong bag item 15 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_15.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_15.name == 0,
+            "wrong bag item 15 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_15.name,
+        );
+        assert(adventurer_verbose.bag.item_15.tier == Tier::None, 'wrong bag item 15 tier');
+        assert(adventurer_verbose.bag.item_15.item_type == Type::None, 'wrong bag item 15 type');
+        assert(adventurer_verbose.bag.item_15.slot == Slot::None, 'wrong bag item 15 slot');
     }
 }

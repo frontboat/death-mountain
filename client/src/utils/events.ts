@@ -1,13 +1,9 @@
-import adventurerImg from '@/assets/images/adventurer.png';
-import barrierImg from '@/assets/images/barrier.png';
-import goldImg from '@/assets/images/gold.png';
-import healthImg from '@/assets/images/health.png';
-import marketImg from '@/assets/images/market.png';
-import upgrade from '@/assets/images/upgrade.png';
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES, BEAST_NAMES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { OBSTACLE_NAMES } from "@/constants/obstacle";
-import { Adventurer, Attack, Beast, useEntityModel, Item, ItemPurchase, Obstacle, Stats } from "@/types/game";
+import { Adventurer, Attack, Beast, Item, ItemPurchase, Obstacle, Stats, useEntityModel } from "@/types/game";
+import { preloadAssets } from "./assetLoader";
 import { getBeastImageById, getBeastName, getBeastTier, getBeastType } from "./beast";
+import { streamIds } from "./cloudflare";
 import { ItemUtils } from "./loot";
 
 export interface GameEvent {
@@ -40,8 +36,8 @@ export interface GameEvent {
 
 export const useEvents = () => {
   const { getEntityModel } = useEntityModel();
-  
-  const formatGameEvent = (entity: any): GameEvent => {
+
+  const processGameEvent = (entity: any) => {
     let event = getEntityModel(entity, "GameEvent")
     const { action_count, details } = event;
 
@@ -235,17 +231,27 @@ export const useEvents = () => {
     return { type: 'unknown', action_count: 0 };
   };
 
-  return { formatGameEvent };
+  return { processGameEvent };
 };
 
-export const ExplorerLogEvents = [
-  'discovery',
-  'obstacle',
-  'defeated_beast',
-  'fled_beast',
-  'stat_upgrade',
-  'buy_items',
-  'level_up',
+export const getVideoId = (event: GameEvent) => {
+  if (event.type === 'beast') {
+    preloadAssets([`/images/battle_scenes/${event.beast!.baseName.toLowerCase()}.png`]);
+    return streamIds[event.beast!.baseName as keyof typeof streamIds];
+  } else if (event.type === 'obstacle') {
+    return streamIds[OBSTACLE_NAMES[event.obstacle!.id as keyof typeof OBSTACLE_NAMES] as keyof typeof streamIds];
+  } else if (event.type === 'discovery') {
+    return streamIds[event.discovery!.type as keyof typeof streamIds];
+  } else if (event.type === 'level_up') {
+    return streamIds.level_up;
+  }
+
+  return null;
+}
+
+// Videos that transition to the next video
+export const transitionVideos = [
+  streamIds.explore,
 ]
 
 export const BattleEvents = [
@@ -270,23 +276,23 @@ export const ExplorerReplayEvents = [
 export const getEventIcon = (event: GameEvent) => {
   switch (event.type) {
     case 'discovery':
-      if (event.discovery?.type === 'Gold') return goldImg;
-      if (event.discovery?.type === 'Health') return healthImg;
+      if (event.discovery?.type === 'Gold') return '/images/mobile/gold.png';
+      if (event.discovery?.type === 'Health') return '/images/mobile/health.png';
       if (event.discovery?.type === 'Loot') return ItemUtils.getItemImage(event.discovery?.amount!);
     case 'obstacle':
-      return barrierImg;
+      return '/images/mobile/barrier.png';
     case 'defeated_beast':
       return getBeastImageById(event.beast_id!);
     case 'fled_beast':
       return getBeastImageById(event.beast_id!);
     case 'stat_upgrade':
-      return adventurerImg;
+      return '/images/mobile/adventurer.png';
     case 'level_up':
-      return upgrade;
+      return '/images/mobile/upgrade.png';
     case 'buy_items':
-      return marketImg;
+      return '/images/mobile/market.png';
     default:
-      return adventurerImg;
+      return '/images/mobile/adventurer.png';
   }
 };
 
