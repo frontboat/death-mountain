@@ -3,8 +3,7 @@ import { stringToFelt } from "@/utils/utils";
 import ControllerConnector from "@cartridge/connector/controller";
 import { sepolia } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState, useEffect } from "react";
-import { Contract } from "starknet";
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 interface DynamicConnectorContext {
   setCurrentNetworkConfig: (network: NetworkConfig) => void;

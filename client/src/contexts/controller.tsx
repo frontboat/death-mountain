@@ -1,4 +1,8 @@
 import { useStarknetApi } from "@/api/starknet";
+import { useGameTokens } from "@/dojo/useGameTokens";
+import { useSystemCalls } from "@/dojo/useSystemCalls";
+import { useGameStore } from "@/stores/gameStore";
+import { Payment } from "@/types/game";
 import {
   ChainId,
   NETWORKS
@@ -12,13 +16,9 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
-import { useGameTokens } from "@/dojo/useGameTokens";
-import { useNavigate } from "react-router-dom";
-import { useSystemCalls } from "@/dojo/useSystemCalls";
-import { Payment } from "@/types/game";
-import { useGameStore } from "@/stores/gameStore";
 
 export interface ControllerContext {
   account: any;

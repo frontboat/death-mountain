@@ -127,7 +127,10 @@ export default function MarketOverlay() {
 
       // Then sort by affordability
       if (canAffordA && canAffordB) {
-        return b.price - a.price; // Both affordable, sort by price
+        if (a.price === b.price) {
+          return a.tier - b.tier; // Both same price, sort by tier
+        }
+        return a.price - b.price;
       } else if (canAffordA) {
         return -1; // A is affordable, B is not, A comes first
       } else if (canAffordB) {

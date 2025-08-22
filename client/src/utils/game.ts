@@ -25,6 +25,8 @@ export const calculateProgress = (xp: number, item: boolean = false) => {
 };
 
 export const getNewItemsEquipped = (newEquipment: Equipment, oldEquipment: Equipment) => {
+  if (!newEquipment || !oldEquipment) return [];
+
   const newItems: Item[] = [];
 
   // Check each equipment slot in the current adventurer

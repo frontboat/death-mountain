@@ -1,5 +1,5 @@
 import { useDojoConfig } from "@/contexts/starknet";
-import { Adventurer } from "@/types/game";
+import { Adventurer, GameSettingsData } from "@/types/game";
 import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useAccount } from "@starknet-react/core";
@@ -189,6 +189,52 @@ export const useStarknetApi = () => {
     return null;
   };
 
+  const getSettingsDetails = async (settingsId: number) => {
+    try {
+      const response = await fetch(dojoConfig.rpcUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "starknet_call",
+          params: [
+            {
+              contract_address: getContractByName(dojoConfig.manifest, dojoConfig.namespace, "settings_systems")?.address,
+              entry_point_selector: "0x212a142d787b7ccdf7549cce575f25c05823490271d294b08eceda21119475",
+              calldata: [num.toHex(settingsId)],
+            },
+            "pending",
+          ],
+          id: 0,
+        }),
+      });
+
+      const data = await response.json();
+      if (!data?.result) return null;
+
+      let settings: any = {
+        adventurer: {
+          health: parseInt(data.result[2]),
+          xp: parseInt(data.result[3]),
+        },
+        game_seed: parseInt(data.result[63]),
+        game_seed_until_xp: parseInt(data.result[64]),
+        in_battle: parseInt(data.result[65]),
+        stats_mode: parseInt(data.result[66]) === 0 ? "Dodge" : "Reduction",
+        base_damage_reduction: parseInt(data.result[67]),
+        market_size: parseInt(data.result[68]),
+      }
+
+      return settings;
+    } catch (error) {
+      console.log('error', error)
+    }
+
+    return null;
+  }
+
   const createBurnerAccount = async (rpcProvider: RpcProvider) => {
     const privateKey = stark.randomAddress();
     const publicKey = ec.starkCurve.getStarkKey(privateKey);
@@ -221,5 +267,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getAdventurer, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady };
+  return { getAdventurer, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails };
 };

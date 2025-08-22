@@ -1,6 +1,6 @@
-import { useDojoConfig, useDynamicConnector } from "@/contexts/starknet";
-import { Settings, useGameSettings } from "@/dojo/useGameSettings";
-import { useGameTokens } from "@/dojo/useGameTokens";
+import { useStarknetApi } from "@/api/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
+import { Settings } from "@/dojo/useGameSettings";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { GameAction, useEntityModel } from "@/types/game";
@@ -14,19 +14,15 @@ import {
 import { getNewItemsEquipped } from "@/utils/game";
 import { useQueries } from "@/utils/queries";
 import { delay } from "@/utils/utils";
-import { getContractByName } from "@dojoengine/core";
 import { useDojoSDK } from "@dojoengine/sdk/react";
-import { useSubscribeGameTokens } from "metagame-sdk";
 import {
   createContext,
   PropsWithChildren,
   useContext,
   useEffect,
-  useMemo,
   useReducer,
   useState
 } from "react";
-import { addAddressPadding } from "starknet";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -77,15 +73,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     drop,
     claimBeast,
   } = useSystemCalls();
-  const { getSettingsList } = useGameSettings();
-  const { fetchMetadata } = useGameTokens();
-  const dojoConfig = useDojoConfig();
-  const namespace = dojoConfig.namespace;
-  const GAME_TOKEN_ADDRESS = getContractByName(
-    dojoConfig.manifest,
-    namespace,
-    "game_token_systems"
-  )?.address;
+  const { getSettingsDetails } = useStarknetApi();
   const { getEntityModel } = useEntityModel();
   const { processGameEvent } = useEvents();
   const { gameEventsQuery } = useQueries();
@@ -113,13 +101,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     incrementBeastsCollected
   } = useGameStore();
 
-  const { games: gameTokens } = useSubscribeGameTokens({
-    gameAddresses: [
-      addAddressPadding(GAME_TOKEN_ADDRESS), // adding pad address to sdk
-    ],
-    tokenIds: [gameId ? gameId.toString() : "0"],
-  });
-
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
   const [spectating, setSpectating] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
@@ -130,27 +111,18 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   const [beastDefeated, setBeastDefeated] = useState(false);
 
-  const gameTokensKey = useMemo(() => {
-    return gameTokens.map((token: any) => token.token_id).join(",");
-  }, [gameTokens]);
-
   useEffect(() => {
-    if (gameId && gameTokens && gameTokens.length > 0) {
-      fetchMetadata(gameTokens, gameId);
-    }
-  }, [gameId, gameTokensKey]);
+    console.log('gameId', gameId);
+    console.log('metadata', metadata);
+    console.log('gameSettings', gameSettings);
 
-  useEffect(() => {
     if (gameId && metadata && !gameSettings) {
-      getSettingsList(null, [metadata.settings_id]).then(
-        (settings: Settings[]) => {
-          setGameSettings(settings[0]);
-          setVRFEnabled(
-            currentNetworkConfig.vrf && settings[0].game_seed === 0
-          );
-          subscribeEvents(gameId!, settings[0]);
-        }
-      );
+      getSettingsDetails(metadata.settings_id).then((settings) => {
+        console.log('settings', settings);
+        setGameSettings(settings);
+        setVRFEnabled(currentNetworkConfig.vrf && settings.game_seed === 0);
+        subscribeEvents(gameId!, settings);
+      });
     }
   }, [metadata, gameId]);
 
@@ -204,6 +176,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
             )
             .map((entity: any) => processGameEvent(entity));
 
+          console.log('events', events);
           if (events.some((event: any) => event.type === "defeated_beast")) {
             setBeastDefeated(true);
           }
@@ -219,10 +192,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       .sort((a, b) => a.action_count - b.action_count);
 
     if (!events || events.length === 0) {
-      startGame(
-        gameId,
-        settings.game_seed === 0 && settings.adventurer.xp !== 0
-      );
+      executeGameAction({ type: 'start_game', gameId, settings });
     } else {
       reconnectGameEvents(events);
     }
@@ -315,8 +285,15 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   };
 
-  const executeGameAction = (action: GameAction) => {
+  const executeGameAction = async (action: GameAction) => {
     let txs: any[] = [];
+
+    if (action.type === "start_game") {
+      if (action.settings.game_seed === 0 && action.settings.adventurer.xp !== 0) {
+        txs.push(requestRandom());
+      }
+      txs.push(startGame(action.gameId!));
+    }
 
     if (VRFEnabled && ["explore", "attack", "flee"].includes(action.type)) {
       txs.push(requestRandom());
@@ -364,7 +341,15 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       txs.push(drop(gameId!, action.items!));
     }
 
-    executeAction(txs, setActionFailed);
+    console.log('txs', txs);
+    const events = await executeAction(txs, setActionFailed);
+    console.log('events', events);
+
+    if (events.some((event: any) => event.type === "defeated_beast")) {
+      setBeastDefeated(true);
+    }
+
+    // setEventQueue((prev) => [...prev, ...events]);
   };
 
   return (

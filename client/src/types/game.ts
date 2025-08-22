@@ -110,6 +110,8 @@ export interface GameAction {
   potions?: number;
   untilBeast?: boolean;
   untilDeath?: boolean;
+  gameId?: number;
+  settings?: any;
 }
 
 export interface Payment {
