@@ -15,6 +15,7 @@ import {
 import { createDojoConfig } from "@dojoengine/core";
 import { useEffect, useState } from "react";
 import { MetagameProvider } from "@/contexts/metagame.tsx";
+import { Analytics } from "@vercel/analytics/react";
 import "./index.css";
 
 function DojoApp() {
@@ -63,6 +64,7 @@ function DojoApp() {
 async function main() {
   createRoot(document.getElementById("root")!).render(
     <DynamicConnectorProvider>
+      <Analytics />
       <DojoApp />
     </DynamicConnectorProvider>
   );
