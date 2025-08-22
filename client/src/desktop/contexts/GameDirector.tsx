@@ -112,16 +112,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [beastDefeated, setBeastDefeated] = useState(false);
 
   useEffect(() => {
-    console.log('gameId', gameId);
-    console.log('metadata', metadata);
-    console.log('gameSettings', gameSettings);
-
     if (gameId && metadata && !gameSettings) {
       getSettingsDetails(metadata.settings_id).then((settings) => {
-        console.log('settings', settings);
         setGameSettings(settings);
         setVRFEnabled(currentNetworkConfig.vrf && settings.game_seed === 0);
-        subscribeEvents(gameId!, settings);
+        // subscribeEvents(gameId!, settings);
+        initializeGame(gameId!, settings);
       });
     }
   }, [metadata, gameId]);
@@ -199,6 +195,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     setSubscription(sub);
   };
+
+  const initializeGame = async (gameId: number, settings: Settings) => {
+    executeGameAction({ type: 'start_game', gameId, settings });
+  }
 
   const reconnectGameEvents = async (events: any[]) => {
     events.forEach((event) => {
@@ -341,7 +341,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       txs.push(drop(gameId!, action.items!));
     }
 
-    console.log('txs', txs);
     const events = await executeAction(txs, setActionFailed);
     console.log('events', events);
 
@@ -349,7 +348,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setBeastDefeated(true);
     }
 
-    // setEventQueue((prev) => [...prev, ...events]);
+    setEventQueue((prev) => [...prev, ...events]);
   };
 
   return (

@@ -181,7 +181,7 @@ export const components: any = {
     special3: 'number',
   },
   'discovery': {
-    discovery_type: 'discovery_type',
+    discovery: 'discovery_type',
     xp_reward: 'number',
   },
   'discovery_type': {
@@ -309,19 +309,18 @@ export const translateGameEvent = (event: any, manifest: any): any => {
 
 export const translateTokenMetaData = (data: any): any => {
   return {
-    id: parseInt(data[0]),
     game_id: parseInt(data[1]),
-    minted_at: parseInt(data[2]),
-    settings_id: parseInt(data[3]),
+    minted_at: parseInt(data[4]),
+    settings_id: parseInt(data[5]),
     lifecycle: {
-      start: parseInt(data[4]),
-      end: parseInt(data[5]),
+      start: parseInt(data[6]),
+      end: parseInt(data[7]),
     },
-    minted_by: parseInt(data[6]),
-    soulbound: Boolean(parseInt(data[7])),
-    game_over: Boolean(parseInt(data[8])),
-    completed_all_objectives: Boolean(parseInt(data[9])),
-    has_context: Boolean(parseInt(data[10])),
-    objectives_count: parseInt(data[11]),
+    minted_by: parseInt(data[8]),
+    soulbound: Boolean(parseInt(data[9])),
+    game_over: Boolean(parseInt(data[10])),
+    completed_all_objectives: Boolean(parseInt(data[11])),
+    has_context: Boolean(parseInt(data[12])),
+    objectives_count: parseInt(data[13]),
   }
 }
