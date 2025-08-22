@@ -3342,4 +3342,58 @@ mod tests {
         assert(adventurer_verbose.bag.item_15.item_type == Type::None, 'wrong bag item 15 type');
         assert(adventurer_verbose.bag.item_15.slot == Slot::None, 'wrong bag item 15 slot');
     }
+
+    #[test]
+    fn verbose_adventurer_packed_adventurer() {
+        let (mut world, game, game_libs, _) = deploy_dungeon();
+        let adventurer_id = new_game(world, game);
+
+        game.attack(adventurer_id, false);
+
+        let (adventurer, _) = game_libs.adventurer.load_assets(adventurer_id);
+        let manual_packed_adventurer: felt252 = ImplAdventurer::pack(adventurer);
+
+        let adventurer_packed_adventurer: felt252 = game_libs.adventurer.get_adventurer_packed(adventurer_id);
+        assert!(
+            adventurer_packed_adventurer == manual_packed_adventurer,
+            "get_adventurer_packed_adventurer view function does not match manual pack. Expected: {:?}, Actual: {:?}",
+            manual_packed_adventurer,
+            adventurer_packed_adventurer,
+        );
+
+        let adventurer_verbose = game_libs.adventurer.get_adventurer_verbose(adventurer_id);
+        assert!(
+            adventurer_verbose.packed_adventurer == manual_packed_adventurer,
+            "get_adventurer_verbose view function does not match get_adventurer_packed_adventurer view function. Expected: {:?}, Actual: {:?}",
+            manual_packed_adventurer,
+            adventurer_verbose.packed_adventurer,
+        );
+    }
+
+    #[test]
+    fn verbose_bag_packed_bag() {
+        let (world, game, game_libs, _) = deploy_dungeon();
+        let adventurer_id = new_game(world, game);
+
+        game.attack(adventurer_id, false);
+
+        let (_, bag) = game_libs.adventurer.load_assets(adventurer_id);
+        let manual_packed_bag: felt252 = ImplBag::pack(bag);
+
+        let bag_packed_bag: felt252 = game_libs.adventurer.get_bag_packed(adventurer_id);
+        assert!(
+            bag_packed_bag == manual_packed_bag,
+            "get_bag_packed_bag view function does not match manual pack. Expected: {:?}, Actual: {:?}",
+            manual_packed_bag,
+            bag_packed_bag,
+        );
+
+        let adventurer_verbose = game_libs.adventurer.get_adventurer_verbose(adventurer_id);
+        assert!(
+            adventurer_verbose.packed_bag == manual_packed_bag,
+            "get_adventurer_verbose view function does not match get_bag_packed_bag view function. Expected: {:?}, Actual: {:?}",
+            manual_packed_bag,
+            adventurer_verbose.packed_bag,
+        );
+    }
 }
