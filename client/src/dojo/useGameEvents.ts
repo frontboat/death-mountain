@@ -21,7 +21,7 @@ export const useGameEvents = () => {
       })
 
       let data = await sql.json()
-      return data.map((event: any) => processGameEvent(event))
+      return data.map((event: any) => processGameEvent(JSON.parse(event.data)))
     } catch (error) {
       return [];
     }

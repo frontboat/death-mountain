@@ -341,7 +341,7 @@ export const useStarknetApi = () => {
       if (!data?.result) return null;
 
       let tokenMetadata: Metadata = {
-        player_name: playerName,
+        player_name: '',
         settings_id: parseInt(data.result[2]),
         expires_at: parseInt(data.result[3], 16) * 1000,
         available_at: parseInt(data.result[4], 16) * 1000,

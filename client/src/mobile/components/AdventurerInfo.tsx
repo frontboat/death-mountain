@@ -7,7 +7,7 @@ import { STARTING_HEALTH } from "@/constants/game";
 import { Box } from "@mui/material";
 
 export default function AdventurerInfo() {
-  const { openProfile } = useController();
+  const { openProfile, playerName } = useController();
   const { adventurer, metadata } = useGameStore();
   // Calculate level using the proper function
   const level = calculateLevel(adventurer?.xp || 1);
@@ -21,7 +21,7 @@ export default function AdventurerInfo() {
       <Box sx={styles.characterHeader}>
         <Box onClick={openProfile}>
           <Typography variant="h4" sx={styles.characterName}>
-            {metadata?.player_name || 'Adventurer'}
+            {metadata?.player_name || playerName || 'Adventurer'}
           </Typography>
         </Box>
         <Box sx={styles.headerStats}>
