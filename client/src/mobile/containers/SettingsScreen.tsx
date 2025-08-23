@@ -14,18 +14,15 @@ export default function SettingsScreen() {
   const { gameId, setAdventurer } = useGameStore();
   const { playing, setPlaying, volume, setVolume } = useSound();
   const { account, address, playerName, login, openProfile } = useController();
-  const { getAdventurer } = useStarknetApi();
+  const { getGameState } = useStarknetApi();
 
   const handleExitGame = () => {
     navigate('/survivor');
   };
 
   const handleUnstuck = async () => {
-    const adventurer = await getAdventurer(gameId!);
-
-    if (adventurer) {
-      setAdventurer(adventurer);
-    }
+    const gameState = await getGameState(gameId!);
+    console.log(gameState);
   };
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {

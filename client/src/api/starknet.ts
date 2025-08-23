@@ -1,13 +1,15 @@
-import { useDojoConfig } from "@/contexts/starknet";
-import { Adventurer, GameSettingsData } from "@/types/game";
+import { useController } from "@/contexts/controller";
+import { useDynamicConnector } from "@/contexts/starknet";
+import { Metadata } from "@/types/game";
 import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useAccount } from "@starknet-react/core";
 import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
 export const useStarknetApi = () => {
-  const dojoConfig = useDojoConfig();
+  const { currentNetworkConfig } = useDynamicConnector();
   const { address } = useAccount();
+  const { playerName } = useController();
 
   const getTokenBalances = async (tokens: any[]): Promise<Record<string, string>> => {
     const calls = tokens.map((token, i) => ({
@@ -24,7 +26,7 @@ export const useStarknetApi = () => {
       ]
     }));
 
-    const response = await fetch(dojoConfig.rpcUrl, {
+    const response = await fetch(currentNetworkConfig.rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(calls),
@@ -50,7 +52,7 @@ export const useStarknetApi = () => {
         ]
       }));
 
-      const response = await fetch(dojoConfig.rpcUrl, {
+      const response = await fetch(currentNetworkConfig.rpcUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(calls),
@@ -66,9 +68,9 @@ export const useStarknetApi = () => {
     }
   }
 
-  const getAdventurer = async (adventurerId: number): Promise<Adventurer | null> => {
+  const getGameState = async (adventurerId: number) => {
     try {
-      const response = await fetch(dojoConfig.rpcUrl, {
+      const response = await fetch(currentNetworkConfig.rpcUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,8 +80,8 @@ export const useStarknetApi = () => {
           method: "starknet_call",
           params: [
             {
-              contract_address: getContractByName(dojoConfig.manifest, dojoConfig.namespace, "adventurer_systems")?.address,
-              entry_point_selector: "0x26f44ef7459c56b4f89ce027528afd605332b95a2875631deb3d1be2cbafea5",
+              contract_address: getContractByName(currentNetworkConfig.manifest, currentNetworkConfig.namespace, "game_systems")?.address,
+              entry_point_selector: "0x2305fda54e31f8525bf15eaf4f22b11a7d1d2a03f1b4d0602b9ead3c29533e",
               calldata: [num.toHex(adventurerId)],
             },
             "pending",
@@ -91,60 +93,138 @@ export const useStarknetApi = () => {
       const data = await response.json();
       if (!data?.result || data?.result.length < 10) return null;
 
-      let adventurer: Adventurer = {
-        health: parseInt(data?.result[0], 16),
-        xp: parseInt(data?.result[1], 16),
-        gold: parseInt(data?.result[2], 16),
-        beast_health: parseInt(data?.result[3], 16),
-        stat_upgrades_available: parseInt(data?.result[4], 16),
-        stats: {
-          strength: parseInt(data?.result[5], 16),
-          dexterity: parseInt(data?.result[6], 16),
-          vitality: parseInt(data?.result[7], 16),
-          intelligence: parseInt(data?.result[8], 16),
-          wisdom: parseInt(data?.result[9], 16),
-          charisma: parseInt(data?.result[10], 16),
-          luck: parseInt(data?.result[11], 16),
+      let gameState = {
+        adventurer: {
+          health: parseInt(data?.result[0], 16),
+          xp: parseInt(data?.result[1], 16),
+          gold: parseInt(data?.result[2], 16),
+          beast_health: parseInt(data?.result[3], 16),
+          stat_upgrades_available: parseInt(data?.result[4], 16),
+          stats: {
+            strength: parseInt(data?.result[5], 16),
+            dexterity: parseInt(data?.result[6], 16),
+            vitality: parseInt(data?.result[7], 16),
+            intelligence: parseInt(data?.result[8], 16),
+            wisdom: parseInt(data?.result[9], 16),
+            charisma: parseInt(data?.result[10], 16),
+            luck: parseInt(data?.result[11], 16),
+          },
+          equipment: {
+            weapon: {
+              id: parseInt(data?.result[12], 16),
+              xp: parseInt(data?.result[13], 16),
+            },
+            chest: {
+              id: parseInt(data?.result[14], 16),
+              xp: parseInt(data?.result[15], 16),
+            },
+            head: {
+              id: parseInt(data?.result[16], 16),
+              xp: parseInt(data?.result[17], 16),
+            },
+            waist: {
+              id: parseInt(data?.result[18], 16),
+              xp: parseInt(data?.result[19], 16),
+            },
+            foot: {
+              id: parseInt(data?.result[20], 16),
+              xp: parseInt(data?.result[21], 16),
+            },
+            hand: {
+              id: parseInt(data?.result[22], 16),
+              xp: parseInt(data?.result[23], 16),
+            },
+            neck: {
+              id: parseInt(data?.result[24], 16),
+              xp: parseInt(data?.result[25], 16),
+            },
+            ring: {
+              id: parseInt(data?.result[26], 16),
+              xp: parseInt(data?.result[27], 16),
+            },
+          },
+          item_specials_seed: parseInt(data?.result[28], 16),
+          action_count: parseInt(data?.result[29], 16),
         },
-        equipment: {
-          weapon: {
-            id: parseInt(data?.result[12], 16),
-            xp: parseInt(data?.result[13], 16),
+        bag: {
+          item_1: {
+            id: parseInt(data?.result[30], 16),
+            xp: parseInt(data?.result[31], 16),
           },
-          chest: {
-            id: parseInt(data?.result[14], 16),
-            xp: parseInt(data?.result[15], 16),
+          item_2: {
+            id: parseInt(data?.result[32], 16),
+            xp: parseInt(data?.result[33], 16),
           },
-          head: {
-            id: parseInt(data?.result[16], 16),
-            xp: parseInt(data?.result[17], 16),
+          item_3: {
+            id: parseInt(data?.result[34], 16),
+            xp: parseInt(data?.result[35], 16),
           },
-          waist: {
-            id: parseInt(data?.result[18], 16),
-            xp: parseInt(data?.result[19], 16),
+          item_4: {
+            id: parseInt(data?.result[36], 16),
+            xp: parseInt(data?.result[37], 16),
           },
-          foot: {
-            id: parseInt(data?.result[20], 16),
-            xp: parseInt(data?.result[21], 16),
+          item_5: {
+            id: parseInt(data?.result[38], 16),
+            xp: parseInt(data?.result[39], 16),
           },
-          hand: {
-            id: parseInt(data?.result[22], 16),
-            xp: parseInt(data?.result[23], 16),
+          item_6: {
+            id: parseInt(data?.result[40], 16),
+            xp: parseInt(data?.result[41], 16),
           },
-          neck: {
-            id: parseInt(data?.result[24], 16),
-            xp: parseInt(data?.result[25], 16),
+          item_7: {
+            id: parseInt(data?.result[42], 16),
+            xp: parseInt(data?.result[43], 16),
           },
-          ring: {
-            id: parseInt(data?.result[26], 16),
-            xp: parseInt(data?.result[27], 16),
+          item_8: {
+            id: parseInt(data?.result[44], 16),
+            xp: parseInt(data?.result[45], 16),
           },
+          item_9: {
+            id: parseInt(data?.result[46], 16),
+            xp: parseInt(data?.result[47], 16),
+          },
+          item_10: {
+            id: parseInt(data?.result[48], 16),
+            xp: parseInt(data?.result[49], 16),
+          },
+          item_11: {
+            id: parseInt(data?.result[50], 16),
+            xp: parseInt(data?.result[51], 16),
+          },
+          item_12: {
+            id: parseInt(data?.result[52], 16),
+            xp: parseInt(data?.result[53], 16),
+          },
+          item_13: {
+            id: parseInt(data?.result[54], 16),
+            xp: parseInt(data?.result[55], 16),
+          },
+          item_14: {
+            id: parseInt(data?.result[56], 16),
+            xp: parseInt(data?.result[57], 16),
+          },
+          item_15: {
+            id: parseInt(data?.result[58], 16),
+            xp: parseInt(data?.result[59], 16),
+          },
+          mutated: parseInt(data?.result[60], 16) === 1,
         },
-        item_specials_seed: parseInt(data?.result[28], 16),
-        action_count: parseInt(data?.result[29], 16),
+        beast: {
+          id: parseInt(data?.result[61], 16),
+          seed: parseInt(data?.result[62], 16),
+          health: parseInt(data?.result[63], 16),
+          level: parseInt(data?.result[64], 16),
+          specials: {
+            special1: parseInt(data?.result[65], 16),
+            special2: parseInt(data?.result[66], 16),
+            special3: parseInt(data?.result[67], 16),
+          },
+          is_collectable: parseInt(data?.result[68], 16) === 1,
+        },
+        market: data?.result.slice(70).map((item: any) => parseInt(item, 16)),
       }
 
-      return adventurer;
+      return gameState;
     } catch (error) {
       console.log('error', error)
     }
@@ -154,7 +234,7 @@ export const useStarknetApi = () => {
 
   const getBeastTokenURI = async (beastId: number): Promise<string | null> => {
     try {
-      const response = await fetch(dojoConfig.rpcUrl, {
+      const response = await fetch(currentNetworkConfig.rpcUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -191,7 +271,7 @@ export const useStarknetApi = () => {
 
   const getSettingsDetails = async (settingsId: number) => {
     try {
-      const response = await fetch(dojoConfig.rpcUrl, {
+      const response = await fetch(currentNetworkConfig.rpcUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -201,7 +281,7 @@ export const useStarknetApi = () => {
           method: "starknet_call",
           params: [
             {
-              contract_address: getContractByName(dojoConfig.manifest, dojoConfig.namespace, "settings_systems")?.address,
+              contract_address: getContractByName(currentNetworkConfig.manifest, currentNetworkConfig.namespace, "settings_systems")?.address,
               entry_point_selector: "0x212a142d787b7ccdf7549cce575f25c05823490271d294b08eceda21119475",
               calldata: [num.toHex(settingsId)],
             },
@@ -228,6 +308,47 @@ export const useStarknetApi = () => {
       }
 
       return settings;
+    } catch (error) {
+      console.log('error', error)
+    }
+
+    return null;
+  }
+
+  const getTokenMetadata = async (tokenId: number) => {
+    try {
+      const response = await fetch(currentNetworkConfig.rpcUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "starknet_call",
+          params: [
+            {
+              contract_address: currentNetworkConfig.denshokan,
+              entry_point_selector: "0x20d82cc6889093dce20d92fc9daeda4498c9b99ae798fc2a6f4757e38fb1729",
+              calldata: [num.toHex(tokenId)],
+            },
+            "pending",
+          ],
+          id: 0,
+        }),
+      });
+
+      const data = await response.json();
+      if (!data?.result) return null;
+
+      let tokenMetadata: Metadata = {
+        player_name: playerName,
+        settings_id: parseInt(data.result[2]),
+        expires_at: parseInt(data.result[3], 16) * 1000,
+        available_at: parseInt(data.result[4], 16) * 1000,
+        minted_by: data.result[5],
+      }
+
+      return tokenMetadata;
     } catch (error) {
       console.log('error', error)
     }
@@ -267,5 +388,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getAdventurer, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails };
+  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata };
 };

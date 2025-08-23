@@ -1,10 +1,10 @@
 import { useStarknetApi } from "@/api/starknet";
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useController } from "@/contexts/controller";
-import { useDojoConfig } from "@/contexts/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameStore } from "@/stores/gameStore";
 import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
-import { translateGameEvent, translateTokenMetaData } from "@/utils/translation";
+import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
@@ -12,24 +12,24 @@ export const useSystemCalls = () => {
   const { getBeastTokenURI } = useStarknetApi();
   const { setCollectableTokenURI } = useGameStore();
   const { account } = useController();
-  const dojoConfig = useDojoConfig();
+  const { currentNetworkConfig } = useDynamicConnector();
 
-  const namespace = dojoConfig.namespace;
+  const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const DUNGEON_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS;
   const DUNGEON_TICKET = import.meta.env.VITE_PUBLIC_DUNGEON_TICKET;
   const GAME_ADDRESS = getContractByName(
-    dojoConfig.manifest,
+    currentNetworkConfig.manifest,
     namespace,
     "game_systems"
   )?.address;
   const GAME_TOKEN_ADDRESS = getContractByName(
-    dojoConfig.manifest,
+    currentNetworkConfig.manifest,
     namespace,
     "game_token_systems"
   )?.address;
   const SETTINGS_ADDRESS = getContractByName(
-    dojoConfig.manifest,
+    currentNetworkConfig.manifest,
     namespace,
     "settings_systems"
   )?.address;
@@ -60,7 +60,7 @@ export const useSystemCalls = () => {
         forceResetAction();
       }
 
-      const translatedEvents = receipt.events.map((event: any) => translateGameEvent(event, dojoConfig.manifest))
+      const translatedEvents = receipt.events.map((event: any) => translateGameEvent(event, currentNetworkConfig.manifest))
       return translatedEvents.filter(Boolean);
     } catch (error) {
       console.error("Error executing action:", error);
@@ -113,17 +113,7 @@ export const useSystemCalls = () => {
         (event: any) => event.data.length === 14
       );
 
-      const tokenMetadata = translateTokenMetaData(tokenMetadataEvent.data);
-      console.log('tokenMetadata', tokenMetadata);
-      useGameStore.getState().setMetadata({
-        player_name: name,
-        settings_id: tokenMetadata.settings_id,
-        minted_by: tokenMetadata.minted_by,
-        expires_at: tokenMetadata.lifecycle.end * 1000,
-        available_at: tokenMetadata.lifecycle.start * 1000,
-      });
-
-      return tokenMetadata.game_id;
+      return tokenMetadataEvent.data[1];
     } catch (error) {
       console.error("Error buying game:", error);
       throw error;
@@ -169,17 +159,7 @@ export const useSystemCalls = () => {
         (event: any) => event.data.length === 14
       );
 
-      const tokenMetadata = translateTokenMetaData(tokenMetadataEvent.data);
-
-      useGameStore.getState().setMetadata({
-        player_name: name,
-        settings_id: tokenMetadata.settings_id,
-        minted_by: tokenMetadata.minted_by,
-        expires_at: tokenMetadata.lifecycle.end * 1000,
-        available_at: tokenMetadata.lifecycle.start * 1000,
-      });
-
-      return tokenMetadata.game_id;
+      return tokenMetadataEvent.data[1];
     } catch (error) {
       console.error("Error minting game:", error);
       throw error;

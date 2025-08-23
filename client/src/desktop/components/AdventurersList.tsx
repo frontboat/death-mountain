@@ -1,5 +1,5 @@
 import { useController } from "@/contexts/controller";
-import { useDojoConfig } from "@/contexts/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { calculateLevel } from "@/utils/game";
 import { getContractByName } from "@dojoengine/core";
@@ -23,10 +23,10 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
   const navigate = useNavigate();
   const { address } = useController();
   const { fetchAdventurerData } = useGameTokens();
-  const dojoConfig = useDojoConfig();
-  const namespace = dojoConfig.namespace;
+  const { currentNetworkConfig } = useDynamicConnector();
+  const namespace = currentNetworkConfig.namespace;
   const GAME_TOKEN_ADDRESS = getContractByName(
-    dojoConfig.manifest,
+    currentNetworkConfig.manifest,
     namespace,
     "game_token_systems"
   )?.address;

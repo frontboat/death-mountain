@@ -7,7 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import TokenIcon from '@mui/icons-material/Token';
-import { Box, Button, FormControl, IconButton, Link, Menu, MenuItem, Select, Typography } from '@mui/material';
+import { Box, Button, IconButton, Link, Menu, MenuItem, Typography } from '@mui/material';
 import { useProvider } from '@starknet-react/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';

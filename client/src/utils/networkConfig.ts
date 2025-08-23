@@ -8,6 +8,7 @@ export interface NetworkConfig {
   name: string;
   status: string;
   namespace: string;
+  manifest: any;
   slot: string;
   preset: string;
   policies: Array<{
@@ -15,11 +16,14 @@ export interface NetworkConfig {
     method: string;
   }>;
   vrf: boolean;
+  rpcUrl: string;
+  toriiUrl: string;
   chains: Array<{
     rpcUrl: string;
   }>;
   tokens: Tokens;
   paymentTokens: any[];
+  denshokan: string;
   goldenToken: string;
   ekuboRouter: string;
 }
@@ -59,6 +63,7 @@ export const NETWORKS = {
     },
     manifest: manifest_sepolia,
     vrf: true,
+    denshokan: "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4",
     goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
     ekuboRouter: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
     paymentTokens: [
@@ -99,6 +104,7 @@ export const NETWORKS = {
     manifest: manifest_slot,
     vrf: false,
     paymentTokens: [],
+    denshokan: "0x07fb67dae8765fe214b68fcd20d14b5d4784cedde759840559314f539aa04e32",
     goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
     ekuboRouter: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
   },
@@ -178,15 +184,19 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     name: network.name,
     status: network.status,
     namespace: network.namespace,
+    manifest: network.manifest,
     slot: network.slot,
     preset: "loot-survivor",
     vrf: network.vrf,
     policies,
+    rpcUrl: network.rpcUrl,
+    toriiUrl: network.torii,
     chains: [{ rpcUrl: network.rpcUrl }],
     tokens: network.tokens,
     paymentTokens: network.paymentTokens,
     goldenToken: network.goldenToken,
     ekuboRouter: network.ekuboRouter,
+    denshokan: network.denshokan,
   };
 }
 

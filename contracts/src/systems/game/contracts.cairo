@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 use death_mountain::models::adventurer::stats::Stats;
+use death_mountain::models::game::GameState;
 use death_mountain::models::market::ItemPurchase;
 
 const VRF_ENABLED: bool = true;
@@ -16,6 +17,9 @@ pub trait IGameSystems<T> {
     fn drop(ref self: T, adventurer_id: u64, items: Array<u8>);
     fn buy_items(ref self: T, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>);
     fn select_stat_upgrades(ref self: T, adventurer_id: u64, stat_upgrades: Stats);
+
+    // ------ Game State ------
+    fn get_game_state(self: @T, adventurer_id: u64) -> GameState;
 }
 
 
@@ -42,7 +46,7 @@ mod game_systems {
     use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
     use death_mountain::models::game::{
         AdventurerEntropy, AdventurerPacked, AttackEvent, BagPacked, BeastEvent, BuyItemsEvent, DefeatedBeastEvent,
-        DiscoveryEvent, FledBeastEvent, GameEvent, GameEventDetails, GameSettings, ItemEvent, LevelUpEvent,
+        DiscoveryEvent, FledBeastEvent, GameEvent, GameEventDetails, GameSettings, GameState, ItemEvent, LevelUpEvent,
         MarketItemsEvent, ObstacleEvent, StatUpgradeEvent, StatsMode,
     };
     use death_mountain::models::market::{ImplMarket, ItemPurchase};
@@ -635,6 +639,44 @@ mod game_systems {
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
 
             post_action(token_address, adventurer_id);
+        }
+
+        fn get_game_state(self: @ContractState, adventurer_id: u64) -> GameState {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let game_libs = _init_game_context(world);
+
+            let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
+            let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
+            let adventurer_entropy: AdventurerEntropy = game_libs.adventurer.get_adventurer_entropy(adventurer_id);
+            let market = game_libs
+                .adventurer
+                .get_market(adventurer_id, adventurer_entropy.market_seed, game_settings.market_size)
+                .span();
+            let (beast, _, _) = _get_beast(ref adventurer, adventurer_entropy.beast_seed, game_libs);
+
+            let is_collectable = if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+                game_libs
+                    .beast
+                    .is_beast_collectable(
+                        adventurer_id,
+                        ImplBeast::get_beast_hash(
+                            beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                        ),
+                    )
+            } else {
+                false
+            };
+
+            let beast_event = BeastEvent {
+                id: beast.id,
+                seed: adventurer_entropy.beast_seed,
+                health: beast.starting_health,
+                level: beast.combat_spec.level,
+                specials: beast.combat_spec.specials,
+                is_collectable,
+            };
+
+            GameState { adventurer, bag, beast: beast_event, market }
         }
     }
 

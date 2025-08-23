@@ -17,7 +17,7 @@ import WalletConnect from '../components/WalletConnect';
 export default function SettingsOverlay() {
   const { gameId, showSettings, setShowSettings, setAdventurer } = useGameStore();
   const { volume, setVolume, muted, setMuted } = useSound();
-  const { getAdventurer } = useStarknetApi();
+  const { getGameState } = useStarknetApi();
   const navigate = useNavigate();
   const [unstuckLoading, setUnstuckLoading] = useState(false);
 
@@ -33,10 +33,8 @@ export default function SettingsOverlay() {
     setUnstuckLoading(true);
 
     try {
-      const adventurer = await getAdventurer(gameId!);
-      if (adventurer) {
-        setAdventurer(adventurer);
-      }
+      const gameState = await getGameState(gameId!);
+      console.log(gameState);
     } catch (error) {
       console.error('Failed to unstuck adventurer:', error);
     } finally {

@@ -1329,7 +1329,7 @@
   "contracts": [
     {
       "address": "0x25d684f534006eac237d725f92e7b2c22d33cd14934377e106d6b2dca40b4f6",
-      "class_hash": "0x6f36406ee67065feba87f97303837ab520e586cae131fa72fa3d75c698854d9",
+      "class_hash": "0x44248486b68d5d9fd55598f31e7dc29614885502a266a378782f566b0397334",
       "abi": [
         {
           "type": "impl",
@@ -1840,7 +1840,15 @@
           "members": [
             {
               "name": "name",
-              "type": "core::byte_array::ByteArray"
+              "type": "core::felt252"
+            },
+            {
+              "name": "packed_adventurer",
+              "type": "core::felt252"
+            },
+            {
+              "name": "packed_bag",
+              "type": "core::felt252"
             },
             {
               "name": "health",
@@ -2058,6 +2066,38 @@
             },
             {
               "type": "function",
+              "name": "get_adventurer_packed",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_bag_packed",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
               "name": "get_bag",
               "inputs": [
                 {
@@ -2083,7 +2123,7 @@
               ],
               "outputs": [
                 {
-                  "type": "core::byte_array::ByteArray"
+                  "type": "core::felt252"
                 }
               ],
               "state_mutability": "view"
@@ -2146,6 +2186,22 @@
             },
             {
               "type": "function",
+              "name": "unpack_adventurer",
+              "inputs": [
+                {
+                  "name": "packed_adventurer",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
               "name": "get_discovery",
               "inputs": [
                 {
@@ -2184,6 +2240,22 @@
               "outputs": [
                 {
                   "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "unpack_bag",
+              "inputs": [
+                {
+                  "name": "packed_bag",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 }
               ],
               "state_mutability": "view"
@@ -3189,7 +3261,7 @@
     },
     {
       "address": "0x6e30b065b176edac4acf9082c6d0e0113c3693c305aef7ccda97766522ed63d",
-      "class_hash": "0x21f81a167bbf70db3e88ad61225fd08c58a79101fa5b4afe95cb510927b84ca",
+      "class_hash": "0x5d42c3bd4706452d257bd34a92c268fd3038bd209bc864416bf91ebbe162e98",
       "abi": [
         {
           "type": "impl",
@@ -3305,6 +3377,250 @@
             {
               "name": "luck",
               "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::item::Item",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::equipment::Equipment",
+          "members": [
+            {
+              "name": "weapon",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "chest",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "head",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "waist",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "foot",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "hand",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "neck",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "ring",
+              "type": "death_mountain::models::adventurer::item::Item"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::adventurer::Adventurer",
+          "members": [
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "gold",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "beast_health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "stat_upgrades_available",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "stats",
+              "type": "death_mountain::models::adventurer::stats::Stats"
+            },
+            {
+              "name": "equipment",
+              "type": "death_mountain::models::adventurer::equipment::Equipment"
+            },
+            {
+              "name": "item_specials_seed",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "action_count",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::bag::Bag",
+          "members": [
+            {
+              "name": "item_1",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_2",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_3",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_4",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_5",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_6",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_7",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_8",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_9",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_10",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_11",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_12",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_13",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_14",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_15",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "mutated",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::combat::SpecialPowers",
+          "members": [
+            {
+              "name": "special1",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special2",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special3",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game::BeastEvent",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "seed",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "level",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "specials",
+              "type": "death_mountain::models::combat::SpecialPowers"
+            },
+            {
+              "name": "is_collectable",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<core::integer::u8>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<core::integer::u8>"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game::GameState",
+          "members": [
+            {
+              "name": "adventurer",
+              "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+            },
+            {
+              "name": "bag",
+              "type": "death_mountain::models::adventurer::bag::Bag"
+            },
+            {
+              "name": "beast",
+              "type": "death_mountain::models::game::BeastEvent"
+            },
+            {
+              "name": "market",
+              "type": "core::array::Span::<core::integer::u8>"
             }
           ]
         },
@@ -3443,6 +3759,22 @@
               ],
               "outputs": [],
               "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "get_game_state",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game::GameState"
+                }
+              ],
+              "state_mutability": "view"
             }
           ]
         },
@@ -3578,7 +3910,7 @@
     },
     {
       "address": "0x6d82696a6401166ec4575e816fb0828366a803575174c384d1af9930544329f",
-      "class_hash": "0x1180b1358f6a576edf17b2f2e4544f299489d80a577da07ef4790551e9daa44",
+      "class_hash": "0x64bc959b111c32ded56686e01ece880e9ead1fbba109d29a67b6d1e8b097286",
       "abi": [
         {
           "type": "impl",
@@ -3631,6 +3963,20 @@
           ]
         },
         {
+          "type": "enum",
+          "name": "core::option::Option::<core::starknet::contract_address::ContractAddress>",
+          "variants": [
+            {
+              "name": "Some",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "None",
+              "type": "()"
+            }
+          ]
+        },
+        {
           "type": "function",
           "name": "dojo_init",
           "inputs": [
@@ -3641,6 +3987,10 @@
             {
               "name": "denshokan_address",
               "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "renderer_address",
+              "type": "core::option::Option::<core::starknet::contract_address::ContractAddress>"
             }
           ],
           "outputs": [],
@@ -3822,7 +4172,7 @@
               ],
               "outputs": [
                 {
-                  "type": "core::byte_array::ByteArray"
+                  "type": "core::felt252"
                 }
               ],
               "state_mutability": "external"
@@ -3891,11 +4241,11 @@
         },
         {
           "type": "enum",
-          "name": "core::option::Option::<core::byte_array::ByteArray>",
+          "name": "core::option::Option::<core::felt252>",
           "variants": [
             {
               "name": "Some",
-              "type": "core::byte_array::ByteArray"
+              "type": "core::felt252"
             },
             {
               "name": "None",
@@ -4017,11 +4367,11 @@
         },
         {
           "type": "enum",
-          "name": "core::option::Option::<core::starknet::contract_address::ContractAddress>",
+          "name": "core::option::Option::<core::byte_array::ByteArray>",
           "variants": [
             {
               "name": "Some",
-              "type": "core::starknet::contract_address::ContractAddress"
+              "type": "core::byte_array::ByteArray"
             },
             {
               "name": "None",
@@ -4072,7 +4422,7 @@
               "inputs": [
                 {
                   "name": "player_name",
-                  "type": "core::option::Option::<core::byte_array::ByteArray>"
+                  "type": "core::option::Option::<core::felt252>"
                 },
                 {
                   "name": "settings_id",
@@ -4235,7 +4585,8 @@
       ],
       "init_calldata": [
         "0x065d2AB17338b5AffdEbAF95E2D79834B5f30Bac596fF55563c62C3c98700150",
-        "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4"
+        "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4",
+        "1"
       ],
       "tag": "ls_0_0_6-game_token_systems",
       "selector": "0x3275bafbab55269a16cca4d314e63204f9b04ff98cdd996cb517f11b27cc8d1",
@@ -4755,7 +5106,7 @@
     },
     {
       "address": "0x6c8282a60b27fbea8140e579469ffdee0168dabd2473bdd2cca4b6898567cda",
-      "class_hash": "0x7588c8c7805d7f55b4a7208def0e67cfac7d15cd250df01fe4990fb1b506fd3",
+      "class_hash": "0x30fb384375add0bb606e7da48f1ca035c3ba94e16262f6ac2d95026b1a57f07",
       "abi": [
         {
           "type": "impl",
