@@ -4,7 +4,7 @@ import { useGameEvents } from "@/dojo/useGameEvents";
 import { Settings } from "@/dojo/useGameSettings";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
-import { GameAction } from "@/types/game";
+import { GameAction, Item } from "@/types/game";
 import { BattleEvents, ExplorerReplayEvents, GameEvent, processGameEvent } from "@/utils/events";
 import { getNewItemsEquipped } from "@/utils/game";
 import { delay } from "@/utils/utils";
@@ -217,7 +217,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     });
 
     setAdventurer(gameState.adventurer);
-    setBag(gameState.bag);
+    setBag(Object.values(gameState.bag).filter((item: any) => typeof item === "object" && item.id !== 0) as Item[]);
     setMarketItemIds(gameState.market);
 
     if (gameState.adventurer.beast_health > 0) {

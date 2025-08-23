@@ -14,7 +14,7 @@ import { getMenuLeftOffset } from "@/utils/utils";
 import { Box } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface AnimatedOverlayProps {
@@ -56,7 +56,6 @@ export default function GamePage() {
   } = useGameStore();
   const { setVideoQueue, actionFailed } = useGameDirector();
   const [padding, setPadding] = useState(getMenuLeftOffset());
-  const [update, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get("id"));

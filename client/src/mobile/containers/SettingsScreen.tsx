@@ -2,6 +2,8 @@ import { useStarknetApi } from '@/api/starknet';
 import { useSound } from '@/contexts/Sound';
 import { useController } from '@/contexts/controller';
 import { useGameStore } from '@/stores/gameStore';
+import { Item } from '@/types/game';
+import { processGameEvent } from '@/utils/events';
 import { ellipseAddress } from '@/utils/utils';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MusicOffIcon from '@mui/icons-material/MusicOff';
@@ -11,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function SettingsScreen() {
   const navigate = useNavigate();
-  const { gameId, setAdventurer } = useGameStore();
+  const { gameId, setAdventurer, setBag, setMarketItemIds, setBeast, setCollectable } = useGameStore();
   const { playing, setPlaying, volume, setVolume } = useSound();
   const { account, address, playerName, login, openProfile } = useController();
   const { getGameState } = useStarknetApi();
@@ -22,7 +24,17 @@ export default function SettingsScreen() {
 
   const handleUnstuck = async () => {
     const gameState = await getGameState(gameId!);
-    console.log(gameState);
+    if (!gameState) return;
+
+    setAdventurer(gameState.adventurer);
+    setBag(Object.values(gameState.bag).filter((item: any) => typeof item === "object" && item.id !== 0) as Item[]);
+    setMarketItemIds(gameState.market);
+
+    if (gameState.adventurer.beast_health > 0) {
+      let beast = processGameEvent({ action_count: 0, details: { beast: gameState.beast } }).beast!;
+      setBeast(beast);
+      setCollectable(beast.isCollectable ? beast : null);
+    }
   };
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {
