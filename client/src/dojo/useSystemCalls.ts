@@ -6,6 +6,7 @@ import { useGameStore } from "@/stores/gameStore";
 import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
 import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
+import { stringToFelt } from "node_modules/metagame-sdk/dist/types/src/shared/lib";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
 export const useSystemCalls = () => {
@@ -133,10 +134,7 @@ export const useSystemCalls = () => {
           contractAddress: GAME_TOKEN_ADDRESS,
           entrypoint: "mint_game",
           calldata: CallData.compile([
-            new CairoOption(
-              CairoOptionVariant.Some,
-              byteArray.byteArrayFromString(name)
-            ),
+            new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
             new CairoOption(CairoOptionVariant.Some, settingsId),
             1, // start
             1, // end
