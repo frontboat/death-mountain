@@ -195,6 +195,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setBeast(beast);
       setCollectable(beast.isCollectable ? beast : null);
     }
+
+    if (gameState.adventurer.stat_upgrades_available > 0) {
+      setShowInventory(true);
+    }
   };
 
   const processEvent = async (event: any, skipDelay: boolean = false) => {
