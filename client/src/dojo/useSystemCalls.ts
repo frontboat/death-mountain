@@ -6,7 +6,7 @@ import { useGameStore } from "@/stores/gameStore";
 import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
 import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
-import { stringToFelt } from "node_modules/metagame-sdk/dist/types/src/shared/lib";
+import { stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
 export const useSystemCalls = () => {
@@ -114,7 +114,7 @@ export const useSystemCalls = () => {
         (event: any) => event.data.length === 14
       );
 
-      return tokenMetadataEvent.data[1];
+      return parseInt(tokenMetadataEvent.data[1], 16);
     } catch (error) {
       console.error("Error buying game:", error);
       throw error;
@@ -157,7 +157,7 @@ export const useSystemCalls = () => {
         (event: any) => event.data.length === 14
       );
 
-      return tokenMetadataEvent.data[1];
+      return parseInt(tokenMetadataEvent.data[1], 16);
     } catch (error) {
       console.error("Error minting game:", error);
       throw error;
