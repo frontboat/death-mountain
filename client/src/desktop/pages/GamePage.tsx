@@ -38,6 +38,7 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
+  
   const {
     account,
     playerName,
@@ -54,7 +55,7 @@ export default function GamePage() {
     showOverlay,
     setShowOverlay,
   } = useGameStore();
-  const { setVideoQueue, actionFailed } = useGameDirector();
+  const { setVideoQueue, actionFailed, spectating } = useGameDirector();
   const [padding, setPadding] = useState(getMenuLeftOffset());
 
   const [searchParams] = useSearchParams();
@@ -76,6 +77,11 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
+    if (spectating) {
+      setGameId(game_id);
+      return;
+    }
+
     if (isPending) return;
 
     if (mode === "entering") {

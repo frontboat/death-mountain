@@ -16,20 +16,16 @@ import {
   useReducer,
   useState,
 } from "react";
-import { useNavigate } from "react-router-dom";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
   actionFailed: number;
-  watch: {
-    setSpectating: (spectating: boolean) => void;
-    spectating: boolean;
-    replayEvents: any[];
-    processEvent: (event: any, reconnecting: boolean) => void;
-    setEventQueue: (events: any[]) => void;
-    eventsProcessed: number;
-    setEventsProcessed: (eventsProcessed: number) => void;
-  };
+  setSpectating: (spectating: boolean) => void;
+  spectating: boolean;
+  processEvent: (event: any, skipDelay?: boolean) => void;
+  eventsProcessed: number;
+  setEventQueue: (events: any) => void;
+  setEventsProcessed: (eventsProcessed: number) => void;
 }
 
 const GameDirectorContext = createContext<GameDirectorContext>(
@@ -75,7 +71,6 @@ const ExplorerLogEvents = [
 const VRF_ENABLED = true;
 
 export const GameDirector = ({ children }: PropsWithChildren) => {
-  const navigate = useNavigate();
   const {
     startGame,
     executeAction,
@@ -116,7 +111,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   } = useGameStore();
 
   const [spectating, setSpectating] = useState(false);
-  const [replayEvents, setReplayEvents] = useState<any[]>([]);
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -178,28 +172,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   }, [beastDefeated]);
 
-  const handleSpectating = async (events: any[]) => {
-    if (events.length === 0) {
-      return navigate("/survivor");
-    }
-
-    // Fetch game state
-    const gameState = await getGameState(gameId!);
-    console.log(gameState);
-
-    if (!adventurer) {
-      return navigate("/survivor");
-    }
-
-    if (adventurer.health > 0) {
-      restoreGameState(gameState);
-    } else {
-      setReplayEvents(events);
-    }
-  };
-
   const initializeGame = async (settings: Settings) => {
+    if (spectating) return;
+
     const gameState = await getGameState(gameId!);
+
     if (gameState) {
       restoreGameState(gameState);
     } else {
@@ -227,7 +204,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   };
 
-  const processEvent = async (event: any) => {
+  const processEvent = async (event: GameEvent, skipDelay: boolean = false) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
     }
@@ -269,9 +246,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setBattleEvent(event);
     }
 
-    if (
-      (delayTimes[event.type] || replayDelayTimes[event.type])
-    ) {
+    if (!skipDelay && (delayTimes[event.type] || replayDelayTimes[event.type])) {
       await delay(
         spectating ? replayDelayTimes[event.type] : delayTimes[event.type]
       );
@@ -350,16 +325,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       value={{
         executeGameAction,
         actionFailed,
-
-        watch: {
-          setSpectating,
-          spectating,
-          replayEvents,
-          processEvent,
-          setEventQueue,
-          eventsProcessed,
-          setEventsProcessed,
-        },
+        eventsProcessed,
+        setEventsProcessed,
+        processEvent,
+        setEventQueue,
+        setSpectating,
+        spectating,
       }}
     >
       {children}

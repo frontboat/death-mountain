@@ -28,6 +28,12 @@ export interface GameDirectorContext {
   actionFailed: number;
   videoQueue: string[];
   setVideoQueue: (videoQueue: string[]) => void;
+  setSpectating: (spectating: boolean) => void;
+  spectating: boolean;
+  processEvent: (event: any, skipDelay?: boolean) => void;
+  eventsProcessed: number;
+  setEventQueue: (events: any) => void;
+  setEventsProcessed: (eventsProcessed: number) => void;
 }
 
 const GameDirectorContext = createContext<GameDirectorContext>(
@@ -102,6 +108,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [actionFailed, setActionFailed] = useReducer((x) => x + 1, 0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [eventQueue, setEventQueue] = useState<any[]>([]);
+  const [eventsProcessed, setEventsProcessed] = useState(0);
   const [videoQueue, setVideoQueue] = useState<string[]>([]);
 
   const [beastDefeated, setBeastDefeated] = useState(false);
@@ -144,6 +151,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         await processEvent(event);
         setEventQueue((prev) => prev.slice(1));
         setIsProcessing(false);
+        setEventsProcessed((prev) => prev + 1);
       }
     };
 
@@ -158,7 +166,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   }, [beastDefeated]);
 
   const initializeGame = async (settings: Settings) => {
+    if (spectating) return;
+
     const gameState = await getGameState(gameId!);
+
     if (gameState) {
       restoreGameState(gameState);
     } else {
@@ -186,7 +197,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   };
 
-  const processEvent = async (event: any) => {
+  const processEvent = async (event: any, skipDelay: boolean = false) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
 
@@ -253,12 +264,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setBattleEvent(event);
     }
 
-    if (getVideoId(event)) {
+    if (getVideoId(event) && !skipDelay) {
       setShowOverlay(false);
       setVideoQueue((prev) => [...prev, getVideoId(event)!]);
     }
 
-    if (delayTimes[event.type]) {
+    if (delayTimes[event.type] && !skipDelay) {
       await delay(delayTimes[event.type]);
     }
   };
@@ -335,6 +346,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         actionFailed,
         videoQueue,
         setVideoQueue,
+        eventsProcessed,
+        setEventsProcessed,
+        processEvent,
+        setEventQueue,
+        setSpectating,
+        spectating,
       }}
     >
       {children}

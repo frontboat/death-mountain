@@ -14,7 +14,7 @@ import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
 
 export default function ExploreOverlay() {
-  const { executeGameAction, actionFailed, setVideoQueue } = useGameDirector();
+  const { executeGameAction, actionFailed, setVideoQueue, spectating } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI, setCollectable } = useGameStore();
   const { cart, inProgress, setInProgress } = useMarketStore();
   const [isSelectingStats, setIsSelectingStats] = useState(false);
@@ -69,7 +69,7 @@ export default function ExploreOverlay() {
   const event = exploreLog[0];
 
   return (
-    <Box sx={styles.container}>
+    <Box sx={[styles.container, spectating && styles.spectating]}>
       <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/game.png')` }]} />
 
       {/* Adventurer Overlay */}
@@ -165,7 +165,7 @@ export default function ExploreOverlay() {
       {adventurer?.stat_upgrades_available! === 0 && <MarketOverlay />}
 
       {/* Bottom Buttons */}
-      <Box sx={styles.buttonContainer}>
+      {!spectating && <Box sx={styles.buttonContainer}>
         {adventurer?.stat_upgrades_available! > 0 ? (
           <Button
             variant="contained"
@@ -203,7 +203,7 @@ export default function ExploreOverlay() {
             )}
           </Button>
         )}
-      </Box>
+      </Box>}
 
       {collectable && collectableTokenURI && (
         <BeastCollectedPopup
@@ -225,6 +225,10 @@ const styles = {
     alignItems: 'center',
     position: 'relative',
     zIndex: 1,
+  },
+  spectating: {
+    boxSizing: 'border-box',
+    border: '1px solid rgba(128, 255, 0, 0.6)',
   },
   imageContainer: {
     position: 'absolute',

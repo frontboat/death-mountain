@@ -19,11 +19,13 @@ import MarketScreen from "../containers/MarketScreen";
 import QuestCompletedScreen from "../containers/QuestCompletedScreen";
 import SettingsScreen from "../containers/SettingsScreen";
 import StatSelectionScreen from "../containers/StatSelectionScreen";
+import { useGameDirector } from "../contexts/GameDirector";
 
 export default function GamePage() {
   const navigate = useNavigate();
   const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
+  const { spectating } = useGameDirector();
   const {
     account,
     playerName,
@@ -40,6 +42,7 @@ export default function GamePage() {
     showBeastRewards,
     quest,
   } = useGameStore();
+
 
   const [activeNavItem, setActiveNavItem] = useState<
     "GAME" | "CHARACTER" | "MARKET" | "SETTINGS"
@@ -69,6 +72,12 @@ export default function GamePage() {
   }, [account]);
 
   useEffect(() => {
+    if (spectating) {
+      setLoadingProgress(99);
+      setGameId(game_id);
+      return;
+    }
+
     if (isPending) return;
 
     if (mode === "entering") {

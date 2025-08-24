@@ -1,14 +1,59 @@
 import { createRoot } from "react-dom/client";
-import { DynamicConnectorProvider } from "@/contexts/starknet.tsx";
-import { MetagameProvider } from "@/contexts/metagame.tsx";
+
 import App from "./App.tsx";
+
+// Dojo related imports
+import { init } from "@dojoengine/sdk";
+import { DojoSdkProvider } from "@dojoengine/sdk/react";
+import { MetagameProvider } from "@/contexts/metagame.tsx";
+import {
+  DynamicConnectorProvider,
+  useDynamicConnector,
+} from "@/contexts/starknet.tsx";
+import { createDojoConfig } from "@dojoengine/core";
+import { useEffect, useState } from "react";
 import "./index.css";
 
 function DojoApp() {
+  const { currentNetworkConfig } = useDynamicConnector();
+  const [sdk, setSdk] = useState<any>(null);
+
+  useEffect(() => {
+    async function initializeSdk() {
+      try {
+        const initializedSdk = await init({
+          client: {
+            toriiUrl: currentNetworkConfig.toriiUrl,
+            worldAddress: currentNetworkConfig.manifest.world.address,
+          },
+          domain: {
+            name: "Loot Survivor",
+            version: "1.0",
+            chainId: currentNetworkConfig.chainId,
+            revision: "1",
+          },
+        });
+        setSdk(initializedSdk);
+      } catch (error) {
+        console.error("Failed to initialize SDK:", error);
+      }
+    }
+
+    if (currentNetworkConfig) {
+      initializeSdk();
+    }
+  }, [currentNetworkConfig]);
+
   return (
-    <MetagameProvider>
-      <App />
-    </MetagameProvider>
+    <DojoSdkProvider
+      sdk={sdk}
+      dojoConfig={createDojoConfig(currentNetworkConfig)}
+      clientFn={() => { }}
+    >
+      <MetagameProvider>
+        <App />
+      </MetagameProvider>
+    </DojoSdkProvider>
   );
 }
 

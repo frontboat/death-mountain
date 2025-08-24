@@ -15,7 +15,7 @@ const fleeMessage = "Attempting to flee";
 const equipMessage = "Equipping items";
 
 export default function CombatOverlay() {
-  const { executeGameAction, actionFailed } = useGameDirector();
+  const { executeGameAction, actionFailed, spectating } = useGameDirector();
   const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment } = useGameStore();
 
   const [untilDeath, setUntilDeath] = useState(false);
@@ -92,7 +92,7 @@ export default function CombatOverlay() {
   }, [adventurer?.equipment]);
 
   return (
-    <Box sx={styles.container}>
+    <Box sx={[styles.container, spectating && styles.spectating]}>
       <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${beast!.baseName.toLowerCase()}.png')` }]} />
 
       {/* Adventurer */}
@@ -115,7 +115,7 @@ export default function CombatOverlay() {
       <SettingsOverlay />
 
       {/* Combat Buttons */}
-      <Box sx={styles.buttonContainer}>
+      {!spectating && <Box sx={styles.buttonContainer}>
         {hasNewItemsEquipped ? (
           <>
             <Box sx={styles.actionButtonContainer}>
@@ -205,7 +205,7 @@ export default function CombatOverlay() {
             </Box>
           </>
         )}
-      </Box>
+      </Box>}
     </Box>
   );
 }
@@ -217,6 +217,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
+  },
+  spectating: {
+    border: '1px solid rgba(128, 255, 0, 0.6)',
+    boxSizing: 'border-box',
   },
   imageContainer: {
     position: 'absolute',

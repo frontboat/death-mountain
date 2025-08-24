@@ -1,5 +1,5 @@
 import { useStarknetApi } from '@/api/starknet';
-import { useGameDirector } from '@/mobile/contexts/GameDirector';
+import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useEntityModel } from '@/types/game';
 import { ExplorerReplayEvents, processRawGameEvent } from '@/utils/events';
@@ -212,12 +212,12 @@ export default function WatchPage() {
                 <SkipPreviousIcon />
               </Button>
 
-              <Button
+              {/* <Button
                 onClick={() => handlePlayPause(!isPlaying)}
                 sx={styles.controlButton}
               >
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-              </Button>
+              </Button> */}
 
               <Button
                 onClick={replayForward}
@@ -244,7 +244,7 @@ const styles = {
     width: '444px',
     maxWidth: 'calc(100dvw - 6px)',
     position: 'fixed',
-    bottom: '67px',
+    bottom: '0px',
     left: '50%',
     transform: 'translateX(-50%)',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -255,7 +255,7 @@ const styles = {
     gap: '16px',
     zIndex: 1000,
     boxSizing: 'border-box',
-    borderTop: '2px solid rgba(128, 255, 0, 0.4)',
+    border: '2px solid rgba(128, 255, 0, 0.4)',
     borderBottom: 'none',
   },
   visibilityIcon: {

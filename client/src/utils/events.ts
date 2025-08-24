@@ -1,6 +1,6 @@
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES, BEAST_NAMES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { OBSTACLE_NAMES } from "@/constants/obstacle";
-import { Adventurer, Attack, Beast, Item, ItemPurchase, Obstacle, Stats } from "@/types/game";
+import { Adventurer, Attack, Beast, Item, ItemPurchase, Obstacle, Stats, useEntityModel } from "@/types/game";
 import { preloadAssets } from "./assetLoader";
 import { getBeastImageById, getBeastName, getBeastTier, getBeastType } from "./beast";
 import { streamIds } from "./cloudflare";
@@ -32,6 +32,15 @@ export interface GameEvent {
   level?: number;
   success?: boolean;
 
+}
+
+export const processRawGameEvent = (rawEvent: any): GameEvent => {
+  let event = {
+    action_count: rawEvent.action_count,
+    details: rawEvent.details.variant
+  }
+
+  return processGameEvent(event);
 }
 
 export const processGameEvent = (event: any): GameEvent => {
@@ -80,8 +89,8 @@ export const processGameEvent = (event: any): GameEvent => {
       type: 'discovery',
       action_count,
       discovery: {
-        type: Object.keys(discovery.discovery_type)[0] as 'Gold' | 'Health' | 'Loot',
-        amount: Object.values(discovery.discovery_type)[0] as number,
+        type: Object.keys((discovery.discovery_type.variant || discovery.discovery_type))[0] as 'Gold' | 'Health' | 'Loot',
+        amount: Object.values((discovery.discovery_type.variant || discovery.discovery_type))[0] as number,
       },
       xp_reward: discovery.xp_reward
     };
