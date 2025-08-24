@@ -1742,6 +1742,7 @@ mod tests {
     use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
     use death_mountain::systems::game_token::contracts::game_token_systems;
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
+    use death_mountain::systems::objectives::contracts::objectives_systems;
     use death_mountain::systems::renderer::contracts::renderer_systems;
     use death_mountain::systems::settings::contracts::settings_systems;
     use dojo::model::{ModelStorage, ModelStorageTest};
@@ -1771,6 +1772,7 @@ mod tests {
                 TestResource::Contract(adventurer_systems::TEST_CLASS_HASH),
                 TestResource::Contract(beast_systems::TEST_CLASS_HASH),
                 TestResource::Contract(settings_systems::TEST_CLASS_HASH),
+                TestResource::Contract(objectives_systems::TEST_CLASS_HASH),
                 TestResource::Contract(game_token_systems::TEST_CLASS_HASH),
                 TestResource::Event(e_GameEvent::TEST_CLASS_HASH.try_into().unwrap()),
             ]
@@ -1795,11 +1797,13 @@ mod tests {
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
             ContractDefTrait::new(@DEFAULT_NS(), @"beast_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
-            ContractDefTrait::new(@DEFAULT_NS(), @"settings_systems")
-                .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
             ContractDefTrait::new(@DEFAULT_NS(), @"game_token_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span())
                 .with_init_calldata(game_token_init_calldata.span()),
+            ContractDefTrait::new(@DEFAULT_NS(), @"settings_systems")
+                .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
+            ContractDefTrait::new(@DEFAULT_NS(), @"objectives_systems")
+                .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
         ]
             .span()
     }
