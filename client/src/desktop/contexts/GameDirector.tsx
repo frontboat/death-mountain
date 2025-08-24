@@ -201,12 +201,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
 
-      if (event.adventurer!.health === 0) {
+      if (event.adventurer!.health === 0 && !skipDelay) {
         setShowOverlay(false);
         setVideoQueue((prev) => [...prev, streamIds.death]);
       }
 
       if (
+        !skipDelay &&
         event.adventurer!.item_specials_seed &&
         event.adventurer!.item_specials_seed !== adventurer?.item_specials_seed
       ) {

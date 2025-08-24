@@ -26,7 +26,7 @@ export default function WatchPage() {
   const { gameEventsQuery } = useQueries();
   const { getEntityModel } = useEntityModel();
   const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
-  const { gameId, adventurer, popExploreLog } = useGameStore();
+  const { gameId, adventurer, popExploreLog, setShowOverlay } = useGameStore();
   const { getGameState } = useStarknetApi();
 
   const [subscription, setSubscription] = useState<any>(null);
@@ -193,7 +193,7 @@ export default function WatchPage() {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <VisibilityIcon sx={styles.visibilityIcon} />
               <Typography sx={styles.text}>
-                Spectating
+                spectating
               </Typography>
             </Box>
 
@@ -270,7 +270,7 @@ const styles = {
   },
   text: {
     color: 'rgba(128, 255, 0, 1)',
-    fontSize: '1.4rem',
+    fontSize: '1.1rem',
   },
   controlButton: {
     color: 'rgba(128, 255, 0, 1)',
