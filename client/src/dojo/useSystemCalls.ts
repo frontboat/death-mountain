@@ -106,7 +106,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 500 }
+        { retryInterval: 200 }
       );
 
       const tokenMetadataEvent = receipt.events.find(
@@ -152,7 +152,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 500 }
+        { retryInterval: 200 }
       );
 
       const tokenMetadataEvent = receipt.events.find(
@@ -299,7 +299,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 500 }
+        { retryInterval: 200 }
       );
 
       const tokenId = parseInt(receipt.events[1].data[2], 16);
