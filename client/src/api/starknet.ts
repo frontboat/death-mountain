@@ -382,7 +382,7 @@ export const useStarknetApi = () => {
 
     if (receipt) {
       localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey }))
-      localStorage.setItem('burner_version', "3")
+      localStorage.setItem('burner_version', "5")
       return account
     }
   };
