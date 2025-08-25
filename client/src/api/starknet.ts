@@ -9,7 +9,6 @@ import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 export const useStarknetApi = () => {
   const { currentNetworkConfig } = useDynamicConnector();
   const { address } = useAccount();
-  const { playerName } = useController();
 
   const getTokenBalances = async (tokens: any[]): Promise<Record<string, string>> => {
     const calls = tokens.map((token, i) => ({
@@ -44,7 +43,7 @@ export const useStarknetApi = () => {
         method: "starknet_call",
         params: [
           {
-            contract_address: import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS,
+            contract_address: currentNetworkConfig.dungeon,
             entry_point_selector: "0x02f6ca94ed3ceec9e8b907a11317d8d624f94cf62d9c8112c658fd4d9f02b2d8",
             calldata: [goldenPassAddress, num.toHex(tokenId)]
           },
@@ -244,7 +243,7 @@ export const useStarknetApi = () => {
           method: "starknet_call",
           params: [
             {
-              contract_address: import.meta.env.VITE_PUBLIC_BEASTS_ADDRESS,
+              contract_address: currentNetworkConfig.beasts,
               entry_point_selector: "0x226ad7e84c1fe08eb4c525ed93cccadf9517670341304571e66f7c4f95cbe54",
               calldata: [num.toHex(beastId), "0x0"],
             },
@@ -388,5 +387,31 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata };
+  const mintSepoliaLords = async (address: string) => {
+    try {
+      await fetch("https://api.cartridge.gg/x/starknet/sepolia", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "starknet_call",
+          params: [
+            {
+              contract_address: "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+              entry_point_selector: "0x2f0b3c5710379609eb5495f1ecd348cb28167711b73609fe565a72734550354",
+              calldata: [address, 100e18],
+            },
+            "pending",
+          ],
+          id: 0,
+        }),
+      });
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
+
+  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata, mintSepoliaLords };
 };

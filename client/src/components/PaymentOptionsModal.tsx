@@ -13,7 +13,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Contract } from 'starknet';
 
-let DUNGEON_TICKET_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_TICKET;
+let DUNGEON_TICKET_ADDRESS = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].dungeonTicket;
 interface PaymentOptionsModalProps {
   open: boolean;
   onClose: () => void;

@@ -47,7 +47,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { createBurnerAccount, getTokenBalances, goldenPassReady } = useStarknetApi();
+  const { createBurnerAccount, getTokenBalances, goldenPassReady, mintSepoliaLords } = useStarknetApi();
   const { getGameTokens } = useGameTokens();
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
@@ -62,7 +62,13 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (address) {
-      fetchTokenBalances();
+      if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA) {
+        mintSepoliaLords(address).then(() => {
+          fetchTokenBalances();
+        });
+      } else {
+        fetchTokenBalances();
+      }
     }
   }, [address]);
 

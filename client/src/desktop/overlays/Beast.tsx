@@ -1,4 +1,5 @@
 import BeastTooltip from '@/desktop/components/BeastTooltip';
+import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
 import { beastPowerPercent, getCollectableTraits } from '@/utils/beast';
 import { calculateLevel } from '@/utils/game';
@@ -20,6 +21,7 @@ const pulseGold = keyframes`
 `;
 
 export default function Beast() {
+  const { currentNetworkConfig } = useDynamicConnector();
   const { adventurer, beast, battleEvent, setShowInventory } = useGameStore();
   const [beastHealth, setBeastHealth] = useState(adventurer!.beast_health);
 
@@ -94,7 +96,7 @@ export default function Beast() {
       {collectable && (
         <Box sx={styles.collectableIndicator}>
           <Typography sx={styles.collectableText}>
-            Defeat this beast to collect it
+            {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
           </Typography>
         </Box>
       )}

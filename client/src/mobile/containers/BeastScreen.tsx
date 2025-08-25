@@ -1,4 +1,5 @@
 import { STARTING_HEALTH } from '@/constants/game';
+import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
@@ -21,6 +22,7 @@ const fleeMessage = "Attempting to flee";
 const equipMessage = "Equipping items";
 
 export default function BeastScreen() {
+  const { currentNetworkConfig } = useDynamicConnector();
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, adventurerState, beast, battleEvent, bag,
     equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
@@ -208,7 +210,7 @@ export default function BeastScreen() {
               {beast!.isCollectable && (
                 <>
                   <Typography sx={styles.collectableText}>
-                    Defeat this beast to collect it
+                    {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
                   </Typography>
                   {collectableTraits && (
                     <Box sx={styles.traitIndicators}>

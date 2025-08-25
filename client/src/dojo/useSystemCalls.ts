@@ -17,8 +17,8 @@ export const useSystemCalls = () => {
 
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
-  const DUNGEON_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS;
-  const DUNGEON_TICKET = import.meta.env.VITE_PUBLIC_DUNGEON_TICKET;
+  const DUNGEON_ADDRESS = currentNetworkConfig.dungeon;
+  const DUNGEON_TICKET = currentNetworkConfig.dungeonTicket;
   const GAME_ADDRESS = getContractByName(
     currentNetworkConfig.manifest,
     namespace,

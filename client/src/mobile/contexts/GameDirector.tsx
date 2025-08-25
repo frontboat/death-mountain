@@ -166,7 +166,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   }, [eventQueue, isProcessing]);
 
   useEffect(() => {
-    if (beastDefeated && collectable) {
+    if (beastDefeated && collectable && currentNetworkConfig.beasts) {
       incrementBeastsCollected();
       claimBeast(gameId!, collectable);
     }
