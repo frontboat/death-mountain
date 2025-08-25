@@ -3261,7 +3261,7 @@
     },
     {
       "address": "0x553b436ed00409c1bc0cbb1dc765029acad1cdd1f7eb5c778a27bf55fe374c5",
-      "class_hash": "0x21f81a167bbf70db3e88ad61225fd08c58a79101fa5b4afe95cb510927b84ca",
+      "class_hash": "0x5d42c3bd4706452d257bd34a92c268fd3038bd209bc864416bf91ebbe162e98",
       "abi": [
         {
           "type": "impl",
