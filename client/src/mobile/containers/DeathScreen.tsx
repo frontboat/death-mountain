@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 export default function DeathScreen() {
-  const { gameId, exploreLog, battleEvent, beast, quest, collectableCount } = useGameStore();
+  const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
   const navigate = useNavigate();
 
   const finalBattleEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
@@ -21,7 +21,7 @@ export default function DeathScreen() {
     battleMessage = `${BEAST_NAMES[beast?.id!]} ambushed your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
   }
 
-  const shareMessage = collectableCount > 0 
+  const shareMessage = collectableCount > 0
     ? `I fought bravely in Death Mountain and collected ${collectableCount} ${collectableCount === 1 ? 'beast' : 'beasts'}! Want to see my journey? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`
     : `I fought bravely in Death Mountain but couldn't collect any beasts. Want to see my journey? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`;
 
@@ -48,8 +48,8 @@ export default function DeathScreen() {
 
         <Box sx={styles.statsContainer}>
           <Box sx={styles.statCard}>
-            <Typography sx={styles.statLabel}>Beasts Collected</Typography>
-            <Typography sx={styles.statValue}>{collectableCount}</Typography>
+            <Typography sx={styles.statLabel}>Final Score</Typography>
+            <Typography sx={styles.statValue}>{adventurer?.xp || 0}</Typography>
           </Box>
         </Box>
 
@@ -64,7 +64,7 @@ export default function DeathScreen() {
 
         <Box sx={styles.messageContainer}>
           <Typography sx={styles.message}>
-            {collectableCount > 0 
+            {collectableCount > 0
               ? `You've proven your worth in Death Mountain by collecting ${collectableCount} ${collectableCount === 1 ? 'beast' : 'beasts'}. Your victories will echo through the halls of the great adventurers.`
               : `Though you fought valiantly in Death Mountain, the beasts proved too elusive this time. The mountain awaits your return, adventurer.`
             }

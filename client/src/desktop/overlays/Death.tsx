@@ -4,7 +4,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 export default function DeathOverlay() {
-  const { gameId, exploreLog, battleEvent, beast, quest, collectableCount } = useGameStore();
+  const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
   const navigate = useNavigate();
 
   const finalBattleEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
@@ -41,8 +41,8 @@ export default function DeathOverlay() {
 
         <Box sx={styles.statsContainer}>
           <Box sx={styles.statCard}>
-            <Typography sx={styles.statLabel}>Beasts Collected</Typography>
-            <Typography sx={styles.statValue}>{collectableCount}</Typography>
+            <Typography sx={styles.statLabel}>Final Score</Typography>
+            <Typography sx={styles.statValue}>{adventurer?.xp || 0}</Typography>
           </Box>
         </Box>
 
