@@ -94,12 +94,12 @@ export const useSystemCalls = () => {
         {
           contractAddress: DUNGEON_ADDRESS,
           entrypoint: "buy_game",
-          calldata: [
+          calldata: CallData.compile([
             ...paymentData,
-            byteArray.byteArrayFromString(name),
+            new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
             account!.address, // send game to this address
             false, // soulbound
-          ],
+          ]),
         },
       ]);
 
@@ -311,6 +311,27 @@ export const useSystemCalls = () => {
     }
   };
 
+  const mintSepoliaLords = async (account: any) => {
+    try {
+      let tx = await account!.execute([
+        {
+          contractAddress: "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+          entrypoint: "mint",
+          calldata: [account.address, 100e18.toString(), "0x0"],
+        },
+      ]);
+
+      let receipt = await account!.waitForTransaction(
+        tx.transaction_hash,
+        { retryInterval: 500 }
+      );
+      console.log("receipt", receipt);
+    } catch (error) {
+      console.error("Error minting sepolia lords:", error);
+      throw error;
+    }
+  }
+
   const createSettings = async (settings: GameSettingsData) => {
     let bag = {
       item_1: settings.bag[0]
@@ -400,5 +421,6 @@ export const useSystemCalls = () => {
     mintGame,
     requestRandom,
     executeAction,
+    mintSepoliaLords,
   };
 };

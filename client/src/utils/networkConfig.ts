@@ -52,7 +52,7 @@ export const NETWORKS = {
     manifest: manifest_sepolia,
     vrf: true,
     denshokan:
-      "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4",
+      "0x00cf3712b6168493d89be576f3ebdf0c76dcda964f952dacc21a72094b9e2899",
     dungeon:
       "0x0501c6e5f5c588bd3ae74b47c0dcde4acfe0c3243ce2b294ac3bce24e4e071a8",
     dungeonTicket:
@@ -186,6 +186,11 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     {
       target: network.dungeon,
       method: "claim_beast",
+    },
+    {
+      target:
+        "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+      method: "mint",
     },
   ];
 

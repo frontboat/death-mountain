@@ -130,7 +130,7 @@ export default function MarketOverlay() {
         if (a.price === b.price) {
           return a.tier - b.tier; // Both same price, sort by tier
         }
-        return a.price - b.price;
+        return b.price - a.price;
       } else if (canAffordA) {
         return -1; // A is affordable, B is not, A comes first
       } else if (canAffordB) {

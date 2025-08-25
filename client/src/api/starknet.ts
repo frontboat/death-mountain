@@ -387,31 +387,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  const mintSepoliaLords = async (address: string) => {
-    try {
-      await fetch("https://api.cartridge.gg/x/starknet/sepolia", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          method: "starknet_call",
-          params: [
-            {
-              contract_address: "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-              entry_point_selector: "0x2f0b3c5710379609eb5495f1ecd348cb28167711b73609fe565a72734550354",
-              calldata: [address, 100e18],
-            },
-            "pending",
-          ],
-          id: 0,
-        }),
-      });
-    } catch (error) {
-      console.log('error', error)
-    }
-  }
-
-  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata, mintSepoliaLords };
+  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata };
 };
