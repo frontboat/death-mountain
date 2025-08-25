@@ -43,11 +43,11 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const navigate = useNavigate();
   const { setShowOverlay } = useGameStore();
   const { account, address, isConnecting } = useAccount();
-  const { buyGame } = useSystemCalls();
+  const { buyGame, mintSepoliaLords } = useSystemCalls();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { createBurnerAccount, getTokenBalances, goldenPassReady, mintSepoliaLords } = useStarknetApi();
+  const { createBurnerAccount, getTokenBalances, goldenPassReady } = useStarknetApi();
   const { getGameTokens } = useGameTokens();
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
@@ -62,13 +62,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (address) {
-      if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA) {
-        mintSepoliaLords(address).then(() => {
-          fetchTokenBalances();
-        });
-      } else {
-        fetchTokenBalances();
-      }
+      fetchTokenBalances();
     }
   }, [address]);
 
@@ -127,6 +121,11 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   async function fetchTokenBalances() {
     const balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].paymentTokens);
     setTokenBalances(balances);
+
+    if (parseInt(balances.SLORDS) < 10 && import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA") {
+      mintSepoliaLords(account);
+      setTokenBalances({ ...balances, SLORDS: "100" });
+    }
 
     let goldenTokenAddress = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].goldenToken;
     const allTokens = await getGameTokens(address!, goldenTokenAddress);
