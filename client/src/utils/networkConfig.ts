@@ -51,12 +51,18 @@ export const NETWORKS = {
     },
     manifest: manifest_sepolia,
     vrf: true,
-    denshokan: "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4",
-    dungeon: "0x0501c6e5f5c588bd3ae74b47c0dcde4acfe0c3243ce2b294ac3bce24e4e071a8",
-    dungeonTicket: "0x035b77e467aa54686237533bb63e942b2a4c8c76f7321cf94ce8955030a8cc2e",
-    beasts: "0x03d6e75fd8270a5098987713fa2c766a3edd0b03161ffeebe81b27dc48a3f335",
-    goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
-    ekuboRouter: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
+    denshokan:
+      "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4",
+    dungeon:
+      "0x0501c6e5f5c588bd3ae74b47c0dcde4acfe0c3243ce2b294ac3bce24e4e071a8",
+    dungeonTicket:
+      "0x035b77e467aa54686237533bb63e942b2a4c8c76f7321cf94ce8955030a8cc2e",
+    beasts:
+      "0x03d6e75fd8270a5098987713fa2c766a3edd0b03161ffeebe81b27dc48a3f335",
+    goldenToken:
+      "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+    ekuboRouter:
+      "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
     paymentTokens: [
       {
         name: "SLORDS",
@@ -96,16 +102,17 @@ export const NETWORKS = {
     name: "Practice Mode",
     status: "online",
     namespace: "ls_0_0_6",
-    slot: "pg-slot-3",
-    rpcUrl: "https://api.cartridge.gg/x/pg-slot-3/katana",
-    torii: "https://api.cartridge.gg/x/pg-slot-3/torii",
+    slot: "pg-slot-4",
+    rpcUrl: "https://api.cartridge.gg/x/pg-slot-4/katana",
+    torii: "https://api.cartridge.gg/x/pg-slot-4/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_slot,
     vrf: false,
     paymentTokens: [],
-    denshokan: "0x07fb67dae8765fe214b68fcd20d14b5d4784cedde759840559314f539aa04e32",
+    denshokan:
+      "0x01d3950941c7cbb80160d2fd3f112bb9885244833e547b298dfed040ce1e140f",
     goldenToken: "",
     ekuboRouter: "",
     dungeon: "",
