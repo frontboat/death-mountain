@@ -1,5 +1,5 @@
 import { useController } from "@/contexts/controller";
-import { useDojoConfig, useDynamicConnector } from "@/contexts/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 import VideoPlayer from "@/desktop/components/VideoPlayer";
 import { useGameDirector } from "@/desktop/contexts/GameDirector";
 import CombatOverlay from "@/desktop/overlays/Combat";
@@ -11,11 +11,10 @@ import { useGameStore } from "@/stores/gameStore";
 import { streamIds } from "@/utils/cloudflare";
 import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
-import { useDojoSDK } from "@dojoengine/sdk/react";
 import { Box } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface AnimatedOverlayProps {
@@ -37,10 +36,9 @@ const AnimatedOverlay = ({ children, overlayKey }: AnimatedOverlayProps) => (
 
 export default function GamePage() {
   const navigate = useNavigate();
-  const { sdk } = useDojoSDK();
-  const { setCurrentNetworkConfig } = useDynamicConnector();
-  const dojoConfig = useDojoConfig();
+  const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
+  
   const {
     account,
     playerName,
@@ -57,9 +55,8 @@ export default function GamePage() {
     showOverlay,
     setShowOverlay,
   } = useGameStore();
-  const { subscription, setVideoQueue, actionFailed } = useGameDirector();
+  const { setVideoQueue, actionFailed, spectating } = useGameDirector();
   const [padding, setPadding] = useState(getMenuLeftOffset());
-  const [update, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get("id"));
@@ -80,14 +77,19 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
-    if (!sdk || isPending) return;
+    if (spectating) {
+      setGameId(game_id);
+      return;
+    }
+
+    if (isPending) return;
 
     if (mode === "entering") {
       setVideoQueue([streamIds.start]);
       return;
     }
 
-    if (mode === "real" && dojoConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
+    if (mode === "real" && currentNetworkConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
       setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
       return;
     }
@@ -97,7 +99,7 @@ export default function GamePage() {
       return;
     }
 
-    if (mode === "practice" && dojoConfig.chainId !== ChainId.WP_PG_SLOT) {
+    if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
     }
@@ -111,16 +113,10 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, controllerAddress, isPending, sdk, account, dojoConfig.chainId]);
+  }, [game_id, controllerAddress, isPending, account, currentNetworkConfig.chainId]);
 
   useEffect(() => {
     return () => {
-      if (subscription) {
-        try {
-          subscription.cancel();
-        } catch (error) { }
-      }
-
       exitGame();
     };
   }, []);

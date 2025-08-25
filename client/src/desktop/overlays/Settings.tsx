@@ -13,11 +13,13 @@ import { Box, Button, Divider, IconButton, Slider, Typography } from '@mui/mater
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import WalletConnect from '../components/WalletConnect';
+import { processGameEvent } from '@/utils/events';
+import { Item } from '@/types/game';
 
 export default function SettingsOverlay() {
-  const { gameId, showSettings, setShowSettings, setAdventurer } = useGameStore();
+  const { gameId, showSettings, setShowSettings, setAdventurer, setBag, setMarketItemIds, setBeast, setCollectable } = useGameStore();
   const { volume, setVolume, muted, setMuted } = useSound();
-  const { getAdventurer } = useStarknetApi();
+  const { getGameState } = useStarknetApi();
   const navigate = useNavigate();
   const [unstuckLoading, setUnstuckLoading] = useState(false);
 
@@ -32,16 +34,20 @@ export default function SettingsOverlay() {
   const handleUnstuck = async () => {
     setUnstuckLoading(true);
 
-    try {
-      const adventurer = await getAdventurer(gameId!);
-      if (adventurer) {
-        setAdventurer(adventurer);
-      }
-    } catch (error) {
-      console.error('Failed to unstuck adventurer:', error);
-    } finally {
-      setUnstuckLoading(false);
+    const gameState = await getGameState(gameId!);
+    if (!gameState) return;
+
+    setAdventurer(gameState.adventurer);
+    setBag(Object.values(gameState.bag).filter((item: any) => typeof item === "object" && item.id !== 0) as Item[]);
+    setMarketItemIds(gameState.market);
+
+    if (gameState.adventurer.beast_health > 0) {
+      let beast = processGameEvent({ action_count: 0, details: { beast: gameState.beast } }).beast!;
+      setBeast(beast);
+      setCollectable(beast.isCollectable ? beast : null);
     }
+
+    setUnstuckLoading(false);
   };
 
   return (

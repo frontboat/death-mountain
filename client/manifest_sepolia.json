@@ -3381,6 +3381,250 @@
           ]
         },
         {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::item::Item",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::equipment::Equipment",
+          "members": [
+            {
+              "name": "weapon",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "chest",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "head",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "waist",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "foot",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "hand",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "neck",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "ring",
+              "type": "death_mountain::models::adventurer::item::Item"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::adventurer::Adventurer",
+          "members": [
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "gold",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "beast_health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "stat_upgrades_available",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "stats",
+              "type": "death_mountain::models::adventurer::stats::Stats"
+            },
+            {
+              "name": "equipment",
+              "type": "death_mountain::models::adventurer::equipment::Equipment"
+            },
+            {
+              "name": "item_specials_seed",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "action_count",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::bag::Bag",
+          "members": [
+            {
+              "name": "item_1",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_2",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_3",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_4",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_5",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_6",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_7",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_8",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_9",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_10",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_11",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_12",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_13",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_14",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_15",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "mutated",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::combat::SpecialPowers",
+          "members": [
+            {
+              "name": "special1",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special2",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special3",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game::BeastEvent",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "seed",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "level",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "specials",
+              "type": "death_mountain::models::combat::SpecialPowers"
+            },
+            {
+              "name": "is_collectable",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<core::integer::u8>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<core::integer::u8>"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game::GameState",
+          "members": [
+            {
+              "name": "adventurer",
+              "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+            },
+            {
+              "name": "bag",
+              "type": "death_mountain::models::adventurer::bag::Bag"
+            },
+            {
+              "name": "beast",
+              "type": "death_mountain::models::game::BeastEvent"
+            },
+            {
+              "name": "market",
+              "type": "core::array::Span::<core::integer::u8>"
+            }
+          ]
+        },
+        {
           "type": "interface",
           "name": "death_mountain::systems::game::contracts::IGameSystems",
           "items": [
@@ -3515,6 +3759,22 @@
               ],
               "outputs": [],
               "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "get_game_state",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game::GameState"
+                }
+              ],
+              "state_mutability": "view"
             }
           ]
         },

@@ -1,4 +1,5 @@
 import { STARTING_HEALTH } from '@/constants/game';
+import { useController } from '@/contexts/controller';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { CombatStats } from '@/types/game';
@@ -7,6 +8,7 @@ import { Box, LinearProgress, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 export default function Adventurer({ combatStats }: { combatStats?: CombatStats }) {
+  const { playerName } = useController();
   const { adventurer, metadata, battleEvent, setShowInventory, showInventory, beast } = useGameStore();
   const { cart } = useMarketStore();
 
@@ -56,7 +58,7 @@ export default function Adventurer({ combatStats }: { combatStats?: CombatStats 
           variant="h6"
           sx={{ ml: 4, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', height: '26px', lineHeight: '24px' }}
         >
-          {metadata?.player_name || 'Adventurer'}
+          {metadata?.player_name || playerName || 'Adventurer'}
         </Typography>}
         {/* HP Info */}
         <Box sx={{ ml: beast ? '42px' : '32px', display: 'flex', flexDirection: 'column', height: beast ? '100%' : 'initial', justifyContent: 'center' }}>

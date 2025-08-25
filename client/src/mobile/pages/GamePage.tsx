@@ -1,13 +1,11 @@
 import { useController } from "@/contexts/controller";
-import { useDojoConfig, useDynamicConnector } from "@/contexts/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
-import { useGameDirector } from "@/mobile/contexts/GameDirector";
 import { useGameStore } from "@/stores/gameStore";
 import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
-import { useDojoSDK } from "@dojoengine/sdk/react";
 import { Box } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useState } from "react";
 import { isMobile } from "react-device-detect";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
@@ -21,13 +19,13 @@ import MarketScreen from "../containers/MarketScreen";
 import QuestCompletedScreen from "../containers/QuestCompletedScreen";
 import SettingsScreen from "../containers/SettingsScreen";
 import StatSelectionScreen from "../containers/StatSelectionScreen";
+import { useGameDirector } from "../contexts/GameDirector";
 
 export default function GamePage() {
   const navigate = useNavigate();
-  const { sdk } = useDojoSDK();
-  const { setCurrentNetworkConfig } = useDynamicConnector();
-  const dojoConfig = useDojoConfig();
+  const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
+  const { spectating } = useGameDirector();
   const {
     account,
     playerName,
@@ -44,14 +42,13 @@ export default function GamePage() {
     showBeastRewards,
     quest,
   } = useGameStore();
-  const { subscription } = useGameDirector();
+
 
   const [activeNavItem, setActiveNavItem] = useState<
     "GAME" | "CHARACTER" | "MARKET" | "SETTINGS"
   >("GAME");
 
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [update, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get("id"));
@@ -75,14 +72,20 @@ export default function GamePage() {
   }, [account]);
 
   useEffect(() => {
-    if (!sdk || isPending) return;
+    if (spectating) {
+      setLoadingProgress(99);
+      setGameId(game_id);
+      return;
+    }
+
+    if (isPending) return;
 
     if (mode === "entering") {
       setLoadingProgress(45);
       return;
     }
 
-    if (mode === "real" && dojoConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
+    if (mode === "real" && currentNetworkConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
       setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
       return;
     }
@@ -92,7 +95,7 @@ export default function GamePage() {
       return;
     }
 
-    if (mode === "practice" && dojoConfig.chainId !== ChainId.WP_PG_SLOT) {
+    if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
     }
@@ -107,7 +110,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, controllerAddress, isPending, sdk, account, dojoConfig.chainId]);
+  }, [game_id, controllerAddress, isPending, account, currentNetworkConfig.chainId]);
 
   useEffect(() => {
     setActiveNavItem("GAME");
@@ -115,12 +118,6 @@ export default function GamePage() {
 
   useEffect(() => {
     return () => {
-      if (subscription) {
-        try {
-          subscription.cancel();
-        } catch (error) { }
-      }
-
       exitGame();
     };
   }, []);

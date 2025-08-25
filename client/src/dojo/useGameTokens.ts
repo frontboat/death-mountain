@@ -1,35 +1,17 @@
-import { useDojoConfig } from "@/contexts/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { addAddressPadding } from "starknet";
 
-import { useGameStore } from "@/stores/gameStore";
+import { NETWORKS } from "@/utils/networkConfig";
 import { getShortNamespace } from "@/utils/utils";
 import { gql, request } from "graphql-request";
 import { GameTokenData } from "metagame-sdk";
-import { NETWORKS } from "@/utils/networkConfig";
 
 export const useGameTokens = () => {
-  const dojoConfig = useDojoConfig();
+  const { currentNetworkConfig } = useDynamicConnector();
 
-  const namespace = dojoConfig.namespace;
+  const namespace = currentNetworkConfig.namespace;
   const NS_SHORT = getShortNamespace(namespace);
   const SQL_ENDPOINT = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].torii;
-
-  const fetchMetadata = async (gameTokens: any, tokenId: number) => {
-    const gameToken = gameTokens?.find(
-      (token: any) => token.token_id === tokenId
-    );
-
-    if (gameToken) {
-      useGameStore.getState().setMetadata({
-        player_name: gameToken.player_name,
-        settings_id: gameToken.settings_id,
-        minted_by: gameToken.minted_by_address,
-        expires_at: parseInt(gameToken.lifecycle.end || 0, 16) * 1000,
-        available_at: parseInt(gameToken.lifecycle.start || 0, 16) * 1000,
-      });
-      return;
-    }
-  };
 
   const fetchAdventurerData = async (gamesData: GameTokenData[]) => {
     const formattedTokenIds = gamesData.map(
@@ -78,7 +60,7 @@ export const useGameTokens = () => {
 
     try {
       const res: any = await request(
-        dojoConfig.toriiUrl + "/graphql",
+        currentNetworkConfig.toriiUrl + "/graphql",
         document
       );
       let gameEvents =
@@ -151,7 +133,6 @@ export const useGameTokens = () => {
   }
 
   return {
-    fetchMetadata,
     fetchAdventurerData,
     getGameTokens,
     countBeasts,

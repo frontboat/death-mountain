@@ -1,36 +1,36 @@
+import { useStarknetApi } from "@/api/starknet";
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useController } from "@/contexts/controller";
-import { useDojoConfig } from "@/contexts/starknet";
-import { useStarknetApi } from "@/api/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameStore } from "@/stores/gameStore";
 import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
+import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
+import { stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
-import { useNavigate } from "react-router-dom";
 
 export const useSystemCalls = () => {
-  const navigate = useNavigate();
   const { getBeastTokenURI } = useStarknetApi();
   const { setCollectableTokenURI } = useGameStore();
   const { account } = useController();
-  const dojoConfig = useDojoConfig();
+  const { currentNetworkConfig } = useDynamicConnector();
 
-  const namespace = dojoConfig.namespace;
+  const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const DUNGEON_ADDRESS = import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS;
   const DUNGEON_TICKET = import.meta.env.VITE_PUBLIC_DUNGEON_TICKET;
   const GAME_ADDRESS = getContractByName(
-    dojoConfig.manifest,
+    currentNetworkConfig.manifest,
     namespace,
     "game_systems"
   )?.address;
   const GAME_TOKEN_ADDRESS = getContractByName(
-    dojoConfig.manifest,
+    currentNetworkConfig.manifest,
     namespace,
     "game_token_systems"
   )?.address;
   const SETTINGS_ADDRESS = getContractByName(
-    dojoConfig.manifest,
+    currentNetworkConfig.manifest,
     namespace,
     "settings_systems"
   )?.address;
@@ -54,14 +54,15 @@ export const useSystemCalls = () => {
       let tx = await account!.execute(calls);
       let receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 500 }
+        { retryInterval: 200 }
       );
 
       if (receipt.execution_status === "REVERTED") {
         forceResetAction();
       }
 
-      return true;
+      const translatedEvents = receipt.events.map((event: any) => translateGameEvent(event, currentNetworkConfig.manifest))
+      return translatedEvents.filter(Boolean);
     } catch (error) {
       console.error("Error executing action:", error);
       forceResetAction();
@@ -106,15 +107,14 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 500 }
+        { retryInterval: 200 }
       );
 
       const tokenMetadataEvent = receipt.events.find(
         (event: any) => event.data.length === 14
       );
 
-      const gameId = parseInt(tokenMetadataEvent.data[1], 16);
-      return gameId;
+      return parseInt(tokenMetadataEvent.data[1], 16);
     } catch (error) {
       console.error("Error buying game:", error);
       throw error;
@@ -134,10 +134,7 @@ export const useSystemCalls = () => {
           contractAddress: GAME_TOKEN_ADDRESS,
           entrypoint: "mint_game",
           calldata: CallData.compile([
-            new CairoOption(
-              CairoOptionVariant.Some,
-              byteArray.byteArrayFromString(name)
-            ),
+            new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
             new CairoOption(CairoOptionVariant.Some, settingsId),
             1, // start
             1, // end
@@ -153,16 +150,14 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 500 }
+        { retryInterval: 200 }
       );
 
       const tokenMetadataEvent = receipt.events.find(
         (event: any) => event.data.length === 14
       );
 
-      const gameId = parseInt(tokenMetadataEvent.data[1], 16);
-
-      return gameId;
+      return parseInt(tokenMetadataEvent.data[1], 16);
     } catch (error) {
       console.error("Error minting game:", error);
       throw error;
@@ -174,24 +169,15 @@ export const useSystemCalls = () => {
    * @param gameId The ID of the game to start
    * @returns {Promise<void>}
    */
-  const startGame = async (gameId: number, use_vrf: boolean) => {
+  const startGame = (gameId: number) => {
     let starterWeapons = [12, 16, 46, 76];
-    let weapon =
-      starterWeapons[Math.floor(Math.random() * starterWeapons.length)];
+    let weapon = starterWeapons[Math.floor(Math.random() * starterWeapons.length)];
 
-    let calls: any[] = [
-      {
-        contractAddress: GAME_ADDRESS,
-        entrypoint: "start_game",
-        calldata: [gameId, weapon],
-      },
-    ];
-
-    if (use_vrf) {
-      calls.unshift(requestRandom());
+    return {
+      contractAddress: GAME_ADDRESS,
+      entrypoint: "start_game",
+      calldata: [gameId, weapon],
     }
-
-    await executeAction(calls, () => { });
   };
 
   /**
@@ -311,7 +297,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 500 }
+        { retryInterval: 200 }
       );
 
       const tokenId = parseInt(receipt.events[1].data[2], 16);

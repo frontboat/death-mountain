@@ -8,7 +8,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getContractByName } from "@dojoengine/core";
-import { useDojoConfig } from "@/contexts/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameTokens as useMetagameTokens } from "metagame-sdk";
 import { motion } from "framer-motion";
 
@@ -21,10 +21,10 @@ export default function GameTokensList() {
   const [loading, setLoading] = useState(true);
   const [includeDead, setIncludeDead] = useState(false);
 
-  const dojoConfig = useDojoConfig();
-  const namespace = dojoConfig.namespace;
+  const { currentNetworkConfig } = useDynamicConnector();
+  const namespace = currentNetworkConfig.namespace;
   const GAME_TOKEN_ADDRESS = getContractByName(
-    dojoConfig.manifest,
+    currentNetworkConfig.manifest,
     namespace,
     "game_token_systems"
   )?.address;

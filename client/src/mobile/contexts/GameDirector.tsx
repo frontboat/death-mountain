@@ -1,15 +1,13 @@
 import { useStarknetApi } from "@/api/starknet";
 import { useDynamicConnector } from "@/contexts/starknet";
-import { Settings, useGameSettings } from "@/dojo/useGameSettings";
-import { useGameTokens } from "@/dojo/useGameTokens";
+import { useGameEvents } from "@/dojo/useGameEvents";
+import { Settings } from "@/dojo/useGameSettings";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
-import { GameAction, useEntityModel } from "@/types/game";
-import { BattleEvents, ExplorerReplayEvents, useEvents } from "@/utils/events";
+import { GameAction, Item } from "@/types/game";
+import { BattleEvents, ExplorerReplayEvents, GameEvent, processGameEvent } from "@/utils/events";
 import { getNewItemsEquipped } from "@/utils/game";
-import { useQueries } from "@/utils/queries";
 import { delay } from "@/utils/utils";
-import { useDojoSDK } from "@dojoengine/sdk/react";
 import {
   createContext,
   PropsWithChildren,
@@ -17,27 +15,17 @@ import {
   useEffect,
   useReducer,
   useState,
-  useMemo,
 } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSubscribeGameTokens } from "metagame-sdk";
-import { getContractByName } from "@dojoengine/core";
-import { useDojoConfig } from "@/contexts/starknet";
-import { addAddressPadding } from "starknet";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
   actionFailed: number;
-  subscription: any;
-  watch: {
-    setSpectating: (spectating: boolean) => void;
-    spectating: boolean;
-    replayEvents: any[];
-    processEvent: (event: any, reconnecting: boolean) => void;
-    setEventQueue: (events: any[]) => void;
-    eventsProcessed: number;
-    setEventsProcessed: (eventsProcessed: number) => void;
-  };
+  setSpectating: (spectating: boolean) => void;
+  spectating: boolean;
+  processEvent: (event: any, skipDelay?: boolean) => void;
+  eventsProcessed: number;
+  setEventQueue: (events: any) => void;
+  setEventsProcessed: (eventsProcessed: number) => void;
 }
 
 const GameDirectorContext = createContext<GameDirectorContext>(
@@ -83,8 +71,6 @@ const ExplorerLogEvents = [
 const VRF_ENABLED = true;
 
 export const GameDirector = ({ children }: PropsWithChildren) => {
-  const navigate = useNavigate();
-  const { sdk } = useDojoSDK();
   const {
     startGame,
     executeAction,
@@ -99,12 +85,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     claimBeast,
   } = useSystemCalls();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { getAdventurer } = useStarknetApi();
-  const { getSettingsList } = useGameSettings();
-  const { fetchMetadata } = useGameTokens();
-  const { getEntityModel } = useEntityModel();
-  const { processGameEvent } = useEvents();
-  const { gameEventsQuery } = useQueries();
+  const { getGameState, getSettingsDetails, getTokenMetadata } = useStarknetApi();
+  const { getGameEvents } = useGameEvents();
 
   const {
     gameId,
@@ -124,14 +106,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameSettings,
     setGameSettings,
     incrementBeastsCollected,
-    setCollectable
+    setCollectable,
+    setMetadata
   } = useGameStore();
 
   const [spectating, setSpectating] = useState(false);
-  const [replayEvents, setReplayEvents] = useState<any[]>([]);
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
 
-  const [subscription, setSubscription] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [eventQueue, setEventQueue] = useState<any[]>([]);
   const [eventsProcessed, setEventsProcessed] = useState(0);
@@ -139,41 +120,21 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   const [beastDefeated, setBeastDefeated] = useState(false);
 
-  const dojoConfig = useDojoConfig();
-  const namespace = dojoConfig.namespace;
-  const GAME_TOKEN_ADDRESS = getContractByName(
-    dojoConfig.manifest,
-    namespace,
-    "game_token_systems"
-  )?.address;
-
-  const { games: gameTokens } = useSubscribeGameTokens({
-    gameAddresses: [
-      addAddressPadding(GAME_TOKEN_ADDRESS), // adding pad address to sdk
-    ],
-  });
-
-  const gameTokensKey = useMemo(() => {
-    return gameTokens.map((token) => token.token_id).join(",");
-  }, [gameTokens]);
-
   useEffect(() => {
-    if (gameId && gameTokens && gameTokens.length > 0) {
-      fetchMetadata(gameTokens, gameId);
+    if (gameId && !metadata) {
+      getTokenMetadata(gameId).then((metadata) => {
+        setMetadata(metadata);
+      });
     }
-  }, [gameId, gameTokensKey]);
+  }, [gameId, metadata]);
 
   useEffect(() => {
     if (gameId && metadata && !gameSettings) {
-      getSettingsList(null, [metadata.settings_id]).then(
-        (settings: Settings[]) => {
-          setGameSettings(settings[0]);
-          setVRFEnabled(
-            currentNetworkConfig.vrf && settings[0].game_seed === 0
-          );
-          subscribeEvents(gameId!, settings[0]);
-        }
-      );
+      getSettingsDetails(metadata.settings_id).then((settings) => {
+        setGameSettings(settings);
+        setVRFEnabled(currentNetworkConfig.vrf && settings.game_seed === 0);
+        initializeGame(settings);
+      });
     }
   }, [metadata, gameId]);
 
@@ -194,7 +155,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       if (eventQueue.length > 0 && !isProcessing) {
         setIsProcessing(true);
         const event = eventQueue[0];
-        await processEvent(event, false);
+        await processEvent(event);
         setEventQueue((prev) => prev.slice(1));
         setIsProcessing(false);
         setEventsProcessed((prev) => prev + 1);
@@ -211,76 +172,39 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   }, [beastDefeated]);
 
-  const subscribeEvents = async (gameId: number, settings: Settings) => {
-    if (subscription) {
-      try {
-        subscription.cancel();
-      } catch (error) { }
+  const initializeGame = async (settings: Settings) => {
+    if (spectating) return;
+
+    const gameState = await getGameState(gameId!);
+
+    if (gameState) {
+      restoreGameState(gameState);
+    } else {
+      executeGameAction({ type: 'start_game', gameId: gameId!, settings });
     }
+  }
 
-    const [initialData, sub] = await sdk.subscribeEventQuery({
-      query: gameEventsQuery(gameId),
-      callback: ({ data, error }: { data?: any[]; error?: Error }) => {
-        if (data && data.length > 0) {
-          let events = data
-            .filter((entity: any) =>
-              Boolean(getEntityModel(entity, "GameEvent"))
-            )
-            .map((entity: any) => processGameEvent(entity));
+  const restoreGameState = async (gameState: any) => {
+    const gameEvents = await getGameEvents(gameId!);
 
-          if (events.some((event: any) => event.type === "defeated_beast")) {
-            setBeastDefeated(true);
-          }
-
-          setEventQueue((prev) => [...prev, ...events]);
-        }
-      },
+    gameEvents.forEach((event: GameEvent) => {
+      if (ExplorerLogEvents.includes(event.type)) {
+        setExploreLog(event);
+      }
     });
 
-    let events = (initialData?.getItems() || [])
-      .filter((entity: any) => Boolean(getEntityModel(entity, "GameEvent")))
-      .map((entity: any) => processGameEvent(entity))
-      .sort((a, b) => a.action_count - b.action_count);
+    setAdventurer(gameState.adventurer);
+    setBag(Object.values(gameState.bag).filter((item: any) => typeof item === "object" && item.id !== 0) as Item[]);
+    setMarketItemIds(gameState.market);
 
-    if (spectating) {
-      handleSpectating(events);
-    } else if (!events || events.length === 0) {
-      startGame(
-        gameId,
-        settings.game_seed === 0 && settings.adventurer.xp !== 0
-      );
-    } else {
-      reconnectGameEvents(events);
-    }
-
-    setSubscription(sub);
-  };
-
-  const handleSpectating = async (events: any[]) => {
-    if (events.length === 0) {
-      return navigate("/survivor");
-    }
-
-    // Fetch adventurer state
-    const adventurer = await getAdventurer(gameId!);
-    if (!adventurer) {
-      return navigate("/survivor");
-    }
-
-    if (adventurer.health > 0) {
-      reconnectGameEvents(events);
-    } else {
-      setReplayEvents(events);
+    if (gameState.adventurer.beast_health > 0) {
+      let beast = processGameEvent({ action_count: 0, details: { beast: gameState.beast } }).beast!;
+      setBeast(beast);
+      setCollectable(beast.isCollectable ? beast : null);
     }
   };
 
-  const reconnectGameEvents = async (events: any[]) => {
-    events.forEach((event) => {
-      processEvent(event, true);
-    });
-  };
-
-  const processEvent = async (event: any, reconnecting: boolean) => {
+  const processEvent = async (event: GameEvent, skipDelay: boolean = false) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
     }
@@ -305,7 +229,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     if (!spectating && ExplorerLogEvents.includes(event.type)) {
-      if (!reconnecting && event.type === "discovery") {
+      if (event.type === "discovery") {
         if (event.discovery?.type === "Loot") {
           setNewInventoryItems([...newInventoryItems, event.discovery.amount!]);
         }
@@ -318,24 +242,28 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setExploreLog(event);
     }
 
-    if (!reconnecting && BattleEvents.includes(event.type)) {
+    if (BattleEvents.includes(event.type)) {
       setBattleEvent(event);
     }
 
-    if (
-      !reconnecting &&
-      (delayTimes[event.type] || replayDelayTimes[event.type])
-    ) {
+    if (!skipDelay && (delayTimes[event.type] || replayDelayTimes[event.type])) {
       await delay(
         spectating ? replayDelayTimes[event.type] : delayTimes[event.type]
       );
     }
   };
 
-  const executeGameAction = (action: GameAction) => {
+  const executeGameAction = async (action: GameAction) => {
     if (spectating) return;
 
     let txs: any[] = [];
+
+    if (action.type === "start_game") {
+      if (action.settings.game_seed === 0 && action.settings.adventurer.xp !== 0) {
+        txs.push(requestRandom());
+      }
+      txs.push(startGame(action.gameId!));
+    }
 
     if (VRFEnabled && ["explore", "attack", "flee"].includes(action.type)) {
       txs.push(requestRandom());
@@ -383,7 +311,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       txs.push(drop(gameId!, action.items!));
     }
 
-    executeAction(txs, setActionFailed);
+    const events = await executeAction(txs, setActionFailed);
+
+    if (events.some((event: any) => event.type === "defeated_beast")) {
+      setBeastDefeated(true);
+    }
+
+    setEventQueue((prev) => [...prev, ...events]);
   };
 
   return (
@@ -391,17 +325,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       value={{
         executeGameAction,
         actionFailed,
-        subscription,
-
-        watch: {
-          setSpectating,
-          spectating,
-          replayEvents,
-          processEvent,
-          setEventQueue,
-          eventsProcessed,
-          setEventsProcessed,
-        },
+        eventsProcessed,
+        setEventsProcessed,
+        processEvent,
+        setEventQueue,
+        setSpectating,
+        spectating,
       }}
     >
       {children}

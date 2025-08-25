@@ -94,6 +94,9 @@ export default function MarketScreen() {
 
       // Then sort by affordability
       if (canAffordA && canAffordB) {
+        if (a.price === b.price) {
+          return a.tier - b.tier; // Both same price, sort by tier
+        }
         return b.price - a.price; // Both affordable, sort by price
       } else if (canAffordA) {
         return -1; // A is affordable, B is not, A comes first

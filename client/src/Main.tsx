@@ -5,34 +5,31 @@ import App from "./App.tsx";
 // Dojo related imports
 import { init } from "@dojoengine/sdk";
 import { DojoSdkProvider } from "@dojoengine/sdk/react";
-import { setupWorld } from "./generated/contracts.gen.ts";
-import type { SchemaType } from "./generated/models.gen.ts";
-
+import { MetagameProvider } from "@/contexts/metagame.tsx";
 import {
   DynamicConnectorProvider,
   useDynamicConnector,
 } from "@/contexts/starknet.tsx";
 import { createDojoConfig } from "@dojoengine/core";
 import { useEffect, useState } from "react";
-import { MetagameProvider } from "@/contexts/metagame.tsx";
 import "./index.css";
 
 function DojoApp() {
-  const { dojoConfig } = useDynamicConnector();
+  const { currentNetworkConfig } = useDynamicConnector();
   const [sdk, setSdk] = useState<any>(null);
 
   useEffect(() => {
     async function initializeSdk() {
       try {
-        const initializedSdk = await init<SchemaType>({
+        const initializedSdk = await init({
           client: {
-            toriiUrl: dojoConfig.toriiUrl,
-            worldAddress: dojoConfig.manifest.world.address,
+            toriiUrl: currentNetworkConfig.toriiUrl,
+            worldAddress: currentNetworkConfig.manifest.world.address,
           },
           domain: {
             name: "Loot Survivor",
             version: "1.0",
-            chainId: dojoConfig.chainId,
+            chainId: currentNetworkConfig.chainId,
             revision: "1",
           },
         });
@@ -42,16 +39,16 @@ function DojoApp() {
       }
     }
 
-    if (dojoConfig) {
+    if (currentNetworkConfig) {
       initializeSdk();
     }
-  }, [dojoConfig]);
+  }, [currentNetworkConfig]);
 
   return (
     <DojoSdkProvider
       sdk={sdk}
-      dojoConfig={createDojoConfig(dojoConfig)}
-      clientFn={setupWorld}
+      dojoConfig={createDojoConfig(currentNetworkConfig)}
+      clientFn={() => { }}
     >
       <MetagameProvider>
         <App />
