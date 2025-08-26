@@ -310,7 +310,7 @@ export default function PaymentOptionsModal({
       } else if (userTokens && userTokens.length > 0 && userTokens.some((t: any) => parseFloat(t.balance) > 0)) {
         setCurrentView('token');
       } else {
-        setCurrentView('credit');
+        setCurrentView('token');
       }
     }
   }, [currentView]);
