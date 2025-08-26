@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 use death_mountain::models::adventurer::stats::Stats;
+use death_mountain::models::game::GameState;
 use death_mountain::models::market::ItemPurchase;
 
 const VRF_ENABLED: bool = true;
@@ -16,6 +17,9 @@ pub trait IGameSystems<T> {
     fn drop(ref self: T, adventurer_id: u64, items: Array<u8>);
     fn buy_items(ref self: T, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>);
     fn select_stat_upgrades(ref self: T, adventurer_id: u64, stat_upgrades: Stats);
+
+    // ------ Game State ------
+    fn get_game_state(self: @T, adventurer_id: u64) -> GameState;
 }
 
 
@@ -42,7 +46,7 @@ mod game_systems {
     use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
     use death_mountain::models::game::{
         AdventurerEntropy, AdventurerPacked, AttackEvent, BagPacked, BeastEvent, BuyItemsEvent, DefeatedBeastEvent,
-        DiscoveryEvent, FledBeastEvent, GameEvent, GameEventDetails, GameSettings, ItemEvent, LevelUpEvent,
+        DiscoveryEvent, FledBeastEvent, GameEvent, GameEventDetails, GameSettings, GameState, ItemEvent, LevelUpEvent,
         MarketItemsEvent, ObstacleEvent, StatUpgradeEvent, StatsMode,
     };
     use death_mountain::models::market::{ImplMarket, ItemPurchase};
@@ -57,7 +61,6 @@ mod game_systems {
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
     use game_components_minigame::libs::{assert_token_ownership, post_action, pre_action};
-    use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
     use starknet::{ContractAddress, get_tx_info};
     use super::VRF_ENABLED;
 
@@ -141,6 +144,7 @@ mod game_systems {
                             health: beast.starting_health,
                             level: beast.combat_spec.level,
                             specials: beast.combat_spec.specials,
+                            is_collectable: false,
                         },
                     ),
                 );
@@ -152,7 +156,7 @@ mod game_systems {
                 let packed = game_libs.adventurer.pack_adventurer(adventurer);
                 world.write_model(@AdventurerPacked { adventurer_id, packed });
             } else {
-                let mut adventurer = game_settings.adventurer;
+                let mut adventurer = game_libs.adventurer.add_stat_boosts(game_settings.adventurer, game_settings.bag);
                 adventurer.increment_action_count();
 
                 let (beast_seed, market_seed) = _get_random_seed(
@@ -192,6 +196,7 @@ mod game_systems {
                                 health: beast.starting_health,
                                 level: beast.combat_spec.level,
                                 specials: beast.combat_spec.specials,
+                                is_collectable: false,
                             },
                         ),
                     );
@@ -635,6 +640,44 @@ mod game_systems {
 
             post_action(token_address, adventurer_id);
         }
+
+        fn get_game_state(self: @ContractState, adventurer_id: u64) -> GameState {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let game_libs = _init_game_context(world);
+
+            let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
+            let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
+            let adventurer_entropy: AdventurerEntropy = game_libs.adventurer.get_adventurer_entropy(adventurer_id);
+            let market = game_libs
+                .adventurer
+                .get_market(adventurer_id, adventurer_entropy.market_seed, game_settings.market_size)
+                .span();
+            let (beast, _, _) = _get_beast(ref adventurer, adventurer_entropy.beast_seed, game_libs);
+
+            let is_collectable = if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+                game_libs
+                    .beast
+                    .is_beast_collectable(
+                        adventurer_id,
+                        ImplBeast::get_beast_hash(
+                            beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                        ),
+                    )
+            } else {
+                false
+            };
+
+            let beast_event = BeastEvent {
+                id: beast.id,
+                seed: adventurer_entropy.beast_seed,
+                health: beast.starting_health,
+                level: beast.combat_spec.level,
+                specials: beast.combat_spec.specials,
+                is_collectable,
+            };
+
+            GameState { adventurer, bag, beast: beast_event, market }
+        }
     }
 
     fn reveal_starting_stats(ref adventurer: Adventurer, seed: u64, game_libs: GameLibs) {
@@ -767,6 +810,19 @@ mod game_systems {
                 // save seed to get correct beast
                 _save_seed(ref world, adventurer_id, 0, explore_seed);
 
+                let is_collectable = if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+                    game_libs
+                        .beast
+                        .is_beast_collectable(
+                            adventurer_id,
+                            ImplBeast::get_beast_hash(
+                                beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                            ),
+                        )
+                } else {
+                    false
+                };
+
                 // emit beast event
                 _emit_game_event(
                     ref world,
@@ -779,6 +835,7 @@ mod game_systems {
                             health: beast.starting_health,
                             level: beast.combat_spec.level,
                             specials: beast.combat_spec.specials,
+                            is_collectable,
                         },
                     ),
                 );
@@ -1727,9 +1784,10 @@ mod tests {
     use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
     use death_mountain::systems::game_token::contracts::game_token_systems;
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
+    use death_mountain::systems::objectives::contracts::objectives_systems;
     use death_mountain::systems::renderer::contracts::renderer_systems;
     use death_mountain::systems::settings::contracts::settings_systems;
-    use dojo::model::{ModelStorage, ModelStorageTest, ModelValueStorage};
+    use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
@@ -1756,6 +1814,7 @@ mod tests {
                 TestResource::Contract(adventurer_systems::TEST_CLASS_HASH),
                 TestResource::Contract(beast_systems::TEST_CLASS_HASH),
                 TestResource::Contract(settings_systems::TEST_CLASS_HASH),
+                TestResource::Contract(objectives_systems::TEST_CLASS_HASH),
                 TestResource::Contract(game_token_systems::TEST_CLASS_HASH),
                 TestResource::Event(e_GameEvent::TEST_CLASS_HASH.try_into().unwrap()),
             ]
@@ -1768,6 +1827,7 @@ mod tests {
         let mut game_token_init_calldata: Array<felt252> = array![];
         game_token_init_calldata.append(contract_address_const::<'player1'>().into()); // creator_address
         game_token_init_calldata.append(denshokan_address.into()); // denshokan_address
+        game_token_init_calldata.append(1); // Option::None for renderer address
         [
             ContractDefTrait::new(@DEFAULT_NS(), @"game_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
@@ -1779,11 +1839,13 @@ mod tests {
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
             ContractDefTrait::new(@DEFAULT_NS(), @"beast_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
-            ContractDefTrait::new(@DEFAULT_NS(), @"settings_systems")
-                .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
             ContractDefTrait::new(@DEFAULT_NS(), @"game_token_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span())
                 .with_init_calldata(game_token_init_calldata.span()),
+            ContractDefTrait::new(@DEFAULT_NS(), @"settings_systems")
+                .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
+            ContractDefTrait::new(@DEFAULT_NS(), @"objectives_systems")
+                .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
         ]
             .span()
     }
@@ -1814,7 +1876,7 @@ mod tests {
 
         let adventurer_id = minigame_dispatcher
             .mint_game(
-                Option::Some("player1"), // player_name
+                Option::Some('player1'), // player_name
                 Option::Some(0), // settings_id
                 Option::None, // start
                 Option::None, // end
@@ -2056,7 +2118,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market item does not exist', 'ENTRYPOINT_FAILED'))]
     fn buy_item_not_on_market() {
-        let (world, game, game_libs, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -3325,5 +3387,59 @@ mod tests {
         assert(adventurer_verbose.bag.item_15.tier == Tier::None, 'wrong bag item 15 tier');
         assert(adventurer_verbose.bag.item_15.item_type == Type::None, 'wrong bag item 15 type');
         assert(adventurer_verbose.bag.item_15.slot == Slot::None, 'wrong bag item 15 slot');
+    }
+
+    #[test]
+    fn verbose_adventurer_packed_adventurer() {
+        let (mut world, game, game_libs, _) = deploy_dungeon();
+        let adventurer_id = new_game(world, game);
+
+        game.attack(adventurer_id, false);
+
+        let (adventurer, _) = game_libs.adventurer.load_assets(adventurer_id);
+        let manual_packed_adventurer: felt252 = ImplAdventurer::pack(adventurer);
+
+        let adventurer_packed_adventurer: felt252 = game_libs.adventurer.get_adventurer_packed(adventurer_id);
+        assert!(
+            adventurer_packed_adventurer == manual_packed_adventurer,
+            "get_adventurer_packed_adventurer view function does not match manual pack. Expected: {:?}, Actual: {:?}",
+            manual_packed_adventurer,
+            adventurer_packed_adventurer,
+        );
+
+        let adventurer_verbose = game_libs.adventurer.get_adventurer_verbose(adventurer_id);
+        assert!(
+            adventurer_verbose.packed_adventurer == manual_packed_adventurer,
+            "get_adventurer_verbose view function does not match get_adventurer_packed_adventurer view function. Expected: {:?}, Actual: {:?}",
+            manual_packed_adventurer,
+            adventurer_verbose.packed_adventurer,
+        );
+    }
+
+    #[test]
+    fn verbose_bag_packed_bag() {
+        let (world, game, game_libs, _) = deploy_dungeon();
+        let adventurer_id = new_game(world, game);
+
+        game.attack(adventurer_id, false);
+
+        let (_, bag) = game_libs.adventurer.load_assets(adventurer_id);
+        let manual_packed_bag: felt252 = ImplBag::pack(bag);
+
+        let bag_packed_bag: felt252 = game_libs.adventurer.get_bag_packed(adventurer_id);
+        assert!(
+            bag_packed_bag == manual_packed_bag,
+            "get_bag_packed_bag view function does not match manual pack. Expected: {:?}, Actual: {:?}",
+            manual_packed_bag,
+            bag_packed_bag,
+        );
+
+        let adventurer_verbose = game_libs.adventurer.get_adventurer_verbose(adventurer_id);
+        assert!(
+            adventurer_verbose.packed_bag == manual_packed_bag,
+            "get_adventurer_verbose view function does not match get_bag_packed_bag view function. Expected: {:?}, Actual: {:?}",
+            manual_packed_bag,
+            adventurer_verbose.packed_bag,
+        );
     }
 }

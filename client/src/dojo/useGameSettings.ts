@@ -1,7 +1,7 @@
 import { hexToAscii } from "@dojoengine/utils";
 import { addAddressPadding } from "starknet";
 import { Adventurer, Equipment, Item, Stats } from "@/types/game";
-import { useDojoConfig } from "@/contexts/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 
 export interface Settings {
   settings_id: number;
@@ -19,12 +19,12 @@ export interface Settings {
 }
 
 export const useGameSettings = () => {
-  const dojoConfig = useDojoConfig();
+  const { currentNetworkConfig } = useDynamicConnector();
 
   const getRecommendedSettings = async (): Promise<Settings[]> => {
     try {
       // TODO: Replace with dynamic relayer namespace
-      let url = `${dojoConfig.toriiUrl}/sql?query=
+      let url = `${currentNetworkConfig.toriiUrl}/sql?query=
           SELECT settings_id, COUNT(*) as usage_count
           FROM "relayer_0_0_1-TokenMetadataUpdate"
           GROUP BY settings_id
@@ -71,12 +71,12 @@ export const useGameSettings = () => {
     const whereStatement =
       whereClause.length > 0 ? `WHERE ${whereClause.join(" AND ")}` : "";
 
-    let url = `${dojoConfig.toriiUrl}/sql?query=
+    let url = `${currentNetworkConfig.toriiUrl}/sql?query=
         SELECT *
         FROM 
-          "${dojoConfig.namespace}-GameSettingsMetadata" as metadata
+          "${currentNetworkConfig.namespace}-GameSettingsMetadata" as metadata
         JOIN 
-          "${dojoConfig.namespace}-GameSettings" as settings
+          "${currentNetworkConfig.namespace}-GameSettings" as settings
         ON 
           metadata.settings_id = settings.settings_id
         ${whereStatement}

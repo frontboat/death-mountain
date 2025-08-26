@@ -8,6 +8,7 @@ export interface NetworkConfig {
   name: string;
   status: string;
   namespace: string;
+  manifest: any;
   slot: string;
   preset: string;
   policies: Array<{
@@ -15,10 +16,19 @@ export interface NetworkConfig {
     method: string;
   }>;
   vrf: boolean;
+  rpcUrl: string;
+  toriiUrl: string;
   chains: Array<{
     rpcUrl: string;
   }>;
   tokens: Tokens;
+  denshokan: string;
+  paymentTokens: any[];
+  goldenToken: string;
+  ekuboRouter: string;
+  dungeon: string;
+  dungeonTicket: string;
+  beasts: string;
 }
 
 export enum ChainId {
@@ -28,47 +38,86 @@ export enum ChainId {
 }
 
 export const NETWORKS = {
-  // SN_MAIN: {
-  //   chainId: ChainId.SN_MAIN,
-  //   name: "Beast Mode",
-  //   status: "offline",
-  //   namespace: "ls_0_0_1",
-  //   slot: "pg-mainnet",
-  //   rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet",
-  //   torii: "https://api.cartridge.gg/x/pg-mainnet/torii",
-  //   tokens: {
-  //     erc20: [],
-  //   },
-  //   manifest: manifest_sepolia,
-  //   vrf: true,
-  // },
   SN_SEPOLIA: {
     chainId: ChainId.SN_SEPOLIA,
     name: "Beast Mode",
     status: "online",
-    namespace: "ls_0_0_5",
-    slot: "pg-sepolia-3",
+    namespace: "ls_0_0_6",
+    slot: "pg-sepolia-4",
     rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
-    torii: "https://api.cartridge.gg/x/pg-sepolia-3/torii",
+    torii: "https://api.cartridge.gg/x/pg-sepolia-4/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_sepolia,
     vrf: true,
+    denshokan:
+      "0x00cf3712b6168493d89be576f3ebdf0c76dcda964f952dacc21a72094b9e2899",
+    dungeon:
+      "0x0501c6e5f5c588bd3ae74b47c0dcde4acfe0c3243ce2b294ac3bce24e4e071a8",
+    dungeonTicket:
+      "0x035b77e467aa54686237533bb63e942b2a4c8c76f7321cf94ce8955030a8cc2e",
+    beasts:
+      "0x03d6e75fd8270a5098987713fa2c766a3edd0b03161ffeebe81b27dc48a3f335",
+    goldenToken:
+      "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+    ekuboRouter:
+      "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
+    paymentTokens: [
+      {
+        name: "SLORDS",
+        address:
+          "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+        displayDecimals: 0,
+      },
+      {
+        name: "ETH",
+        address:
+          "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        displayDecimals: 4,
+      },
+      {
+        name: "STRK",
+        address:
+          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        displayDecimals: 2,
+      },
+      {
+        name: "USDC",
+        address:
+          "0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080",
+        displayDecimals: 2,
+        decimals: 6,
+      },
+      {
+        name: "TICKET",
+        address:
+          "0x035b77e467aa54686237533bb63e942b2a4c8c76f7321cf94ce8955030a8cc2e",
+        displayDecimals: 0,
+      },
+    ],
   },
   WP_PG_SLOT: {
     chainId: ChainId.WP_PG_SLOT,
     name: "Practice Mode",
     status: "online",
     namespace: "ls_0_0_6",
-    slot: "pg-slot-3",
-    rpcUrl: "https://api.cartridge.gg/x/pg-slot-3/katana",
-    torii: "https://api.cartridge.gg/x/pg-slot-3/torii",
+    slot: "pg-slot-4",
+    rpcUrl: "https://api.cartridge.gg/x/pg-slot-4/katana",
+    torii: "https://api.cartridge.gg/x/pg-slot-4/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_slot,
     vrf: false,
+    paymentTokens: [],
+    denshokan:
+      "0x01d3950941c7cbb80160d2fd3f112bb9885244833e547b298dfed040ce1e140f",
+    goldenToken: "",
+    ekuboRouter: "",
+    dungeon: "",
+    dungeonTicket: "",
+    beasts: "",
   },
 };
 
@@ -134,6 +183,15 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
       target: vrf_provider,
       method: "request_random",
     },
+    {
+      target: network.dungeon,
+      method: "claim_beast",
+    },
+    {
+      target:
+        "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+      method: "mint",
+    },
   ];
 
   return {
@@ -141,12 +199,22 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     name: network.name,
     status: network.status,
     namespace: network.namespace,
+    manifest: network.manifest,
     slot: network.slot,
     preset: "loot-survivor",
     vrf: network.vrf,
     policies,
+    rpcUrl: network.rpcUrl,
+    toriiUrl: network.torii,
     chains: [{ rpcUrl: network.rpcUrl }],
     tokens: network.tokens,
+    paymentTokens: network.paymentTokens,
+    denshokan: network.denshokan,
+    goldenToken: network.goldenToken,
+    ekuboRouter: network.ekuboRouter,
+    dungeon: network.dungeon,
+    dungeonTicket: network.dungeonTicket,
+    beasts: network.beasts,
   };
 }
 

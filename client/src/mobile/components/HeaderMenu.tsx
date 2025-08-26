@@ -139,12 +139,7 @@ function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
 
       <Divider sx={{ my: 1, borderColor: "rgba(255, 255, 255, 0.1)" }} />
 
-      <MenuItem
-        onClick={() => {
-          window.open("https://discord.gg/zzADjRjx5b", "_blank");
-          handleClose();
-        }}
-      >
+      <MenuItem onClick={() => { window.open("https://discord.gg/DQa4z9jXnY", "_blank"); handleClose(); }}>
         <ListItemIcon>
           <SportsEsportsIcon fontSize="small" sx={{ color: "#80FF00" }} />
         </ListItemIcon>
@@ -153,12 +148,7 @@ function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
         </ListItemText>
       </MenuItem>
 
-      <MenuItem
-        onClick={() => {
-          window.open("https://x.com/lootsurvivor", "_blank");
-          handleClose();
-        }}
-      >
+      <MenuItem onClick={() => { window.open("https://x.com/LootSurvivor", "_blank"); handleClose(); }}>
         <ListItemIcon>
           <XIcon fontSize="small" sx={{ color: "#80FF00" }} />
         </ListItemIcon>
@@ -167,15 +157,7 @@ function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
         </ListItemText>
       </MenuItem>
 
-      <MenuItem
-        onClick={() => {
-          window.open(
-            "https://github.com/provable-games/loot-survivor-2",
-            "_blank"
-          );
-          handleClose();
-        }}
-      >
+      <MenuItem onClick={() => { window.open("https://github.com/provable-games/death-mountain", "_blank"); handleClose(); }}>
         <ListItemIcon>
           <GitHubIcon fontSize="small" sx={{ color: "#80FF00" }} />
         </ListItemIcon>

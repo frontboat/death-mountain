@@ -1,3 +1,4 @@
+import { STARTING_HEALTH } from '@/constants/game';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
@@ -41,7 +42,7 @@ const renderTypeToggleButton = (type: keyof typeof typeIcons) => (
 );
 
 export default function MarketScreen() {
-  const { adventurer, bag, marketItemIds, gameSettings } = useGameStore();
+  const { adventurer, bag, marketItemIds } = useGameStore();
   const { executeGameAction } = useGameDirector();
   const {
     cart,
@@ -93,6 +94,9 @@ export default function MarketScreen() {
 
       // Then sort by affordability
       if (canAffordA && canAffordB) {
+        if (a.price === b.price) {
+          return a.tier - b.tier; // Both same price, sort by tier
+        }
         return b.price - a.price; // Both affordable, sort by price
       } else if (canAffordA) {
         return -1; // A is affordable, B is not, A comes first
@@ -146,7 +150,7 @@ export default function MarketScreen() {
   const potionCost = potionPrice(calculateLevel(adventurer?.xp || 0), adventurer?.stats?.charisma || 0);
   const totalCost = cart.items.reduce((sum, item) => sum + item.price, 0) + (cart.potions * potionCost);
   const remainingGold = (adventurer?.gold || 0) - totalCost;
-  const maxHealth = gameSettings?.adventurer.health! + (adventurer!.stats.vitality * 15);
+  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
   const maxPotionsByHealth = Math.ceil((maxHealth - (adventurer?.health || 0)) / 10);
   const maxPotionsByGold = Math.floor((adventurer?.gold || 0) / potionCost);
   const maxPotions = Math.min(maxPotionsByHealth, maxPotionsByGold);
