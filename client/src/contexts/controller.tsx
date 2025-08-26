@@ -119,12 +119,13 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   };
 
   async function fetchTokenBalances() {
-    const balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].paymentTokens);
+    let balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].paymentTokens);
     setTokenBalances(balances);
-
+    
     if (parseInt(balances.SLORDS) < 10 && import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA") {
-      mintSepoliaLords(account);
-      setTokenBalances({ ...balances, SLORDS: "100" });
+      await mintSepoliaLords(account);
+      balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].paymentTokens);
+      setTokenBalances(balances);
     }
 
     let goldenTokenAddress = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].goldenToken;
