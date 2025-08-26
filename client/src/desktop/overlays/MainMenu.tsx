@@ -66,15 +66,6 @@ export default function MainMenu() {
     setShowAdventurers(true);
   };
 
-  const handleShowAdventurers = () => {
-    if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA && !account) {
-      login();
-      return;
-    }
-
-    setShowAdventurers(true);
-  };
-
   return (
     <>
       <Box sx={{ ...styles.container, left: `${left + 32}px` }}>
