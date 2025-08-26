@@ -40,8 +40,8 @@ export default function MainMenu() {
     function handleResize() {
       setLeft(getMenuLeftOffset());
     }
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleStartGame = () => {
@@ -59,6 +59,15 @@ export default function MainMenu() {
 
   const handleShowAdventurers = () => {
     if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN && !account) {
+      login();
+      return;
+    }
+
+    setShowAdventurers(true);
+  };
+
+  const handleShowAdventurers = () => {
+    if (currentNetworkConfig.chainId === ChainId.SN_SEPOLIA && !account) {
       login();
       return;
     }
@@ -182,65 +191,65 @@ export default function MainMenu() {
 
 const styles = {
   container: {
-    position: 'absolute',
+    position: "absolute",
     top: 32,
     width: 310,
     minHeight: 600,
-    bgcolor: 'rgba(24, 40, 24, 0.55)',
-    border: '2px solid #083e22',
-    borderRadius: '12px',
-    backdropFilter: 'blur(8px)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    bgcolor: "rgba(24, 40, 24, 0.55)",
+    border: "2px solid #083e22",
+    borderRadius: "12px",
+    backdropFilter: "blur(8px)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
     px: 2,
     py: 1,
     zIndex: 10,
     gap: 1,
   },
   headerBox: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
     mt: 2,
     mb: 0.5,
   },
   gameTitle: {
-    fontSize: '1.6rem',
+    fontSize: "1.6rem",
     fontWeight: 700,
     letterSpacing: 1,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 1.1,
     mb: 0.5,
   },
   modeTitle: {
-    fontSize: '1.5rem',
+    fontSize: "1.5rem",
     fontWeight: 600,
     letterSpacing: 1,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 1.1,
     mb: 0.5,
   },
   modeDescription: {
-    fontSize: '1.1rem',
+    fontSize: "1.1rem",
     fontWeight: 400,
-    color: '#b6ffb6',
-    fontStyle: 'italic',
+    color: "#b6ffb6",
+    fontStyle: "italic",
     letterSpacing: 0.5,
-    textAlign: 'center',
-    textShadow: '0 1px 2px #0f0',
+    textAlign: "center",
+    textShadow: "0 1px 2px #0f0",
     mb: 1,
   },
   icon: {
     mr: 1,
   },
   bottom: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    mt: 'auto',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    mt: "auto",
     gap: 0.5,
-    width: '100%',
+    width: "100%",
   },
   bottomRow: {
     mt: 0.5,
@@ -251,31 +260,31 @@ const styles = {
     mr: -1
   },
   socialButtons: {
-    display: 'flex',
+    display: "flex",
     gap: 0.5,
   },
   socialButton: {
-    color: '#d0c98d',
+    color: "#d0c98d",
     opacity: 0.8,
-    '&:hover': {
+    "&:hover": {
       opacity: 1,
     },
-    padding: '4px',
+    padding: "4px",
   },
   alphaVersion: {
-    fontSize: '0.7rem',
+    fontSize: "0.7rem",
     opacity: 0.8,
     letterSpacing: 1,
   },
   orDivider: {
-    display: 'flex',
-    alignItems: 'center',
-    width: '100%',
+    display: "flex",
+    alignItems: "center",
+    width: "100%",
   },
   orText: {
-    margin: '0 1rem',
-    fontSize: '0.8rem',
+    margin: "0 1rem",
+    fontSize: "0.8rem",
     opacity: 0.8,
-    textAlign: 'center',
+    textAlign: "center",
   },
 };

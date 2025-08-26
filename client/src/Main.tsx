@@ -12,6 +12,7 @@ import {
 } from "@/contexts/starknet.tsx";
 import { createDojoConfig } from "@dojoengine/core";
 import { useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import "./index.css";
 
 function DojoApp() {
@@ -60,6 +61,7 @@ function DojoApp() {
 async function main() {
   createRoot(document.getElementById("root")!).render(
     <DynamicConnectorProvider>
+      <Analytics />
       <DojoApp />
     </DynamicConnectorProvider>
   );
