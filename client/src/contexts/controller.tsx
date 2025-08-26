@@ -61,10 +61,10 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   );
 
   useEffect(() => {
-    if (address) {
+    if (account) {
       fetchTokenBalances();
     }
-  }, [address]);
+  }, [account]);
 
   useEffect(() => {
     if (
