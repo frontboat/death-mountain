@@ -44,7 +44,7 @@ export const streamIds = {
   "Minotaur": "7893d71ba16e1a542ef348f6592718f3",
   "Qilin": "a02fb1280925f5de19fdc64efed8682f",
   "Ammit": "05989d5140166220b0e475060b767387",
-  "Nue": "3baa32db715cf73941b4facde600ea2a",
+  "Nue": "c7850f43c93139aedbe36c719644d0d3",
   "Skinwalker": "398ebe3dcd710cae085d89248e6888d8",
   "Chupacabra": "27c6519e9a74df648bcdf062d5a8f610",
   "Weretiger": "b1d916c4c09c4ea2ee4d58a7fb8e9891",
