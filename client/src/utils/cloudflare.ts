@@ -61,7 +61,7 @@ export const streamIds = {
   "Wolf": "abc1f1e75ef4a723f0cb2d383daa0ca1",
   "Mantis": "830ae902a5f5422104233ec9e56837da",
   "Spider": "2ec637d90e35077a90b5339fdcd5831d",
-  "Rat": "007a022840ecce1c98e76b16fd4f098f",
+  "Rat": "561e5882bed34fce54f45d3eeeec1b1a",
   "Kraken": "3a52c37636e8f667ff270f8ec4b342e3",
   "Colossus": "d955e21cc3b91fa36f3172edbe332ce4",
   "Balrog": "e9766c040a203b9a0de99eeabcdc6fb7",
