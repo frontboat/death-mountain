@@ -1,27 +1,34 @@
 import { BEAST_NAMES } from '@/constants/beast';
 import { OBSTACLE_NAMES } from '@/constants/obstacle';
+import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
 import { screenVariants } from '@/utils/animations';
+import { ChainId } from '@/utils/networkConfig';
 import { Box, Button, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 export default function DeathScreen() {
-  const { gameId, adventurer, exploreLog, battleEvent, beast, quest } = useGameStore();
+  const { currentNetworkConfig } = useDynamicConnector();
+  const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
   const navigate = useNavigate();
 
-  const deathEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle')
+  const finalBattleEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
 
-  let deathMessage = '';
-  if (deathEvent?.type === 'obstacle') {
-    deathMessage = `${OBSTACLE_NAMES[deathEvent.obstacle?.id!]} hit your ${deathEvent.obstacle?.location} for ${deathEvent.obstacle?.damage} damage ${deathEvent.obstacle?.critical_hit ? 'CRITICAL HIT!' : ''}`
-  } else if (deathEvent?.type === 'beast_attack') {
-    deathMessage = `${BEAST_NAMES[beast?.id!]} attacked your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`
-  } else if (deathEvent?.type === 'ambush') {
-    deathMessage = `${BEAST_NAMES[beast?.id!]} ambushed your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`
+  let battleMessage = '';
+  if (finalBattleEvent?.type === 'obstacle') {
+    battleMessage = `${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]} hit your ${finalBattleEvent.obstacle?.location} for ${finalBattleEvent.obstacle?.damage} damage ${finalBattleEvent.obstacle?.critical_hit ? 'CRITICAL HIT!' : ''}`;
+  } else if (finalBattleEvent?.type === 'beast_attack') {
+    battleMessage = `${BEAST_NAMES[beast?.id!]} attacked your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
+  } else if (finalBattleEvent?.type === 'ambush') {
+    battleMessage = `${BEAST_NAMES[beast?.id!]} ambushed your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
   }
 
-  const shareMessage = `I fell to the mist in Loot Survivor after reaching ${adventurer?.xp || 0} XP. Want to see how I did it? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`;
+  let link = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? `https://lootsurvivor.io/survivor/watch?mode=practice&id=${gameId}` : `https://lootsurvivor.io/survivor/watch?mode=real&id=${gameId}`;
+
+  const shareMessage = finalBattleEvent?.type === 'obstacle'
+    ? `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`
+    : `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. A ${beast?.name} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
@@ -41,7 +48,7 @@ export default function DeathScreen() {
     >
       <Box sx={styles.content}>
         <Typography variant="h2" sx={styles.title}>
-          Death
+          Game Over
         </Typography>
 
         <Box sx={styles.statsContainer}>
@@ -51,23 +58,26 @@ export default function DeathScreen() {
           </Box>
         </Box>
 
-        {deathEvent && (
-          <Box sx={styles.deathCauseContainer}>
-            <Typography sx={styles.deathCauseTitle}>Cause of Death</Typography>
-            <Typography sx={styles.deathCauseText}>
-              {deathMessage}
+        {finalBattleEvent && (
+          <Box sx={styles.battleCauseContainer}>
+            <Typography sx={styles.battleCauseTitle}>Final Encounter</Typography>
+            <Typography sx={styles.battleCauseText}>
+              {battleMessage}
             </Typography>
           </Box>
         )}
 
         <Box sx={styles.messageContainer}>
           <Typography sx={styles.message}>
-            Your quest for loot ends here, brave adventurer. The mist has claimed you, but your legend will live on in the halls of the fallen.
+            {collectableCount > 0
+              ? `You've proven your worth in Death Mountain by collecting ${collectableCount} ${collectableCount === 1 ? 'beast' : 'beasts'}. Your victories will echo through the halls of the great adventurers.`
+              : `Though you fought valiantly in Death Mountain, the beasts proved too elusive this time. The mountain awaits your return, adventurer.`
+            }
           </Typography>
         </Box>
 
         <Box sx={styles.buttonContainer}>
-          {/* <Button
+          <Button
             variant="outlined"
             component="a"
             href={`https://x.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`}
@@ -75,7 +85,7 @@ export default function DeathScreen() {
             sx={styles.shareButton}
           >
             Share on X
-          </Button> */}
+          </Button>
           <Button
             variant="contained"
             onClick={backToMenu}
@@ -141,24 +151,24 @@ const styles = {
     fontFamily: 'VT323, monospace',
     fontWeight: 'bold',
   },
-  deathCauseContainer: {
+  battleCauseContainer: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     padding: '20px',
-    background: 'rgba(255, 0, 0, 0.1)',
+    background: 'rgba(255, 165, 0, 0.1)',
     borderRadius: '12px',
-    border: '1px solid rgba(255, 0, 0, 0.2)',
+    border: '1px solid rgba(255, 165, 0, 0.2)',
     width: '100%',
   },
-  deathCauseTitle: {
-    color: 'rgba(255, 0, 0, 0.7)',
+  battleCauseTitle: {
+    color: 'rgba(255, 165, 0, 0.7)',
     fontSize: '1.2rem',
     fontFamily: 'VT323, monospace',
     marginBottom: '8px',
   },
-  deathCauseText: {
-    color: '#FF0000',
+  battleCauseText: {
+    color: '#FFA500',
     fontSize: '1.1rem',
     fontFamily: 'VT323, monospace',
     textAlign: 'center',

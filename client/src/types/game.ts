@@ -1,6 +1,6 @@
 import { ClauseBuilder, ParsedEntity, UnionOfModelData, HistoricalToriiQueryBuilder } from '@dojoengine/sdk';
 import { SchemaType } from '../generated/models.gen.ts';
-import { useDojoConfig } from "../contexts/starknet.tsx";
+import { useDynamicConnector } from "../contexts/starknet.tsx";
 
 export interface Item {
   id: number;
@@ -50,6 +50,7 @@ export interface Bag {
 
 export interface Beast {
   id: number;
+  seed: bigint;
   baseName: string;
   name: string;
   health: number;
@@ -58,6 +59,7 @@ export interface Beast {
   tier: number;
   specialPrefix: string | null;
   specialSuffix: string | null;
+  isCollectable: boolean;
 }
 
 export interface Stats {
@@ -73,6 +75,7 @@ export interface Stats {
 export interface CombatStats {
   baseDamage: number;
   protection: number;
+  bestDamage: number;
   bestProtection: number;
   bestItems: Item[];
   critChance: number;
@@ -107,6 +110,22 @@ export interface GameAction {
   potions?: number;
   untilBeast?: boolean;
   untilDeath?: boolean;
+  gameId?: number;
+  settings?: any;
+}
+
+export interface Payment {
+  paymentType: 'Ticket' | 'Golden Pass';
+  goldenPass?: {
+    address: string;
+    tokenId: number;
+  }
+}
+
+export interface Collectable {
+  beast: Beast;
+  showPopup: boolean;
+  tokenURI: string | null;
 }
 
 export interface Metadata {
@@ -148,10 +167,10 @@ export class GameQueryBuilder extends HistoricalToriiQueryBuilder<GameSchemaType
 export class GameClauseBuilder extends ClauseBuilder<GameSchemaType> { }
 
 export const useEntityModel = () => {
-  const dojoConfig = useDojoConfig();
+  const { currentNetworkConfig } = useDynamicConnector();
 
   const getEntityModel = <M extends GameModelType>(entity: GameEntity, modelName: GameSchemaModelNames | GameComponentModelNames): M => (
-    entity?.models[`${dojoConfig.namespace}`]?.[modelName] as M
+    entity?.models[`${currentNetworkConfig.namespace}`]?.[modelName] as M
   );
 
   return { getEntityModel };

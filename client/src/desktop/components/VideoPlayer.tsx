@@ -6,18 +6,24 @@ import { transitionVideos } from "@/utils/events";
 import { Stream, StreamPlayerApi } from "@cloudflare/stream-react";
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const CUSTOMER_CODE = import.meta.env.VITE_PUBLIC_CLOUDFLARE_ID;
 
 export default function VideoPlayer() {
   const { videoQueue, setVideoQueue } = useGameDirector();
   const { setShowOverlay } = useGameStore();
-  const { hasInteracted } = useSound();
+  const { hasInteracted, muted, volume } = useSound();
 
   const playerRef = useRef<StreamPlayerApi | undefined>(undefined);
   const [videoReady, setVideoReady] = useState(false);
   const [nextVideoReady, setNextVideoReady] = useState(false);
+
+  useEffect(() => {
+    if (videoQueue[0] === streamIds.explore && nextVideoReady) {
+      handleEnded()
+    }
+  }, [nextVideoReady]);
 
   const handleEnded = () => {
     if (videoQueue[0] === streamIds.explore && !nextVideoReady) {
@@ -67,7 +73,8 @@ export default function VideoPlayer() {
                 autoplay
                 preload="auto"
                 controls={false}
-                muted={!hasInteracted}
+                muted={!hasInteracted || muted}
+                volume={volume}
                 onEnded={handleEnded}
                 onCanPlayThrough={() => setVideoReady(true)}
               />

@@ -1,33 +1,17 @@
-import { useDojoConfig } from "@/contexts/starknet";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { addAddressPadding } from "starknet";
 
-import { useGameStore } from "@/stores/gameStore";
+import { NETWORKS } from "@/utils/networkConfig";
 import { getShortNamespace } from "@/utils/utils";
 import { gql, request } from "graphql-request";
 import { GameTokenData } from "metagame-sdk";
 
 export const useGameTokens = () => {
-  const dojoConfig = useDojoConfig();
+  const { currentNetworkConfig } = useDynamicConnector();
 
-  const namespace = dojoConfig.namespace;
+  const namespace = currentNetworkConfig.namespace;
   const NS_SHORT = getShortNamespace(namespace);
-
-  const fetchMetadata = async (gameTokens: any, tokenId: number) => {
-    const gameToken = gameTokens?.find(
-      (token: any) => token.token_id === tokenId
-    );
-
-    if (gameToken) {
-      useGameStore.getState().setMetadata({
-        player_name: gameToken.player_name,
-        settings_id: gameToken.settings_id,
-        minted_by: gameToken.minted_by_address,
-        expires_at: parseInt(gameToken.lifecycle.end || 0, 16) * 1000,
-        available_at: parseInt(gameToken.lifecycle.start || 0, 16) * 1000,
-      });
-      return;
-    }
-  };
+  const SQL_ENDPOINT = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].torii;
 
   const fetchAdventurerData = async (gamesData: GameTokenData[]) => {
     const formattedTokenIds = gamesData.map(
@@ -76,7 +60,7 @@ export const useGameTokens = () => {
 
     try {
       const res: any = await request(
-        dojoConfig.toriiUrl + "/graphql",
+        currentNetworkConfig.toriiUrl + "/graphql",
         document
       );
       let gameEvents =
@@ -114,8 +98,43 @@ export const useGameTokens = () => {
     }
   };
 
+  const getGameTokens = async (accountAddress: string, tokenAddress: string) => {
+    let url = `${SQL_ENDPOINT}/sql?query=
+      SELECT token_id FROM token_balances
+      WHERE account_address = "${accountAddress.replace(/^0x0+/, "0x")}" AND contract_address = "${tokenAddress.replace(/^0x0+/, "0x")}"
+      LIMIT 10000`
+
+    const sql = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    let data = await sql.json()
+    return data.map((token: any) => parseInt(token.token_id.split(":")[1], 16))
+  }
+
+  const countBeasts = async () => {
+    let beast_address = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].beasts;
+    let url = `${SQL_ENDPOINT}/sql?query=
+      SELECT COUNT(*) as count FROM token_balances
+      WHERE contract_address = "${beast_address.replace(/^0x0+/, "0x")}"`
+
+    const sql = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    let data = await sql.json()
+    return data[0].count
+  }
+
   return {
-    fetchMetadata,
     fetchAdventurerData,
+    getGameTokens,
+    countBeasts,
   };
 };

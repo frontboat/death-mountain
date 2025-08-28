@@ -3,35 +3,32 @@ import {
   MetagameProvider as MetagameSDKProvider,
 } from "metagame-sdk";
 import { ReactNode, useEffect, useState } from "react";
-// import { feltToString } from "@/lib/utils";
-// import { ChainId, CHAINS } from "@/dojo/setup/networks";
-// import { manifests } from "@/dojo/setup/config";
 import { useDynamicConnector } from "@/contexts/starknet.tsx";
 
 export const MetagameProvider = ({ children }: { children: ReactNode }) => {
   const [metagameClient, setMetagameClient] = useState<any>(undefined);
-  const { dojoConfig } = useDynamicConnector();
+  const { currentNetworkConfig } = useDynamicConnector();
 
   useEffect(() => {
-    if (!dojoConfig) {
+    if (!currentNetworkConfig) {
       setMetagameClient(undefined);
       return;
     }
 
     // Initialize Metagame SDK
     initMetagame({
-      toriiUrl: dojoConfig.toriiUrl!,
-      worldAddress: dojoConfig.manifest.world.address,
+      toriiUrl: currentNetworkConfig.toriiUrl!,
+      worldAddress: currentNetworkConfig.manifest.world.address,
     })
       .then(setMetagameClient)
       .catch((error) => {
         console.error(
-          `Failed to initialize Metagame SDK for chain ${dojoConfig.chainId}:`,
+          `Failed to initialize Metagame SDK for chain ${currentNetworkConfig.chainId}:`,
           error
         );
         setMetagameClient(undefined);
       });
-  }, [dojoConfig]);
+  }, [currentNetworkConfig]);
 
   if (!metagameClient) {
     return (

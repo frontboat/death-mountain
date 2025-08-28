@@ -64,6 +64,14 @@ pub struct GameSettings {
     pub market_size: u8,
 }
 
+#[derive(Copy, Drop, Serde)]
+pub struct GameState {
+    pub adventurer: Adventurer,
+    pub bag: Bag,
+    pub beast: BeastEvent,
+    pub market: Span<u8>,
+}
+
 #[derive(Introspect, Copy, Drop, Serde, PartialEq)]
 pub enum StatsMode {
     Dodge,
@@ -117,6 +125,7 @@ pub struct BeastEvent {
     pub health: u16,
     pub level: u16,
     pub specials: SpecialPowers,
+    pub is_collectable: bool,
 }
 
 #[derive(Introspect, Copy, Drop, Serde)]

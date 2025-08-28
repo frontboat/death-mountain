@@ -1,26 +1,27 @@
-import { LinearProgress, Typography } from "@mui/material";
 import { useController } from "@/contexts/controller";
 import { useGameStore } from "@/stores/gameStore";
 import { calculateLevel, calculateNextLevelXP, calculateProgress } from "@/utils/game";
+import { LinearProgress, Typography } from "@mui/material";
 
+import { STARTING_HEALTH } from "@/constants/game";
 import { Box } from "@mui/material";
 
 export default function AdventurerInfo() {
-  const { openProfile } = useController();
-  const { adventurer, metadata, gameSettings } = useGameStore();
+  const { openProfile, playerName } = useController();
+  const { adventurer, metadata } = useGameStore();
   // Calculate level using the proper function
   const level = calculateLevel(adventurer?.xp || 1);
   const progress = calculateProgress(adventurer?.xp || 1);
   const nextLevelXP = calculateNextLevelXP(level);
   const xpToNextLevel = nextLevelXP - (adventurer?.xp || 0);
-  const maxHealth = gameSettings?.adventurer.health! + (adventurer!.stats.vitality * 15);
+  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
 
   return (
     <>
       <Box sx={styles.characterHeader}>
         <Box onClick={openProfile}>
           <Typography variant="h4" sx={styles.characterName}>
-            {metadata?.player_name || 'Adventurer'}
+            {metadata?.player_name || playerName || 'Adventurer'}
           </Typography>
         </Box>
         <Box sx={styles.headerStats}>

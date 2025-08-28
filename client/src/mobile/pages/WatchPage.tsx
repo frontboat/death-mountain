@@ -1,6 +1,10 @@
+import { useStarknetApi } from '@/api/starknet';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
-import { ExplorerReplayEvents } from '@/utils/events';
+import { useEntityModel } from '@/types/game';
+import { ExplorerReplayEvents, processRawGameEvent } from '@/utils/events';
+import { useQueries } from '@/utils/queries';
+import { useDojoSDK } from '@dojoengine/sdk/react';
 import CloseIcon from '@mui/icons-material/Close';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -10,19 +14,25 @@ import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Button, Typography } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GamePage from './GamePage';
 
 export default function WatchPage() {
-  const { watch } = useGameDirector();
-  const { spectating, setSpectating, replayEvents, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = watch;
-
-  const { gameId, adventurer, popExploreLog } = useGameStore();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [replayIndex, setReplayIndex] = useState(0);
-
+  const { sdk } = useDojoSDK();
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar()
+  const { gameEventsQuery } = useQueries();
+  const { getEntityModel } = useEntityModel();
+  const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
+  const { gameId, adventurer, popExploreLog } = useGameStore();
+  const { getGameState } = useStarknetApi();
+
+  const [subscription, setSubscription] = useState<any>(null);
+  const [replayEvents, setReplayEvents] = useState<any[]>([]);
+  const [replayIndex, setReplayIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
@@ -30,6 +40,7 @@ export default function WatchPage() {
   useEffect(() => {
     if (game_id) {
       setSpectating(true);
+      subscribeEvents(game_id);
     } else {
       setSpectating(false);
       navigate('/survivor');
@@ -57,6 +68,51 @@ export default function WatchPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [replayIndex, isPlaying]); // Add dependencies
+
+  const subscribeEvents = async (gameId: number) => {
+    if (subscription) {
+      try {
+        subscription.cancel();
+      } catch (error) { }
+    }
+
+    const [initialData, sub] = await sdk.subscribeEventQuery({
+      query: gameEventsQuery(gameId),
+      callback: ({ data, error }: { data?: any[]; error?: Error }) => {
+        if (data && data.length > 0) {
+          let events = data
+            .filter((entity: any) =>
+              Boolean(getEntityModel(entity, "GameEvent"))
+            )
+            .map((entity: any) => processRawGameEvent(getEntityModel(entity, "GameEvent")));
+
+          setEventQueue((prev: any) => [...prev, ...events]);
+        }
+      },
+    });
+
+    let events = (initialData?.getItems() || [])
+      .filter((entity: any) => Boolean(getEntityModel(entity, "GameEvent")))
+      .map((entity: any) => processRawGameEvent(getEntityModel(entity, "GameEvent")))
+      .sort((a, b) => a.action_count - b.action_count);
+
+    const gameState = await getGameState(gameId!);
+
+    if (!gameState || events.length === 0) {
+      enqueueSnackbar('Failed to load game', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
+      return navigate("/survivor");
+    }
+
+    if (gameState.adventurer.health > 0) {
+      events.forEach((event: any) => {
+        processEvent(event, true);
+      });
+    } else {
+      setReplayEvents(events);
+    }
+
+    setSubscription(sub);
+  };
 
   const handleEndWatching = () => {
     setSpectating(false);
@@ -177,7 +233,7 @@ export default function WatchPage() {
         )}
       </Box>}
 
-      <GamePage />
+      {spectating && <GamePage />}
     </>
   );
 }

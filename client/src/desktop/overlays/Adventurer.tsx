@@ -1,3 +1,5 @@
+import { STARTING_HEALTH } from '@/constants/game';
+import { useController } from '@/contexts/controller';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { CombatStats } from '@/types/game';
@@ -6,7 +8,8 @@ import { Box, LinearProgress, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 export default function Adventurer({ combatStats }: { combatStats?: CombatStats }) {
-  const { adventurer, metadata, battleEvent, setShowInventory, showInventory, beast, bag, gameSettings } = useGameStore();
+  const { playerName } = useController();
+  const { adventurer, metadata, battleEvent, setShowInventory, showInventory, beast } = useGameStore();
   const { cart } = useMarketStore();
 
   const [health, setHealth] = useState(adventurer!.health);
@@ -23,13 +26,15 @@ export default function Adventurer({ combatStats }: { combatStats?: CombatStats 
     }
   }, [adventurer?.health]);
 
-  const maxHealth = gameSettings?.adventurer.health! + (adventurer!.stats.vitality * 15);
+  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
   const healthPercent = (health / maxHealth) * 100;
   const potionHealth = cart.potions * 10;
   const previewHealth = Math.min(health + potionHealth, maxHealth);
   const previewHealthPercent = (previewHealth / maxHealth) * 100;
   const previewProtection = combatStats?.bestProtection || 0;
   const previewProtectionPercent = Math.min(100, previewProtection);
+  const previewAttack = combatStats?.bestDamage || 0;
+  const previewAttackPercent = Math.min(100, Math.floor(previewAttack / (beast?.health || 1) * 100));
 
   return (
     <>
@@ -53,7 +58,7 @@ export default function Adventurer({ combatStats }: { combatStats?: CombatStats 
           variant="h6"
           sx={{ ml: 4, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', height: '26px', lineHeight: '24px' }}
         >
-          {metadata?.player_name || 'Adventurer'}
+          {metadata?.player_name || playerName || 'Adventurer'}
         </Typography>}
         {/* HP Info */}
         <Box sx={{ ml: beast ? '42px' : '32px', display: 'flex', flexDirection: 'column', height: beast ? '100%' : 'initial', justifyContent: 'center' }}>
@@ -94,6 +99,13 @@ export default function Adventurer({ combatStats }: { combatStats?: CombatStats 
                     value={Math.min(100, Math.floor(combatStats.baseDamage / beast.health * 100))}
                     sx={styles.attackBar}
                   />
+                  {previewAttack > combatStats.baseDamage && (
+                    <LinearProgress
+                      variant="determinate"
+                      value={previewAttackPercent}
+                      sx={styles.previewAttackBar}
+                    />
+                  )}
                 </Box>
                 {/* Defense Bar */}
                 <Box sx={{ position: 'relative' }}>
@@ -300,6 +312,18 @@ const styles = {
     right: 0,
     '& .MuiLinearProgress-bar': {
       backgroundColor: 'rgba(192, 192, 192, 0.3)',
+    },
+  },
+  previewAttackBar: {
+    height: '12px',
+    borderRadius: '5px',
+    backgroundColor: 'transparent',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    '& .MuiLinearProgress-bar': {
+      backgroundColor: 'rgba(255, 140, 0, 0.3)',
     },
   },
 }; 

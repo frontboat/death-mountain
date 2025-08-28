@@ -1,7 +1,7 @@
 {
   "world": {
     "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
-    "address": "0x51b471d552deb71dcc6122cc79efdb2ad8feffa57d33e6077fb3acd33496b4a",
+    "address": "0x344e910f93abecadf09691825a3b59fb177f9f8762c07a0947c3e9dc25fd8db",
     "seed": "pg-slot-10",
     "name": "Provable Games",
     "entrypoints": [
@@ -1328,8 +1328,8 @@
   },
   "contracts": [
     {
-      "address": "0x5fe615cad59b15191e34ac99492a8d1c7591ec29c14a3de02543e8afbd61187",
-      "class_hash": "0x6fdc849dda0a438f652741e098cf4bad1d48fd1767142f28cc472a922521c7b",
+      "address": "0x1005f63c805f1ef42521e69292dad3505223bf43f7a20cb292dc52823faff95",
+      "class_hash": "0x44248486b68d5d9fd55598f31e7dc29614885502a266a378782f566b0397334",
       "abi": [
         {
           "type": "impl",
@@ -1843,6 +1843,14 @@
               "type": "core::felt252"
             },
             {
+              "name": "packed_adventurer",
+              "type": "core::felt252"
+            },
+            {
+              "name": "packed_bag",
+              "type": "core::felt252"
+            },
+            {
               "name": "health",
               "type": "core::integer::u16"
             },
@@ -2058,6 +2066,38 @@
             },
             {
               "type": "function",
+              "name": "get_adventurer_packed",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_bag_packed",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
               "name": "get_bag",
               "inputs": [
                 {
@@ -2146,6 +2186,22 @@
             },
             {
               "type": "function",
+              "name": "unpack_adventurer",
+              "inputs": [
+                {
+                  "name": "packed_adventurer",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
               "name": "get_discovery",
               "inputs": [
                 {
@@ -2184,6 +2240,22 @@
               "outputs": [
                 {
                   "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "unpack_bag",
+              "inputs": [
+                {
+                  "name": "packed_bag",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::bag::Bag"
                 }
               ],
               "state_mutability": "view"
@@ -2459,7 +2531,7 @@
       "systems": ["record_item_drop", "upgrade"]
     },
     {
-      "address": "0x452844ce80b8f6b248dbec8d3dffff6600dd7e1919370e8017de67ad750e728",
+      "address": "0x2c76cefd63daa5f6cd16b3d579a45cf53a0b7c733398c5b9cf907fafafd59a6",
       "class_hash": "0x59bfaa756313d362c6ad9661695de20da6242ab792e146488bc1aca00a615dd",
       "abi": [
         {
@@ -3185,8 +3257,8 @@
       ]
     },
     {
-      "address": "0x3679c2af35dff69d448b9fbb9cae33b2de2da8a47ef5d791306b64e3f1cd4f8",
-      "class_hash": "0x21f81a167bbf70db3e88ad61225fd08c58a79101fa5b4afe95cb510927b84ca",
+      "address": "0x7933c7e622f1dda406a6f69cbce12c97f36c2b738b442f50a2a1fcea7f6a530",
+      "class_hash": "0x5d42c3bd4706452d257bd34a92c268fd3038bd209bc864416bf91ebbe162e98",
       "abi": [
         {
           "type": "impl",
@@ -3302,6 +3374,250 @@
             {
               "name": "luck",
               "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::item::Item",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::equipment::Equipment",
+          "members": [
+            {
+              "name": "weapon",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "chest",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "head",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "waist",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "foot",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "hand",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "neck",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "ring",
+              "type": "death_mountain::models::adventurer::item::Item"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::adventurer::Adventurer",
+          "members": [
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "gold",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "beast_health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "stat_upgrades_available",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "stats",
+              "type": "death_mountain::models::adventurer::stats::Stats"
+            },
+            {
+              "name": "equipment",
+              "type": "death_mountain::models::adventurer::equipment::Equipment"
+            },
+            {
+              "name": "item_specials_seed",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "action_count",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::bag::Bag",
+          "members": [
+            {
+              "name": "item_1",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_2",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_3",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_4",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_5",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_6",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_7",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_8",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_9",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_10",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_11",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_12",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_13",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_14",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_15",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "mutated",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::combat::SpecialPowers",
+          "members": [
+            {
+              "name": "special1",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special2",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special3",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game::BeastEvent",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "seed",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "level",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "specials",
+              "type": "death_mountain::models::combat::SpecialPowers"
+            },
+            {
+              "name": "is_collectable",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<core::integer::u8>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<core::integer::u8>"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game::GameState",
+          "members": [
+            {
+              "name": "adventurer",
+              "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+            },
+            {
+              "name": "bag",
+              "type": "death_mountain::models::adventurer::bag::Bag"
+            },
+            {
+              "name": "beast",
+              "type": "death_mountain::models::game::BeastEvent"
+            },
+            {
+              "name": "market",
+              "type": "core::array::Span::<core::integer::u8>"
             }
           ]
         },
@@ -3440,6 +3756,22 @@
               ],
               "outputs": [],
               "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "get_game_state",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game::GameState"
+                }
+              ],
+              "state_mutability": "view"
             }
           ]
         },
@@ -3574,8 +3906,8 @@
       ]
     },
     {
-      "address": "0x51d6b5ff3cb2fdc76f24a55f516ebf7885f8d5663915f3f5decdc7bd464a845",
-      "class_hash": "0x64bc959b111c32ded56686e01ece880e9ead1fbba109d29a67b6d1e8b097286",
+      "address": "0x56a32ac6baa3d3e2634d55e6f2ca07bfee4ab09c6c6f0b93d456b0a6da4c84c",
+      "class_hash": "0x1b0c1f4078aae7a3f259184b4f09267942ed6a66087f5829d179cd2f72a269c",
       "abi": [
         {
           "type": "impl",
@@ -3720,93 +4052,6 @@
         },
         {
           "type": "impl",
-          "name": "ObjectivesImpl",
-          "interface_name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives"
-        },
-        {
-          "type": "struct",
-          "name": "game_components_minigame::extensions::objectives::structs::GameObjective",
-          "members": [
-            {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "value",
-              "type": "core::byte_array::ByteArray"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>",
-          "members": [
-            {
-              "name": "snapshot",
-              "type": "@core::array::Array::<game_components_minigame::extensions::objectives::structs::GameObjective>"
-            }
-          ]
-        },
-        {
-          "type": "interface",
-          "name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives",
-          "items": [
-            {
-              "type": "function",
-              "name": "objective_exists",
-              "inputs": [
-                {
-                  "name": "objective_id",
-                  "type": "core::integer::u32"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "completed_objective",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                },
-                {
-                  "name": "objective_id",
-                  "type": "core::integer::u32"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "objectives",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
-          "type": "impl",
           "name": "GameTokenSystemsImpl",
           "interface_name": "death_mountain::systems::game_token::contracts::IGameTokenSystems"
         },
@@ -3814,18 +4059,6 @@
           "type": "interface",
           "name": "death_mountain::systems::game_token::contracts::IGameTokenSystems",
           "items": [
-            {
-              "type": "function",
-              "name": "create_objective",
-              "inputs": [
-                {
-                  "name": "score",
-                  "type": "core::integer::u32"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
             {
               "type": "function",
               "name": "player_name",
@@ -4205,12 +4438,6 @@
         },
         {
           "type": "event",
-          "name": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
-          "kind": "enum",
-          "variants": []
-        },
-        {
-          "type": "event",
           "name": "openzeppelin_introspection::src5::SRC5Component::Event",
           "kind": "enum",
           "variants": []
@@ -4236,11 +4463,6 @@
               "kind": "flat"
             },
             {
-              "name": "ObjectivesEvent",
-              "type": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
-              "kind": "flat"
-            },
-            {
               "name": "SRC5Event",
               "type": "openzeppelin_introspection::src5::SRC5Component::Event",
               "kind": "flat"
@@ -4249,16 +4471,16 @@
         }
       ],
       "init_calldata": [
-        "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-        "0x07fb67dae8765fe214b68fcd20d14b5d4784cedde759840559314f539aa04e32",
+        "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec",
+        "0x01d3950941c7cbb80160d2fd3f112bb9885244833e547b298dfed040ce1e140f",
         "1"
       ],
       "tag": "ls_0_0_6-game_token_systems",
       "selector": "0x3275bafbab55269a16cca4d314e63204f9b04ff98cdd996cb517f11b27cc8d1",
-      "systems": ["dojo_init", "create_objective", "player_name", "upgrade"]
+      "systems": ["dojo_init", "player_name", "upgrade"]
     },
     {
-      "address": "0x2e9f99e0c732d2e4a3cf09f6ca6fda50663bed0e7b9fe32b14f956d0401bff0",
+      "address": "0x11c4a183418b1d379bcc54e342a69b4b0b0950fc039a7d556b2248244f5f45f",
       "class_hash": "0x23cdb494302994de197966707c72df5708f2516f5205ed398dacb4c16fc4bcc",
       "abi": [
         {
@@ -4763,7 +4985,365 @@
       "systems": ["upgrade"]
     },
     {
-      "address": "0x227463ce459c1b45382e2523a7ab2f89990cc5c3d0eec69448e6bab7d17c743",
+      "address": "0x5b855196522d3509c8c55d387470a29a59605f3b0371bd848366baf624594e2",
+      "class_hash": "0x4fddc4a1201a02e662d77f687bfc7a79e570426394182ce882c2c0e8dfa6034",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "objectives_systems__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "objectives_systems__DeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "impl",
+          "name": "ObjectivesImpl",
+          "interface_name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives"
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives",
+          "items": [
+            {
+              "type": "function",
+              "name": "objective_exists",
+              "inputs": [
+                {
+                  "name": "objective_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "completed_objective",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "objective_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "ObjectivesDetailsImpl",
+          "interface_name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectivesDetails"
+        },
+        {
+          "type": "struct",
+          "name": "game_components_minigame::extensions::objectives::structs::GameObjective",
+          "members": [
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "value",
+              "type": "core::byte_array::ByteArray"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<game_components_minigame::extensions::objectives::structs::GameObjective>"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectivesDetails",
+          "items": [
+            {
+              "type": "function",
+              "name": "objectives_details",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "ObjectivesSystemsImpl",
+          "interface_name": "death_mountain::systems::objectives::contracts::IObjectivesSystems"
+        },
+        {
+          "type": "interface",
+          "name": "death_mountain::systems::objectives::contracts::IObjectivesSystems",
+          "items": [
+            {
+              "type": "function",
+              "name": "create_objective",
+              "inputs": [
+                {
+                  "name": "score",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "SRC5Impl",
+          "interface_name": "openzeppelin_introspection::interface::ISRC5"
+        },
+        {
+          "type": "interface",
+          "name": "openzeppelin_introspection::interface::ISRC5",
+          "items": [
+            {
+              "type": "function",
+              "name": "supports_interface",
+              "inputs": [
+                {
+                  "name": "interface_id",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "openzeppelin_introspection::src5::SRC5Component::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::objectives::contracts::objectives_systems::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "ObjectivesEvent",
+              "type": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
+              "kind": "flat"
+            },
+            {
+              "name": "SRC5Event",
+              "type": "openzeppelin_introspection::src5::SRC5Component::Event",
+              "kind": "flat"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [],
+      "tag": "ls_0_0_6-objectives_systems",
+      "selector": "0x791fd850653a249293cbf76a3a140fe91be0556cda4938d82751c79c862ec63",
+      "systems": ["dojo_init", "create_objective", "upgrade"]
+    },
+    {
+      "address": "0x1ab9230df321f6c541aaa8a994e807c3216068bf97159f2cf26d8f6b87413db",
       "class_hash": "0x30fb384375add0bb606e7da48f1ca035c3ba94e16262f6ac2d95026b1a57f07",
       "abi": [
         {
@@ -5090,8 +5670,8 @@
       "systems": ["upgrade"]
     },
     {
-      "address": "0x764f91f901714f0784ee408e182e4184a62a036b3a893c806f5fcff8f33db7e",
-      "class_hash": "0x33cc26c8153398a8d63ae7ec31641be78d015800bd7b7506d0bebdf9cbb07d8",
+      "address": "0x592c60a1de008b0ae2cf9e08674c36d179d5cc7b51482ee26498806273c5bfe",
+      "class_hash": "0x60b27ca7561f80ff903f374900383672a019d51d025017134cdca49d55ad249",
       "abi": [
         {
           "type": "impl",
@@ -5170,6 +5750,33 @@
           ]
         },
         {
+          "type": "interface",
+          "name": "game_components_minigame::extensions::settings::interface::IMinigameSettings",
+          "items": [
+            {
+              "type": "function",
+              "name": "settings_exist",
+              "inputs": [
+                {
+                  "name": "settings_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "GameSettingsDetailsImpl",
+          "interface_name": "game_components_minigame::extensions::settings::interface::IMinigameSettingsDetails"
+        },
+        {
           "type": "struct",
           "name": "game_components_minigame::extensions::settings::structs::GameSetting",
           "members": [
@@ -5213,27 +5820,11 @@
         },
         {
           "type": "interface",
-          "name": "game_components_minigame::extensions::settings::interface::IMinigameSettings",
+          "name": "game_components_minigame::extensions::settings::interface::IMinigameSettingsDetails",
           "items": [
             {
               "type": "function",
-              "name": "settings_exist",
-              "inputs": [
-                {
-                  "name": "settings_id",
-                  "type": "core::integer::u32"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "settings",
+              "name": "settings_details",
               "inputs": [
                 {
                   "name": "settings_id",
