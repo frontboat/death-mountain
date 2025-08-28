@@ -5,7 +5,7 @@ seed = "DNC"
 
 [env]
 rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
-world_address = "0x04c9c7bba8c218c1ee2f9d95f5cecf8b4cafbe8cf072390b69651e48519c1ebb"
+world_address = "0x757092d4bb00c86fd6d96429fc351f4a7d0409e08cc29d62eddd1c284cac6dc"
 
 [namespace]
 default = "ls_0_0_6"
@@ -35,6 +35,6 @@ order_inits = [
 [init_call_args]
 "ls_0_0_6-game_token_systems" = [
     "0x065d2AB17338b5AffdEbAF95E2D79834B5f30Bac596fF55563c62C3c98700150", # account address
-    "0x00cf3712b6168493d89be576f3ebdf0c76dcda964f952dacc21a72094b9e2899", # denshokan address
+    "0x0610aba32da98547f9f65fe0195cc60c08f1ef6fa2f2a0fc03e35f1c29319fd3", # denshokan address
     "1" # Option::None for renderer address
 ]

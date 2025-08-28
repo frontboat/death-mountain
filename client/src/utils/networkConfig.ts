@@ -43,16 +43,16 @@ export const NETWORKS = {
     name: "Beast Mode",
     status: "online",
     namespace: "ls_0_0_6",
-    slot: "pg-sepolia-4",
+    slot: "pg-sepolia-5",
     rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
-    torii: "https://api.cartridge.gg/x/pg-sepolia-4/torii",
+    torii: "https://api.cartridge.gg/x/pg-sepolia-5/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_sepolia,
     vrf: true,
     denshokan:
-      "0x00cf3712b6168493d89be576f3ebdf0c76dcda964f952dacc21a72094b9e2899",
+      "0x0610aba32da98547f9f65fe0195cc60c08f1ef6fa2f2a0fc03e35f1c29319fd3",
     dungeon:
       "0x0501c6e5f5c588bd3ae74b47c0dcde4acfe0c3243ce2b294ac3bce24e4e071a8",
     dungeonTicket:
