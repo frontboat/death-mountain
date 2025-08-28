@@ -1,4 +1,3 @@
-import BeastTooltip from '@/desktop/components/BeastTooltip';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
 import { beastPowerPercent, getCollectableTraits } from '@/utils/beast';
@@ -7,6 +6,8 @@ import { beastNameSize } from '@/utils/utils';
 import { Box, LinearProgress, Typography, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import ArmorTooltip from '../components/ArmorTooltip';
+import WeaponTooltip from '../components/WeaponTooltip';
 
 const pulseGold = keyframes`
   0% {
@@ -82,10 +83,14 @@ export default function Beast() {
         </Box> : <img src="/images/beast.png" alt="Beast" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />}
 
         <Box sx={[styles.beastLevelCircle, { left: -4 }, collectable && styles.collectableLevelCircle]}>
-          <BeastTooltip beastType={beast!.type} beastId={beast!.id} />
+          <WeaponTooltip beastId={beast!.id} />
         </Box>
 
         <Box sx={[styles.beastLevelCircle, { right: -4 }, collectable && styles.collectableLevelCircle]}>
+          <ArmorTooltip beastId={beast!.id} />
+        </Box>
+
+        <Box sx={[styles.beastLevelCircle, { right: -4, top: -4 }, collectable && styles.collectableLevelCircle]}>
           <Typography variant="body2" sx={styles.levelText}>
             {beast?.level || 0}
           </Typography>

@@ -1,14 +1,12 @@
-import { beastTypeIcons, getArmorType, getArmorTypeStrength, getArmorTypeWeakness, getAttackType, getWeaponTypeStrength, getWeaponTypeWeakness } from '@/utils/beast';
+import { getArmorType, getArmorTypeStrength, getArmorTypeWeakness } from '@/utils/beast';
 import { typeIcons } from '@/utils/loot';
 import { Box, Tooltip, Typography } from '@mui/material';
 
-interface BeastTooltipProps {
-  beastType: string;
+interface ArmorTooltipProps {
   beastId: number;
 }
 
-export default function BeastTooltip({ beastType, beastId }: BeastTooltipProps) {
-  const attackType = getAttackType(beastId);
+export default function ArmorTooltip({ beastId }: ArmorTooltipProps) {
   const armorType = getArmorType(beastId);
 
   return (
@@ -25,7 +23,7 @@ export default function BeastTooltip({ beastType, beastId }: BeastTooltipProps) 
             {
               name: 'offset',
               options: {
-                offset: [-200, 0], // [x, y] offset in pixels
+                offset: [-260, 0], // [x, y] offset in pixels
               },
             },
           ],
@@ -39,68 +37,20 @@ export default function BeastTooltip({ beastType, beastId }: BeastTooltipProps) 
       }}
       title={
         <Box sx={styles.tooltipContainer}>
-          <Typography sx={styles.tooltipTitle}>
-            {beastType}
-          </Typography>
-
-          <Box sx={styles.sectionDivider} />
-
-          {/* Weapon Section */}
-          <Box sx={styles.tooltipSection}>
-            <Box sx={styles.tooltipTypeRow}>
-              <Box
-                component="img"
-                src={typeIcons[attackType as keyof typeof typeIcons]}
-                alt={attackType}
-                sx={styles.tooltipTypeIcon}
-              />
-              <Typography sx={styles.tooltipTypeText} mb={'4px'}>{attackType} Attack</Typography>
-            </Box>
-            <Box sx={styles.tooltipRow}>
-              <Typography sx={styles.tooltipLabel}>Strong Against:</Typography>
-              <Box sx={styles.tooltipTypeRow}>
-                <Box
-                  component="img"
-                  src={typeIcons[getWeaponTypeStrength(attackType) as keyof typeof typeIcons]}
-                  alt={'icon'}
-                  sx={styles.tooltipTypeIcon}
-                />
-                <Typography sx={styles.tooltipTypeText}>
-                  {getWeaponTypeStrength(attackType)} Armor
-                </Typography>
-                <Typography sx={styles.tooltipPercentage}>150% DMG</Typography>
-              </Box>
-            </Box>
-            <Box sx={styles.tooltipRow}>
-              <Typography sx={styles.tooltipLabel}>Weak Against:</Typography>
-              <Box sx={styles.tooltipTypeRow}>
-                <Box
-                  component="img"
-                  src={typeIcons[getWeaponTypeWeakness(attackType) as keyof typeof typeIcons]}
-                  alt={'icon'}
-                  sx={styles.tooltipTypeIcon}
-                />
-                <Typography sx={styles.tooltipTypeText}>
-                  {getWeaponTypeWeakness(attackType)} Armor
-                </Typography>
-                <Typography sx={styles.tooltipPercentage}>50% DMG</Typography>
-              </Box>
-            </Box>
+          <Box sx={styles.tooltipTypeRow}>
+            <Box
+              component="img"
+              src={typeIcons[armorType as keyof typeof typeIcons]}
+              alt={armorType}
+              sx={styles.tooltipTypeIcon}
+            />
+            <Typography sx={styles.tooltipTypeText} mt={'4px'}>{armorType} Armor</Typography>
           </Box>
 
           <Box sx={styles.sectionDivider} />
 
           {/* Armor Section */}
           <Box sx={styles.tooltipSection}>
-            <Box sx={styles.tooltipTypeRow}>
-              <Box
-                component="img"
-                src={typeIcons[armorType as keyof typeof typeIcons]}
-                alt={armorType}
-                sx={styles.tooltipTypeIcon}
-              />
-              <Typography sx={styles.tooltipTypeText} mb={'4px'}>{armorType} Armor</Typography>
-            </Box>
             <Box sx={styles.tooltipRow}>
               <Typography sx={styles.tooltipLabel}>Strong Against:</Typography>
               <Box sx={styles.tooltipTypeRow}>
@@ -139,8 +89,7 @@ export default function BeastTooltip({ beastType, beastId }: BeastTooltipProps) 
       <Box sx={styles.typeContainer}>
         <Box
           component="img"
-          src={beastTypeIcons[beastType as keyof typeof beastTypeIcons]}
-          alt={beastType}
+          src={typeIcons[armorType as keyof typeof typeIcons]}
           sx={styles.typeIcon}
         />
       </Box>
@@ -214,8 +163,8 @@ const styles = {
     gap: '4px',
   },
   typeIcon: {
-    width: '18px',
-    height: '18px',
+    width: '16px',
+    height: '16px',
     filter: 'invert(0.85) sepia(0.3) saturate(1.5) hue-rotate(5deg) brightness(0.8)',
   },
 }; 

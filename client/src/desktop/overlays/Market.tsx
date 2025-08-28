@@ -43,7 +43,7 @@ const renderTypeToggleButton = (type: keyof typeof typeIcons) => (
 
 export default function MarketOverlay() {
   const [isOpen, setIsOpen] = useState(false);
-  const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket, showInventory } = useGameStore();
+  const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket } = useGameStore();
   const { executeGameAction, actionFailed } = useGameDirector();
   const {
     cart,

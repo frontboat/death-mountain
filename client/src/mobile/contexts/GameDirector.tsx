@@ -245,6 +245,9 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (event.type === "market_items") {
       setMarketItemIds(event.items!);
+    }
+
+    if (event.type === "stat_upgrade") {
       setNewMarket(true);
     }
 
