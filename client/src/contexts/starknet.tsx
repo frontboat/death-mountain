@@ -18,7 +18,7 @@ const cartridgeController = typeof window !== "undefined" ? new ControllerConnec
   namespace: controllerConfig.namespace,
   slot: controllerConfig.slot,
   preset: controllerConfig.preset,
-  chains: [{ rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_8" }], // controllerConfig.chains,
+  chains: controllerConfig.chains,
   defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
   tokens: controllerConfig.tokens,
 }) : null;
