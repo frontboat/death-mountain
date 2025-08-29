@@ -1,4 +1,3 @@
-import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { Metadata } from "@/types/game";
 import { NETWORKS } from "@/utils/networkConfig";
@@ -405,20 +404,23 @@ export const useStarknetApi = () => {
       0
     );
 
-    const account = new Account(rpcProvider, contractAddress, privateKey);
+    const account = new Account({
+      provider: rpcProvider,
+      address: contractAddress,
+      signer: privateKey,
+    });
+
     const { transaction_hash } = await account.deployAccount({
       classHash: accountClassHash,
       constructorCalldata: constructorCalldata,
       addressSalt: publicKey,
-    }, {
-      maxFee: num.toHex(0),
     });
 
     const receipt = await account.waitForTransaction(transaction_hash, { retryInterval: 100 });
 
     if (receipt) {
       localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey }))
-      localStorage.setItem('burner_version', "5")
+      localStorage.setItem('burner_version', "6")
       return account
     }
   };
