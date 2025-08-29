@@ -5,10 +5,12 @@ import { Box, Button, Typography, keyframes } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import AdventurerInfo from '../components/AdventurerInfo';
 import BeastCollectedPopup from '@/components/BeastCollectedPopup';
+import { useMarketStore } from '@/stores/marketStore';
 
 export default function ExploreScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, exploreLog, collectable, collectableTokenURI, setCollectable } = useGameStore();
+  const { inProgress } = useMarketStore();
 
   const [untilBeast, setUntilBeast] = useState(false);
   const [isExploring, setIsExploring] = useState(false);
@@ -145,7 +147,7 @@ export default function ExploreScreen() {
           <Button
             variant="contained"
             onClick={handleExplore}
-            disabled={isExploring}
+            disabled={isExploring || inProgress}
             sx={styles.exploreButton}
           >
             {isExploring
@@ -155,9 +157,16 @@ export default function ExploreScreen() {
                 </Typography>
                 <div className='dotLoader green' />
               </Box>
-              : <Typography variant={'h4'} lineHeight={'16px'}>
-                EXPLORE
-              </Typography>
+              : inProgress ?
+                <Box display={'flex'} alignItems={'baseline'}>
+                  <Typography variant={'h4'} lineHeight={'16px'}>
+                    Purchasing Items
+                  </Typography>
+                  <div className='dotLoader green' />
+                </Box>
+                : <Typography variant={'h4'} lineHeight={'16px'}>
+                  EXPLORE
+                </Typography>
             }
           </Button>
         </Box>

@@ -105,7 +105,7 @@ export const processGameEvent = (event: any): GameEvent => {
       obstacle: {
         id: obstacle.obstacle_id,
         damage: obstacle.damage,
-        location: obstacle.location,
+        location: typeof obstacle.location === 'object' ? Object.keys(obstacle.location)[0] : obstacle.location,
         critical_hit: obstacle.critical_hit,
         dodged: obstacle.dodged
       }

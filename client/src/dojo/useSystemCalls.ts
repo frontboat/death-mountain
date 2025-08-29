@@ -10,7 +10,7 @@ import { delay, stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
 export const useSystemCalls = () => {
-  const { getBeastTokenURI, getActionCount } = useStarknetApi();
+  const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
   const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
@@ -51,8 +51,8 @@ export const useSystemCalls = () => {
    */
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
     try {
-      if (adventurer?.action_count) {
-        await waitForGlobalState();
+      if (adventurer) {
+        await waitForGlobalState("action_count");
       }
 
       let tx = await account!.execute(calls);
@@ -74,15 +74,16 @@ export const useSystemCalls = () => {
     }
   };
 
-  const waitForGlobalState = async (retries: number = 0): Promise<boolean> => {
-    let actionCount = await getActionCount(gameId!);
+  const waitForGlobalState = async (state: any, retries: number = 0): Promise<boolean> => {
+    let adventurerState = await getAdventurerState(gameId!);
 
-    if (actionCount === adventurer!.action_count || retries > 9) {
+    // @ts-ignore
+    if (adventurerState?.[state] === adventurer![state] || retries > 9) {
       return true;
     }
 
     await delay(500);
-    return waitForGlobalState(retries + 1);
+    return waitForGlobalState(state, retries + 1);
   }
 
   /**
@@ -302,6 +303,8 @@ export const useSystemCalls = () => {
     let suffix = Object.keys(BEAST_NAME_SUFFIXES).find((key: any) => BEAST_NAME_SUFFIXES[key] === beast.specialSuffix) || 0;
 
     try {
+      await waitForGlobalState("beast_health");
+
       let tx = await account!.execute([
         {
           contractAddress: DUNGEON_ADDRESS,

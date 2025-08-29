@@ -18,11 +18,7 @@ export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNav
     if (inProgress) {
       if (cart.items.length > 0) {
         setNewInventoryItems(cart.items.map(item => item.id));
-        setActiveNavItem('CHARACTER');
-      } else {
-        setActiveNavItem('GAME');
       }
-
       setInProgress(false);
     }
 

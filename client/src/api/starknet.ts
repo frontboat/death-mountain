@@ -69,7 +69,7 @@ export const useStarknetApi = () => {
     }
   }
 
-  const getActionCount = async (adventurerId: number) => {
+  const getAdventurerState = async (adventurerId: number) => {
     try {
       const response = await fetch(currentNetworkConfig.rpcUrl, {
         method: "POST",
@@ -92,7 +92,10 @@ export const useStarknetApi = () => {
       });
 
       const data = await response.json();
-      return parseInt(data?.result[29], 16);
+      return {
+        beast_health: parseInt(data?.result[3], 16),
+        action_count: parseInt(data?.result[29], 16)
+      }
     } catch (error) {
       console.log('error', error)
     }
@@ -420,5 +423,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata, getActionCount };
+  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata, getAdventurerState };
 };
