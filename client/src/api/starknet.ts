@@ -22,7 +22,7 @@ export const useStarknetApi = () => {
           entry_point_selector: "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
           calldata: [address]
         },
-        "pending"
+        "latest"
       ]
     }));
 
@@ -33,6 +33,7 @@ export const useStarknetApi = () => {
     });
 
     const data = await response.json();
+
     return parseBalances(data || [], tokens);
   }
 
@@ -48,7 +49,7 @@ export const useStarknetApi = () => {
             entry_point_selector: "0x02f6ca94ed3ceec9e8b907a11317d8d624f94cf62d9c8112c658fd4d9f02b2d8",
             calldata: [goldenPassAddress, num.toHex(tokenId)]
           },
-          "pending"
+          "latest"
         ]
       }));
 
@@ -84,7 +85,7 @@ export const useStarknetApi = () => {
               entry_point_selector: "0x2305fda54e31f8525bf15eaf4f22b11a7d1d2a03f1b4d0602b9ead3c29533e",
               calldata: [num.toHex(adventurerId)],
             },
-            "pending",
+            "latest",
           ],
           id: 0,
         }),
@@ -248,7 +249,7 @@ export const useStarknetApi = () => {
               entry_point_selector: "0x226ad7e84c1fe08eb4c525ed93cccadf9517670341304571e66f7c4f95cbe54",
               calldata: [num.toHex(beastId), "0x0"],
             },
-            "pending",
+            "latest",
           ],
           id: 0,
         }),
@@ -285,7 +286,7 @@ export const useStarknetApi = () => {
               entry_point_selector: "0x212a142d787b7ccdf7549cce575f25c05823490271d294b08eceda21119475",
               calldata: [num.toHex(settingsId)],
             },
-            "pending",
+            "latest",
           ],
           id: 0,
         }),
@@ -331,7 +332,7 @@ export const useStarknetApi = () => {
               entry_point_selector: "0x20d82cc6889093dce20d92fc9daeda4498c9b99ae798fc2a6f4757e38fb1729",
               calldata: [num.toHex(tokenId)],
             },
-            "pending",
+            "latest",
           ],
           id: 0,
         }),
