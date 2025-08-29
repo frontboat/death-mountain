@@ -1,7 +1,7 @@
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Box, Tooltip } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { useEffect } from 'react';
 
 interface BottomNavProps {
@@ -39,13 +39,13 @@ export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNav
   const navItems = [
     {
       key: 'GAME',
-      icon: <img src={'/images/mobile/play.png'} alt="Game" style={{ height: 32 }} />,
+      icon: <img src={'/images/mobile/adventurer.png'} alt="Game" style={{ height: 32 }} />,
       onClick: () => setActiveNavItem('GAME'),
       active: activeNavItem === 'GAME'
     },
     {
       key: 'CHARACTER',
-      icon: <img src={'/images/mobile/adventurer.png'} alt="Adventurer" style={{ height: 32 }} />,
+      icon: <img src={'/images/inventory.png'} alt="Inventory" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(40deg) saturate(1.5) brightness(1.15) contrast(1.2)' }} />,
       onClick: () => setActiveNavItem('CHARACTER'),
       active: activeNavItem === 'CHARACTER'
     },
@@ -78,45 +78,46 @@ export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNav
         <Box sx={styles.mainNavItems}>
           {navItems.slice(0, 3).map((item) => {
             return item.tooltip ? (
-              <Tooltip
-                key={item.key}
-                title={item.tooltip}
-              >
-                <Box
-                  sx={{
-                    ...styles.navItem,
-                    opacity: item.disabled ? 0.3 : item.active ? 1 : 0.7,
-                    cursor: item.disabled ? 'default' : 'pointer',
-                    pointerEvents: 'auto',
-                    touchAction: 'manipulation',
-                    WebkitTapHighlightColor: 'transparent',
-                    '&:hover': item.disabled ? {} : {
-                      opacity: 1,
-                      transform: 'translateY(-2px)'
-                    }
-                  }}
-                  onClick={item.disabled ? undefined : item.onClick}
+              <Box key={item.key} sx={{ position: 'relative' }}>
+                <Tooltip
+                  title={item.tooltip}
                 >
                   <Box
                     sx={{
-                      ...styles.navIcon,
-                      backgroundColor: item.active ? 'rgba(128, 255, 0, 0.1)' : 'transparent',
-                      border: `1px solid ${item.active ? 'rgba(128, 255, 0, 0.2)' : 'rgba(128, 255, 0, 0.1)'}`,
-                      boxShadow: item.active ? '0 0 10px rgba(128, 255, 0, 0.2)' : 'none',
+                      ...styles.navItem,
+                      opacity: item.disabled ? 0.3 : item.active ? 1 : 0.7,
+                      cursor: item.disabled ? 'default' : 'pointer',
+                      pointerEvents: 'auto',
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent',
                       '&:hover': item.disabled ? {} : {
-                        backgroundColor: 'rgba(128, 255, 0, 0.15)',
-                        border: '1px solid rgba(128, 255, 0, 0.3)',
-                        boxShadow: '0 0 15px rgba(128, 255, 0, 0.3)'
+                        opacity: 1,
+                        transform: 'translateY(-2px)'
                       }
                     }}
+                    onClick={item.disabled ? undefined : item.onClick}
                   >
-                    {item.icon}
-                    {item.key === 'MARKET' && item.hasNew && (
-                      <Box sx={styles.newIndicator}>!</Box>
-                    )}
+                    <Box
+                      sx={{
+                        ...styles.navIcon,
+                        backgroundColor: item.active ? 'rgba(128, 255, 0, 0.1)' : 'transparent',
+                        border: `1px solid ${item.active ? 'rgba(128, 255, 0, 0.2)' : 'rgba(128, 255, 0, 0.1)'}`,
+                        boxShadow: item.active ? '0 0 10px rgba(128, 255, 0, 0.2)' : 'none',
+                        '&:hover': item.disabled ? {} : {
+                          backgroundColor: 'rgba(128, 255, 0, 0.15)',
+                          border: '1px solid rgba(128, 255, 0, 0.3)',
+                          boxShadow: '0 0 15px rgba(128, 255, 0, 0.3)'
+                        }
+                      }}
+                    >
+                      {item.icon}
+                      {item.key === 'MARKET' && item.hasNew && (
+                        <Box sx={styles.newIndicator}>!</Box>
+                      )}
+                    </Box>
                   </Box>
-                </Box>
-              </Tooltip>
+                </Tooltip>
+              </Box>
             ) : (
               <Box
                 key={item.key}
@@ -140,6 +141,15 @@ export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNav
                     <Box sx={styles.newIndicator}>!</Box>
                   )}
                 </Box>
+
+                {/* Forced market tooltip when new market is available */}
+                {item.key === 'MARKET' && item.hasNew && adventurer?.stat_upgrades_available! === 0 && (
+                  <Box sx={styles.forcedMarketTooltip}>
+                    <Typography sx={styles.forcedMarketTooltipText}>
+                      New Market Available
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             );
           })}
@@ -238,5 +248,26 @@ const styles = {
     color: '#222',
     fontWeight: 'bold',
     zIndex: 2
+  },
+  forcedMarketTooltip: {
+    position: 'absolute',
+    bottom: '100%',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    border: '1px solid rgba(128, 255, 0, 0.9)',
+    borderRadius: '6px',
+    padding: '6px 12px',
+    marginBottom: '12px',
+    zIndex: 1001,
+    whiteSpace: 'nowrap',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+  },
+  forcedMarketTooltipText: {
+    color: '#80FF00',
+    fontSize: '14px',
+    fontWeight: 600,
+    textAlign: 'center',
+    margin: 0
   }
 };

@@ -26,10 +26,10 @@ function App() {
         <SnackbarProvider anchorOrigin={{ vertical: 'top', horizontal: 'center' }} preventDuplicate autoHideDuration={3000}>
           <ControllerProvider>
             <StatisticsProvider>
+              <SoundProvider>
 
-              {!shouldShowMobile && (
-                <ThemeProvider theme={desktopTheme}>
-                  <SoundProvider>
+                {!shouldShowMobile && (
+                  <ThemeProvider theme={desktopTheme}>
                     <GameDirector>
                       <Box className='main'>
 
@@ -41,14 +41,12 @@ function App() {
 
                       </Box>
                     </GameDirector>
-                  </SoundProvider>
-                </ThemeProvider>
-              )}
+                  </ThemeProvider>
+                )}
 
-              {shouldShowMobile && (
-                <ThemeProvider theme={mobileTheme}>
-                  <Box className='bgImage'>
-                    <SoundProvider>
+                {shouldShowMobile && (
+                  <ThemeProvider theme={mobileTheme}>
+                    <Box className='bgImage'>
                       <MobileGameDirector>
                         <Box className='main'>
                           <Header />
@@ -63,11 +61,11 @@ function App() {
                           <GameSettings />
                         </Box>
                       </MobileGameDirector>
-                    </SoundProvider>
-                  </Box>
-                </ThemeProvider>
-              )}
+                    </Box>
+                  </ThemeProvider>
+                )}
 
+              </SoundProvider>
             </StatisticsProvider>
           </ControllerProvider>
         </SnackbarProvider>

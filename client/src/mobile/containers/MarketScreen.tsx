@@ -117,6 +117,8 @@ export default function MarketScreen() {
   };
 
   const handleCheckout = () => {
+    if (inProgress) return;
+
     setInProgress(true);
 
     let itemPurchases = cart.items.map(item => ({
@@ -150,9 +152,9 @@ export default function MarketScreen() {
   const potionCost = potionPrice(calculateLevel(adventurer?.xp || 0), adventurer?.stats?.charisma || 0);
   const totalCost = cart.items.reduce((sum, item) => sum + item.price, 0) + (cart.potions * potionCost);
   const remainingGold = (adventurer?.gold || 0) - totalCost;
-  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
+  const maxHealth = STARTING_HEALTH + (adventurer?.stats?.vitality || 0) * 15;
   const maxPotionsByHealth = Math.ceil((maxHealth - (adventurer?.health || 0)) / 10);
-  const maxPotionsByGold = Math.floor((adventurer?.gold || 0) / potionCost);
+  const maxPotionsByGold = Math.floor((adventurer!.gold - cart.items.reduce((sum, item) => sum + item.price, 0)) / potionCost);
   const maxPotions = Math.min(maxPotionsByHealth, maxPotionsByGold);
 
   const filteredItems = marketItems.filter(item => {
@@ -177,10 +179,17 @@ export default function MarketScreen() {
         </Box>
         <Button
           variant="contained"
-          onClick={() => setShowCart(!showCart)}
+          onClick={handleCheckout}
+          disabled={(cart.potions === 0 && cart.items.length === 0)}
           sx={styles.cartButton}
         >
-          Cart ({cart.potions + cart.items.length})
+          {inProgress
+            ? <Box display={'flex'} alignItems={'baseline'}>
+              Processing
+              <div className='dotLoader black' />
+            </Box>
+            : `Purchase (${cart.potions + cart.items.length})`
+          }
         </Button>
       </Box>
 
@@ -551,6 +560,11 @@ const styles = {
     fontWeight: 'bold',
     color: '#111111',
     fontFamily: 'VT323, monospace',
+    width: '110px',
+    '&:disabled': {
+      background: 'rgba(128, 255, 0, 0.1)',
+      color: 'rgba(128, 255, 0, 0.5)',
+    },
   },
   mainContent: {
     flex: 1,

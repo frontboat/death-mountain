@@ -1,4 +1,5 @@
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import { calculateLevel } from '@/utils/game';
 import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
@@ -35,11 +36,12 @@ const SoundContext = createContext<SoundContextType>({
 });
 
 export const SoundProvider = ({ children }: PropsWithChildren) => {
+  const { useMobileClient } = useUIStore();
   const { gameId, adventurer } = useGameStore();
   const audioRef = useRef(new Audio(tracks.Intro));
   audioRef.current.loop = true;
 
-  const [playing, setPlaying] = useState(isMobile ? true : false);
+  const [playing, setPlaying] = useState((isMobile || useMobileClient) ? true : false);
   const [volume, setVolume] = useState(0.5);
   const [muted, setMuted] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false)
@@ -47,6 +49,14 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     audioRef.current.volume = volume;
   }, [volume]);
+
+  useEffect(() => {
+    if (useMobileClient && !muted) {
+      setPlaying(true);
+    } else {
+      setPlaying(false);
+    }
+  }, [useMobileClient]);
 
   useEffect(() => {
     const handleFirstInteraction = () => {

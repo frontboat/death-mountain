@@ -127,8 +127,13 @@ export default function BeastTooltip({ beastType, beastId }: BeastTooltipProps) 
       <Box sx={styles.typeContainer}>
         <Box
           component="img"
-          src={beastTypeIcons[beastType as keyof typeof beastTypeIcons]}
-          alt={beastType}
+          src={typeIcons[attackType as keyof typeof typeIcons]}
+          sx={styles.typeIcon}
+        />
+        -
+        <Box
+          component="img"
+          src={typeIcons[armorType as keyof typeof typeIcons]}
           sx={styles.typeIcon}
         />
       </Box>
@@ -212,11 +217,14 @@ const styles = {
   typeContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '4px',
+    justifyContent: 'space-between',
+    color: '#80FF00',
+    width: '100%',
+    fontSize: '14px',
   },
   typeIcon: {
-    width: '18px',
-    height: '18px',
+    width: '14px',
+    height: '14px',
     filter: 'invert(1) sepia(1) saturate(3000%) hue-rotate(50deg) brightness(1.1)',
   },
 }; 
