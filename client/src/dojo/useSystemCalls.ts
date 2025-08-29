@@ -107,7 +107,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, successStates: ["ACCEPTED_ON_L2"] }
       );
 
       const tokenMetadataEvent = receipt.events.find(
@@ -150,7 +150,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, successStates: ["ACCEPTED_ON_L2"] }
       );
 
       const tokenMetadataEvent = receipt.events.find(
