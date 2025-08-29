@@ -44,7 +44,7 @@ export const NETWORKS = {
     status: "online",
     namespace: "ls_0_0_6",
     slot: "pg-sepolia-5",
-    rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_8",
+    rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9",
     torii: "https://api.cartridge.gg/x/pg-sepolia-5/torii",
     tokens: {
       erc20: [],
