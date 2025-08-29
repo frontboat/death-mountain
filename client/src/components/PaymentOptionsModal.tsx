@@ -206,13 +206,13 @@ export default function PaymentOptionsModal({
 
   const routerContract = useMemo(
     () =>
-      new Contract(
-        ROUTER_ABI,
-        NETWORKS[
+      new Contract({
+        abi: ROUTER_ABI,
+        address: NETWORKS[
           import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS
         ].ekuboRouter,
-        provider
-      ),
+        providerOrAccount: provider,
+      }),
     [provider]
   );
 
