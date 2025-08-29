@@ -6,12 +6,12 @@ import { useGameStore } from "@/stores/gameStore";
 import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
 import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
-import { stringToFelt } from "@/utils/utils";
+import { delay, stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 
 export const useSystemCalls = () => {
-  const { getBeastTokenURI } = useStarknetApi();
-  const { setCollectableTokenURI } = useGameStore();
+  const { getBeastTokenURI, getActionCount } = useStarknetApi();
+  const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
 
@@ -51,6 +51,10 @@ export const useSystemCalls = () => {
    */
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
     try {
+      if (adventurer?.action_count) {
+        await waitForGlobalState();
+      }
+
       let tx = await account!.execute(calls);
       let receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
@@ -69,6 +73,17 @@ export const useSystemCalls = () => {
       throw error;
     }
   };
+
+  const waitForGlobalState = async (retries: number = 0): Promise<boolean> => {
+    let actionCount = await getActionCount(gameId!);
+
+    if (actionCount === adventurer!.action_count || retries > 9) {
+      return true;
+    }
+
+    await delay(500);
+    return waitForGlobalState(retries + 1);
+  }
 
   /**
    * Mints a new game token.
@@ -297,7 +312,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, successStates: ["ACCEPTED_ON_L2"] }
       );
 
       const tokenId = parseInt(receipt.events[1].data[2], 16);
@@ -323,7 +338,7 @@ export const useSystemCalls = () => {
 
       await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, successStates: ["ACCEPTED_ON_L2"] }
       );
     } catch (error) {
       console.error("Error minting sepolia lords:", error);

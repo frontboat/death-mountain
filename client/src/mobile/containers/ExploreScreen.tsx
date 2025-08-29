@@ -8,7 +8,7 @@ import BeastCollectedPopup from '@/components/BeastCollectedPopup';
 
 export default function ExploreScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { exploreLog, collectable, collectableTokenURI, setCollectable } = useGameStore();
+  const { adventurer, exploreLog, collectable, collectableTokenURI, setCollectable } = useGameStore();
 
   const [untilBeast, setUntilBeast] = useState(false);
   const [isExploring, setIsExploring] = useState(false);
@@ -24,7 +24,7 @@ export default function ExploreScreen() {
   useEffect(() => {
     scrollToTop();
     setIsExploring(false);
-  }, [exploreLog, actionFailed]);
+  }, [adventurer!.action_count, actionFailed]);
 
   const handleExplore = async () => {
     setIsExploring(true);

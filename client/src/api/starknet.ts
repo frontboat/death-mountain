@@ -69,6 +69,37 @@ export const useStarknetApi = () => {
     }
   }
 
+  const getActionCount = async (adventurerId: number) => {
+    try {
+      const response = await fetch(currentNetworkConfig.rpcUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "starknet_call",
+          params: [
+            {
+              contract_address: getContractByName(currentNetworkConfig.manifest, currentNetworkConfig.namespace, "adventurer_systems")?.address,
+              entry_point_selector: "0x3d3148be1dfdfcfcd22f79afe7aee5a3147ef412bfb2ea27949e7f8c8937a7",
+              calldata: [num.toHex(adventurerId)],
+            },
+            "latest",
+          ],
+          id: 0,
+        }),
+      });
+
+      const data = await response.json();
+      return parseInt(data?.result[29], 16);
+    } catch (error) {
+      console.log('error', error)
+    }
+
+    return null;
+  }
+
   const getGameState = async (adventurerId: number) => {
     try {
       const response = await fetch(currentNetworkConfig.rpcUrl, {
@@ -389,5 +420,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata };
+  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata, getActionCount };
 };
