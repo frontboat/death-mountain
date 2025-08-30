@@ -14,11 +14,11 @@ importers:
   .:
     dependencies:
       '@cartridge/connector':
-        specifier: ^0.9.3
-        version: 0.9.3(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@starknet-react/core@5.0.1(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react@18.3.1)(starknet@8.5.2)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(open@10.2.0)(react@18.3.1)(starknet@8.5.2)(starknetkit@2.12.1(e68cb07b2547689432ad5f04bebe81a1))(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+        specifier: ^0.10.0-alpha.1
+        version: 0.10.0-alpha.1(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@starknet-react/core@5.0.1(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react@18.3.1)(starknet@8.5.2)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@cartridge/controller':
-        specifier: ^0.9.3
-        version: 0.9.3(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(open@10.2.0)(react@18.3.1)(starknet@8.5.2)(starknetkit@2.12.1(e68cb07b2547689432ad5f04bebe81a1))(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+        specifier: ^0.10.0-alpha.1
+        version: 0.10.0-alpha.1(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@cloudflare/stream-react':
         specifier: ^1.9.3
         version: 1.9.3(react@18.3.1)
@@ -409,22 +409,19 @@ packages:
     resolution: {integrity: sha512-ruv7Ae4J5dUYULmeXw1gmb7rYRz57OWCPM57pHojnLq/3Z1CK2lNSLTCVjxVk1F/TZHwOZZrOWi0ur95BbLxNQ==}
     engines: {node: '>=6.9.0'}
 
-  '@cartridge/connector@0.9.3':
-    resolution: {integrity: sha512-9b8LbyAzd4LMFwGUL5i7L1hbjo4i4Y/1Tt0NmzOQ0XR2HLGEl4u/WmEdjC9ukO97X2J+MqE7qYaPIXUQKI86gA==}
+  '@cartridge/connector@0.10.0-alpha.1':
+    resolution: {integrity: sha512-sFe5Q2v11hFANUVx3MTZskGAfDMUu38h76CLxkfHkAr74G6TPnaARzJbdmdYyEiWznxb9w5RQIRakC0W0TGN2g==}
     peerDependencies:
-      '@starknet-react/core': 4.0.1-beta.4
+      '@starknet-react/core': ^5.0.1
 
   '@cartridge/controller-wasm@0.2.7':
     resolution: {integrity: sha512-VF4kcrnxfsqNOhrBLTtHH9maFyLr5ITYbAJ4c9iUorTwmXiryQP32kkXsrOUnSw2KZ/PPoP3y5/DQjeairvIwQ==}
 
-  '@cartridge/controller@0.9.3':
-    resolution: {integrity: sha512-Aw54gfgxgiHsNmVolqBRBVY293rcT3NH5E1kreU8foirgfemsntt/G8+DJok4RCkK+gmZgV4PGywJ++/3f3REg==}
+  '@cartridge/controller@0.10.0-alpha.1':
+    resolution: {integrity: sha512-dsA+Fg0x5YJQqQk5ggFg/9vTneO1UTwvgW96J9cewdKVSwHcj0N1d+0VjdqfOCJBqd2MgNM6MOzEuzVwW9Q76w==}
     peerDependencies:
       '@metamask/sdk': ^0.32.1
       '@solana/web3.js': ^1.98.0
-      open: ^10.1.0
-      starknet: ^7.6.2
-      starknetkit: ^2.6.1
 
   '@cartridge/penpal@6.2.4':
     resolution: {integrity: sha512-tdpOnSJJBFMlgLZ1+z9Ho5e6cG5EgMAb1Cmmh1lGT2tmplogU/XPMjLE6CwvKAPDoe6a38iMnbH+ySTAWWIOKA==}
@@ -5394,9 +5391,9 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
-  '@cartridge/connector@0.9.3(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@starknet-react/core@5.0.1(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react@18.3.1)(starknet@8.5.2)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(open@10.2.0)(react@18.3.1)(starknet@8.5.2)(starknetkit@2.12.1(e68cb07b2547689432ad5f04bebe81a1))(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)':
+  '@cartridge/connector@0.10.0-alpha.1(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@starknet-react/core@5.0.1(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react@18.3.1)(starknet@8.5.2)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
-      '@cartridge/controller': 0.9.3(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(open@10.2.0)(react@18.3.1)(starknet@8.5.2)(starknetkit@2.12.1(e68cb07b2547689432ad5f04bebe81a1))(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@cartridge/controller': 0.10.0-alpha.1(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@starknet-react/core': 5.0.1(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react@18.3.1)(starknet@8.5.2)(typescript@5.8.3)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -5421,10 +5418,7 @@ snapshots:
       - db0
       - encoding
       - ioredis
-      - open
       - react
-      - starknet
-      - starknetkit
       - typescript
       - uploadthing
       - utf-8-validate
@@ -5432,13 +5426,13 @@ snapshots:
 
   '@cartridge/controller-wasm@0.2.7': {}
 
-  '@cartridge/controller@0.9.3(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(open@10.2.0)(react@18.3.1)(starknet@8.5.2)(starknetkit@2.12.1(e68cb07b2547689432ad5f04bebe81a1))(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)':
+  '@cartridge/controller@0.10.0-alpha.1(@metamask/sdk@0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10))(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
       '@cartridge/controller-wasm': 0.2.7
       '@cartridge/penpal': 6.2.4
       '@metamask/sdk': 0.32.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10)
-      '@starknet-io/types-js': 0.8.4
+      '@starknet-io/types-js': 0.9.1
       '@telegram-apps/sdk': 2.11.3
       '@turnkey/sdk-browser': 4.3.0(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@walletconnect/ethereum-provider': 2.21.5(@types/react@18.3.23)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -5447,7 +5441,6 @@ snapshots:
       mipd: 0.0.7(typescript@5.8.3)
       open: 10.2.0
       starknet: 8.5.2
-      starknetkit: 2.12.1(e68cb07b2547689432ad5f04bebe81a1)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'

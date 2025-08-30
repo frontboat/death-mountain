@@ -47,7 +47,7 @@ export const NETWORKS = {
     rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9",
     torii: "https://api.cartridge.gg/x/pg-sepolia-5/torii",
     tokens: {
-      erc20: [],
+      erc20: ["0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d"],
     },
     manifest: manifest_sepolia,
     vrf: true,

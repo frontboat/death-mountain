@@ -21,6 +21,7 @@ const cartridgeController = typeof window !== "undefined" ? new ControllerConnec
   chains: controllerConfig.chains,
   defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
   tokens: controllerConfig.tokens,
+  propagateSessionErrors: true,
 }) : null;
 
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
