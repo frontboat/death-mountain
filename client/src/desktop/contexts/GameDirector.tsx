@@ -13,8 +13,20 @@ import {
   getVideoId,
   processGameEvent,
 } from "@/utils/events";
-import { getNewItemsEquipped } from "@/utils/game";
+import { 
+  calculateLevel, 
+  getNewItemsEquipped,
+  calculateAttackDamage,
+  calculateBeastDamage,
+  calculateCombatStats,
+  ability_based_percentage
+} from "@/utils/game";
+import { ItemUtils } from "@/utils/loot";
+import { potionPrice } from "@/utils/market";
 import { delay } from "@/utils/utils";
+import { BEAST_NAMES } from "@/constants/beast";
+import { OBSTACLE_NAMES } from "@/constants/obstacle";
+import { listAllEncounters } from "@/utils/processFutures";
 import {
   createContext,
   PropsWithChildren,
@@ -36,6 +48,8 @@ export interface GameDirectorContext {
   eventsProcessed: number;
   setEventQueue: (events: any) => void;
   setEventsProcessed: (eventsProcessed: number) => void;
+  gameLog: any[];
+  exportGameLog: () => void;
 }
 
 const GameDirectorContext = createContext<GameDirectorContext>(
@@ -87,6 +101,9 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameId,
     adventurer,
     adventurerState,
+    bag,
+    beast,
+    marketItemIds,
     collectable,
     setAdventurer,
     setBag,
@@ -116,6 +133,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [videoQueue, setVideoQueue] = useState<string[]>([]);
 
   const [beastDefeated, setBeastDefeated] = useState(false);
+  const [gameLog, setGameLog] = useState<any[]>([]);
 
   useEffect(() => {
     if (gameId && !metadata) {
@@ -218,6 +236,256 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   };
 
   const processEvent = async (event: any, skipDelay: boolean = false) => {
+    // Helper to enrich item with details
+    const enrichItem = (item: any) => {
+      if (!item || item.id === 0) return item;
+      return {
+        ...item,
+        name: ItemUtils.getItemName(item.id),
+        slot: ItemUtils.getItemSlot(item.id),
+        type: ItemUtils.getItemType(item.id),
+        tier: ItemUtils.getItemTier(item.id),
+        greatness: calculateLevel(item.xp || 0)
+      };
+    };
+
+    // Helper to enrich equipment
+    const enrichEquipment = (equipment: any) => {
+      if (!equipment) return equipment;
+      const enriched: any = {};
+      for (const [slot, item] of Object.entries(equipment)) {
+        enriched[slot] = enrichItem(item);
+      }
+      return enriched;
+    };
+
+    // Helper to enrich market items with prices
+    const enrichMarketItems = (itemIds: number[]) => {
+      const charisma = adventurer?.stats?.charisma || 0;
+      return itemIds.map(id => {
+        const tier = ItemUtils.getItemTier(id);
+        return {
+          id,
+          name: ItemUtils.getItemName(id),
+          slot: ItemUtils.getItemSlot(id),
+          type: ItemUtils.getItemType(id),
+          tier: tier,
+          price: ItemUtils.getItemPrice(tier, charisma)
+        };
+      });
+    };
+
+    // Helper to enrich beast with details
+    const enrichBeast = (beast: any) => {
+      if (!beast) return beast;
+      return {
+        ...beast,
+        name: beast.name || BEAST_NAMES[beast.id],
+        baseName: BEAST_NAMES[beast.id],
+      };
+    };
+
+    // Helper to enrich obstacle with details
+    const enrichObstacle = (obstacle: any) => {
+      if (!obstacle) return obstacle;
+      return {
+        ...obstacle,
+        name: OBSTACLE_NAMES[obstacle.id - 1], // Obstacle IDs are 1-indexed
+        type: obstacle.location, // Location indicates the type of damage
+      };
+    };
+
+    // Enrich event data if it contains items, beasts, or obstacles
+    let enrichedEvent = { ...event };
+    if (event.type === 'adventurer' && event.adventurer?.equipment) {
+      enrichedEvent.adventurer = {
+        ...event.adventurer,
+        equipment: enrichEquipment(event.adventurer.equipment)
+      };
+    }
+    if (event.type === 'bag' && event.bag) {
+      enrichedEvent.bag = event.bag.map(enrichItem);
+    }
+    if (event.type === 'buy_items' && event.items_purchased) {
+      enrichedEvent.items_purchased = event.items_purchased.map((purchase: any) => ({
+        ...purchase,
+        item: enrichItem({ id: purchase.item_id, xp: 0 })
+      }));
+    }
+    if (event.type === 'discovery' && event.discovery?.type === 'Loot') {
+      // The discovery amount is the item ID for loot discoveries
+      enrichedEvent.discovery = {
+        ...event.discovery,
+        item: enrichItem({ id: event.discovery.amount, xp: 0 })
+      };
+    }
+    if (event.type === 'beast' && event.beast) {
+      enrichedEvent.beast = enrichBeast(event.beast);
+    }
+    if (event.type === 'obstacle' && event.obstacle) {
+      enrichedEvent.obstacle = enrichObstacle(event.obstacle);
+    }
+    if (event.type === 'defeated_beast' && event.beast_id) {
+      enrichedEvent.beastDetails = {
+        id: event.beast_id,
+        name: BEAST_NAMES[event.beast_id],
+      };
+    }
+    if (event.type === 'fled_beast' && event.beast_id) {
+      enrichedEvent.beastDetails = {
+        id: event.beast_id,
+        name: BEAST_NAMES[event.beast_id],
+      };
+    }
+
+    // Calculate combat predictions and UI data when relevant
+    const currentLevel = calculateLevel(adventurer?.xp || 0);
+    const charisma = adventurer?.stats?.charisma || 0;
+    
+    // Calculate combat predictions if in combat
+    let combatPredictions = null;
+    if (beast && adventurer && adventurer.beast_health > 0) {
+      const attackDamage = calculateAttackDamage(adventurer.equipment.weapon, adventurer, beast);
+      
+      // Calculate beast damage predictions for ALL armor slots (including empty)
+      const armorSlots = ['head', 'chest', 'waist', 'hand', 'foot'] as const;
+      const noArmorDamage = Math.floor(beast.level * (6 - Number(beast.tier)) * 1.5);
+      const equippedArmorDamage: any[] = [];
+      
+      armorSlots.forEach(slot => {
+        const armor = adventurer.equipment[slot as keyof typeof adventurer.equipment];
+        if (armor && armor.id !== 0) {
+          // Slot has armor equipped
+          equippedArmorDamage.push({
+            slot: slot,
+            item: enrichItem(armor),
+            beastDamage: calculateBeastDamage(beast, adventurer, armor)
+          });
+        } else {
+          // Empty slot - beast does full damage
+          equippedArmorDamage.push({
+            slot: slot,
+            item: null,
+            beastDamage: noArmorDamage
+          });
+        }
+      });
+      
+      // Calculate damage for each weapon in inventory with full details
+      const inventoryWeaponDamage: any[] = [];
+      bag?.filter(item => ItemUtils.getItemSlot(item.id) === 'Weapon').forEach(weapon => {
+        const damage = calculateAttackDamage(weapon, adventurer, beast);
+        inventoryWeaponDamage.push({
+          item: enrichItem(weapon),
+          baseDamage: damage.baseDamage,
+          criticalDamage: damage.criticalDamage
+        });
+      });
+      
+      // Calculate protection for each armor piece in inventory with full details
+      const inventoryArmorProtection: any[] = [];
+      bag?.filter(item => ItemUtils.getItemSlot(item.id) !== 'Weapon').forEach(armor => {
+        inventoryArmorProtection.push({
+          item: enrichItem(armor),
+          beastDamageIfEquipped: calculateBeastDamage(beast, adventurer, armor)
+        });
+      });
+      
+      combatPredictions = {
+        equippedWeapon: {
+          item: enrichItem(adventurer.equipment.weapon),
+          baseDamage: attackDamage.baseDamage,
+          criticalDamage: attackDamage.criticalDamage,
+        },
+        inventoryWeapons: inventoryWeaponDamage,
+        equippedArmor: equippedArmorDamage,
+        inventoryArmor: inventoryArmorProtection,
+        fleeChance: ability_based_percentage(adventurer.xp, adventurer.stats.dexterity),
+      };
+    }
+    
+    // Calculate obstacle predictions if exploring
+    let obstaclePredictions = null;
+    if (adventurer && !beast) {
+      obstaclePredictions = {
+        dodgeChance: ability_based_percentage(adventurer.xp, adventurer.stats.intelligence),
+        damageReduction: {
+          magic: ability_based_percentage(adventurer.xp, adventurer.stats.intelligence),
+          blade: ability_based_percentage(adventurer.xp, adventurer.stats.intelligence),
+          bludgeon: ability_based_percentage(adventurer.xp, adventurer.stats.intelligence),
+        }
+      };
+    }
+    
+    // Calculate future encounters if we have game seed (for deterministic games)
+    let futureEncounters = null;
+    if (gameSettings && gameSettings.game_seed !== 0 && adventurer) {
+      try {
+        const encounters = listAllEncounters(
+          adventurer.xp,
+          gameSettings.game_seed,
+          currentLevel,
+          beast !== null
+        );
+        // Get next 5 encounters with full details
+        futureEncounters = encounters.slice(0, 5).map(enc => {
+          if (enc.encounter === "Beast" && enc.id) {
+            return {
+              ...enc,
+              name: BEAST_NAMES[Number(enc.id)],
+            };
+          } else if (enc.encounter === "Obstacle" && enc.id) {
+            return {
+              ...enc,
+              name: OBSTACLE_NAMES[Number(enc.id) - 1],
+            };
+          }
+          return enc;
+        });
+      } catch (e) {
+        // If prediction fails, just skip it
+        futureEncounters = null;
+      }
+    }
+    
+    const logEntry = {
+      timestamp: Date.now(),
+      actionCount: event.action_count,
+      eventType: event.type,
+      event: enrichedEvent,
+      gameState: {
+        gameId: gameId,
+        adventurer: adventurer ? {
+          ...adventurer,
+          equipment: enrichEquipment(adventurer.equipment)
+        } : null,
+        beast: beast ? enrichBeast(beast) : null,
+        bag: bag?.map(enrichItem) || [],
+        market: {
+          items: marketItemIds ? enrichMarketItems(marketItemIds) : [],
+          potionPrice: potionPrice(currentLevel, charisma)
+        },
+        health: adventurer?.health || 0,
+        gold: adventurer?.gold || 0,
+        xp: adventurer?.xp || 0,
+        level: currentLevel,
+        statUpgradesAvailable: adventurer?.stat_upgrades_available || 0,
+      },
+      predictions: {
+        combat: combatPredictions,
+        obstacles: obstaclePredictions,
+        futureEncounters: futureEncounters,
+        levelUpAt: (currentLevel + 1) ** 2, // Next level XP threshold
+        maxHealth: adventurer ? 100 + (adventurer.stats.vitality * 10) : 100, // Max health calculation
+      },
+      metadata: {
+        networkName: currentNetworkConfig.name,
+        spectating: spectating,
+        VRFEnabled: VRFEnabled,
+      }
+    };
+    setGameLog(prev => [...prev, logEntry]);
+
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
 
@@ -367,6 +635,27 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setEventQueue((prev) => [...prev, ...events]);
   };
 
+  const exportGameLog = () => {
+    const filename = `game-${gameId}-log-${Date.now()}.json`;
+    const data = JSON.stringify(gameLog, (key, value) => {
+      // Handle BigInt serialization
+      if (typeof value === 'bigint') {
+        return value.toString();
+      }
+      return value;
+    }, 2);
+    
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    console.log(`Exported ${gameLog.length} events to ${filename}`);
+  };
+
   return (
     <GameDirectorContext.Provider
       value={{
@@ -380,6 +669,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         setEventQueue,
         setSpectating,
         spectating,
+        gameLog,
+        exportGameLog,
       }}
     >
       {children}

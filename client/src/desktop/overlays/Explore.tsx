@@ -14,7 +14,7 @@ import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
 
 export default function ExploreOverlay() {
-  const { executeGameAction, actionFailed, setVideoQueue, spectating } = useGameDirector();
+  const { executeGameAction, actionFailed, setVideoQueue, spectating, gameLog, exportGameLog } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI, setCollectable } = useGameStore();
   const { cart, inProgress, setInProgress } = useMarketStore();
   const [isSelectingStats, setIsSelectingStats] = useState(false);
@@ -71,6 +71,33 @@ export default function ExploreOverlay() {
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
       <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/game.png')` }]} />
+
+      {/* Export Button */}
+      {gameLog.length > 0 && (
+        <Button
+          onClick={exportGameLog}
+          variant="outlined"
+          size="small"
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            right: 32,
+            transform: 'translateY(-50%)',
+            zIndex: 1000,
+            opacity: 0.8,
+            backgroundColor: 'rgba(24, 40, 24, 0.8)',
+            borderColor: '#083e22',
+            color: '#d0c98d',
+            '&:hover': {
+              opacity: 1,
+              backgroundColor: 'rgba(24, 40, 24, 0.95)',
+              borderColor: '#083e22',
+            },
+          }}
+        >
+          Export Log ({gameLog.length})
+        </Button>
+      )}
 
       {/* Adventurer Overlay */}
       <Adventurer />

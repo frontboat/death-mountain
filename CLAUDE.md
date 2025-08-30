@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Death Mountain is a blockchain-based adventure RPG game built on StarkNet using the Dojo engine. The game features adventurers battling beasts, collecting loot, and progressing through various challenges.
+Death Mountain is a blockchain-based adventure RPG game built on StarkNet using the Dojo engine. It's a token-agnostic, no-code onchain dungeon creator that allows developers to build complex game mechanics on top of a base adventurer system.
 
 ## Common Development Commands
 
@@ -23,6 +23,7 @@ pnpm preview       # Preview production build
 cd contracts
 sozo build         # Build Cairo contracts
 sozo test          # Run contract tests
+scarb fmt          # Format Cairo code (max line length 120)
 ```
 
 ## Architecture Overview
@@ -38,24 +39,23 @@ sozo test          # Run contract tests
   - `client/src/mobile/` - Mobile-optimized components and pages
 - **Dojo Integration**: `client/src/dojo/` contains blockchain interaction code
 - **Generated Code**: `client/src/generated/` - Auto-generated contract bindings
-- **Game Data**: `client/src/constants/` - Static game data (beasts, loot, obstacles)
-- **Components**: Reusable UI components in `client/src/components/`
-- **Containers**: Screen-specific containers in `client/src/containers/`
+- **Game Constants**: `client/src/constants/` - Static game data (beasts, loot, obstacles)
 
 ### Smart Contract Architecture
-- **Cairo Contracts** in `contracts/src/`
+- **Cairo 2.10.1** contracts in `contracts/src/`
+- **Dojo Framework**: Version 1.6.0 for on-chain game state
 - **Systems**: Core game logic contracts in `contracts/src/systems/`
   - `adventurer/` - Player character system
   - `beast/` - Enemy and combat system
   - `game/` - Main game loop and state management
   - `loot/` - Item generation and management
-  - `market/` - Trading and marketplace logic
-  - `settings/` - Game configuration
+  - `objectives/` - Game objectives system
+  - `game_token/` - Token integration
   - `renderer/` - NFT metadata rendering
+  - `settings/` - Game configuration
 - **Models**: Data structures in `contracts/src/models/`
 - **Libraries**: Shared code in `contracts/src/libs/`
 - **Constants**: Game constants in `contracts/src/constants/`
-- **Dojo Framework**: Version 1.5.1 for on-chain game state
 
 ### Key Integration Points
 - **Wallet Connection**: Uses Cartridge Controller and StarknetKit
@@ -65,23 +65,24 @@ sozo test          # Run contract tests
 
 ## Important Configuration
 
-### Environment Variables (client/.env)
-- `VITE_PUBLIC_NODE_URL` - StarkNet RPC endpoint
-- `VITE_PUBLIC_TORII` - Torii indexer URL
-- `VITE_PUBLIC_CHAIN` - Network (sepolia/mainnet)
-- Contract addresses for ETH, LORDS tokens, and game contracts
+### Environment Variables
+Create a `.env.local` file in the client directory with:
+- `VITE_PUBLIC_CHAIN` - Network (SN_SEPOLIA/SN_MAINNET)
+- `VITE_PUBLIC_NODE_URL` - StarkNet RPC endpoint (if needed)
+- `VITE_PUBLIC_TORII` - Torii indexer URL (if needed)
+- Additional contract addresses and API keys as needed
 
 ### Network Configurations
-- Development: `dojo_dev.toml`
-- Sepolia testnet: `dojo_sepolia.toml`
-- Mainnet: `dojo_mainnet.toml`
-- Slot testnet: `dojo_slot.toml`
+- Development: `contracts/dojo_dev.toml`
+- Sepolia testnet: `contracts/dojo_sepolia.toml`
+- Mainnet: `contracts/dojo_mainnet.toml`
+- Slot testnet: `contracts/dojo_slot.toml`
 
 ## Development Workflow
 
 1. **Frontend Changes**: Work in `client/src/`, run `pnpm dev` to see changes
-2. **Contract Changes**: Modify Cairo files in `contracts/src/`, deploy with Dojo CLI
-3. **Asset Updates**: Place images in appropriate directories under `client/src/assets/`
+2. **Contract Changes**: Modify Cairo files in `contracts/src/`, build with `sozo build`
+3. **Asset Updates**: Place images in appropriate directories under `client/public/images/`
 4. **State Management**: Update Zustand stores for new game features
 5. **UI Components**: Use Material-UI components, maintain consistent styling
 
@@ -95,14 +96,7 @@ sozo test          # Run contract tests
 - Utility files use `.ts` extension
 - Cairo formatting: `scarb fmt` with max line length 120
 
-## Additional Commands
+## Deployment
 
-### Cairo Formatting
-```bash
-cd contracts
-scarb fmt    # Format Cairo code
-```
-
-### Deployment
 - Frontend deployment configured for Google App Engine (`client/app.yaml`)
 - Contract deployment via Dojo CLI with network-specific profiles
