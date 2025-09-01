@@ -3,6 +3,7 @@ import { Metadata } from "@/types/game";
 import { NETWORKS } from "@/utils/networkConfig";
 import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
+import { hexToAscii } from "@dojoengine/utils";
 import { useAccount } from "@starknet-react/core";
 import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
@@ -356,30 +357,45 @@ export const useStarknetApi = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          method: "starknet_call",
-          params: [
-            {
-              contract_address: currentNetworkConfig.denshokan,
-              entry_point_selector: "0x20d82cc6889093dce20d92fc9daeda4498c9b99ae798fc2a6f4757e38fb1729",
-              calldata: [num.toHex(tokenId)],
-            },
-            "latest",
-          ],
-          id: 0,
-        }),
+        body: JSON.stringify([
+          {
+            jsonrpc: "2.0",
+            method: "starknet_call",
+            params: [
+              {
+                contract_address: currentNetworkConfig.denshokan,
+                entry_point_selector: "0x20d82cc6889093dce20d92fc9daeda4498c9b99ae798fc2a6f4757e38fb1729",
+                calldata: [num.toHex(tokenId)],
+              },
+              "latest",
+            ],
+            id: 0,
+          },
+          {
+            jsonrpc: "2.0",
+            method: "starknet_call",
+            params: [
+              {
+                contract_address: currentNetworkConfig.denshokan,
+                entry_point_selector: "0x170ac5a9fd747db6517bea85af33fcc77a61d4442c966b646a41fdf9ecca233",
+                calldata: [num.toHex(tokenId)],
+              },
+              "latest",
+            ],
+            id: 1,
+          }
+        ]),
       });
 
       const data = await response.json();
-      if (!data?.result) return null;
+      if (!data[0]?.result) return null;
 
       let tokenMetadata: Metadata = {
-        player_name: '',
-        settings_id: parseInt(data.result[2]),
-        expires_at: parseInt(data.result[3], 16) * 1000,
-        available_at: parseInt(data.result[4], 16) * 1000,
-        minted_by: data.result[5],
+        player_name: hexToAscii(data[1].result[0]),
+        settings_id: parseInt(data[0].result[2]),
+        expires_at: parseInt(data[0].result[3], 16) * 1000,
+        available_at: parseInt(data[0].result[4], 16) * 1000,
+        minted_by: data[0].result[5],
       }
 
       return tokenMetadata;

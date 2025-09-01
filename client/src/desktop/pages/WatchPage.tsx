@@ -99,7 +99,7 @@ export default function WatchPage() {
     const gameState = await getGameState(gameId!);
 
     if (!gameState || events.length === 0) {
-      enqueueSnackbar('Failed to load game', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
+      enqueueSnackbar('Failed to load game', { variant: 'warning', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
       return navigate("/survivor");
     }
 

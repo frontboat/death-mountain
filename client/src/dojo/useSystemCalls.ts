@@ -8,8 +8,10 @@ import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
 import { delay, stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
+import { useSnackbar } from "notistack";
 
 export const useSystemCalls = () => {
+  const { enqueueSnackbar } = useSnackbar()
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
   const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
   const { account } = useController();
@@ -63,6 +65,7 @@ export const useSystemCalls = () => {
 
       if (receipt.execution_status === "REVERTED") {
         forceResetAction();
+        return enqueueSnackbar('Action failed', { variant: 'warning', anchorOrigin: { vertical: 'bottom', horizontal: 'right' } })
       }
 
       const translatedEvents = receipt.events.map((event: any) => translateGameEvent(event, currentNetworkConfig.manifest))
