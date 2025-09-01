@@ -10,7 +10,7 @@ import { useMarketStore } from '@/stores/marketStore';
 export default function ExploreScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, exploreLog, collectable, collectableTokenURI, setCollectable } = useGameStore();
-  const { inProgress } = useMarketStore();
+  const { inProgress, setInProgress } = useMarketStore();
 
   const [untilBeast, setUntilBeast] = useState(false);
   const [isExploring, setIsExploring] = useState(false);
@@ -26,6 +26,7 @@ export default function ExploreScreen() {
   useEffect(() => {
     scrollToTop();
     setIsExploring(false);
+    setInProgress(false);
   }, [adventurer!.action_count, actionFailed]);
 
   const handleExplore = async () => {
@@ -58,7 +59,15 @@ export default function ExploreScreen() {
                 }}
               >
                 <Box sx={styles.encounterIcon}>
-                  <img src={getEventIcon(event)} alt={'encounter'} style={{ width: '100%', height: '100%' }} />
+                  <img 
+                    src={getEventIcon(event)} 
+                    alt={'encounter'} 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%',
+                      filter: event.type === 'obstacle' ? 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8))' : 'none'
+                    }} 
+                  />
                 </Box>
 
                 <Box sx={styles.encounterDetails}>

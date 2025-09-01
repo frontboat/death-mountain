@@ -1,5 +1,5 @@
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
-import { STARTING_HEALTH } from '@/constants/game';
+import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { calculateLevel } from '@/utils/game';
@@ -187,6 +187,7 @@ export default function MarketOverlay() {
   const maxPotionsByHealth = Math.ceil((maxHealth - (adventurer?.health || 0)) / 10);
   const maxPotionsByGold = Math.floor((adventurer!.gold - cart.items.reduce((sum, item) => sum + item.price, 0)) / potionCost);
   const maxPotions = Math.min(maxPotionsByHealth, maxPotionsByGold);
+  const inventoryFull = bag.length + cart.items.length === MAX_BAG_SIZE;
 
   const filteredItems = marketItems.filter(item => {
     if (slotFilter && item.slot !== slotFilter) return false;
@@ -458,7 +459,7 @@ export default function MarketOverlay() {
                             <Button
                               variant="outlined"
                               onClick={() => inCart ? handleRemoveItem(item) : handleBuyItem(item)}
-                              disabled={!inCart && (remainingGold < item.price || isItemOwned(item.id))}
+                              disabled={!inCart && (remainingGold < item.price || isItemOwned(item.id) || inventoryFull)}
                               sx={{
                                 height: '32px',
                                 ...(inCart && {
@@ -469,7 +470,7 @@ export default function MarketOverlay() {
                               size="small"
                             >
                               <Typography textTransform={'none'}>
-                                {inCart ? 'Undo' : isItemOwned(item.id) ? 'Owned' : 'Buy'}
+                                {inCart ? 'Undo' : isItemOwned(item.id) ? 'Owned' : inventoryFull ? 'Bag Full' : 'Buy'}
                               </Typography>
                             </Button>
                           </Box>

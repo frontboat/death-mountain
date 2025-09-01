@@ -1,3 +1,4 @@
+import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -11,7 +12,7 @@ interface BottomNavProps {
 
 export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNavProps) {
   const { adventurer, marketItemIds, newMarket, setNewMarket, setNewInventoryItems } = useGameStore();
-
+  const { spectating } = useGameDirector();
   const { cart, inProgress, clearCart, setInProgress } = useMarketStore();
 
   useEffect(() => {
@@ -139,7 +140,7 @@ export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNav
                 </Box>
 
                 {/* Forced market tooltip when new market is available */}
-                {item.key === 'MARKET' && item.hasNew && adventurer?.stat_upgrades_available! === 0 && (
+                {item.key === 'MARKET' && item.hasNew && adventurer?.stat_upgrades_available! === 0 && !spectating && (
                   <Box sx={styles.forcedMarketTooltip}>
                     <Typography sx={styles.forcedMarketTooltipText}>
                       New Market Available

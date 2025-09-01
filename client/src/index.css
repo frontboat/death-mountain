@@ -125,13 +125,14 @@ input:-webkit-autofill {
 }
 
 #notistack-snackbar {
-  font-family: oldenburg;
   font-size: 16px;
-  color: rgb(40, 39, 41);
+  color: #FF0000;
 }
 
 .notistack-MuiContent-warning {
-  background-color: #FFE97F;
+  background-color: #570000;
+  border: 1px solid #b10000;
+  color: #FFE6E6 !important;
 }
 
 .notistack-MuiContent-info {

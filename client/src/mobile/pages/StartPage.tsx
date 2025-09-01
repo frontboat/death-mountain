@@ -3,12 +3,13 @@ import { useDynamicConnector } from "@/contexts/starknet";
 import BeastsCollected from "@/components/BeastsCollected";
 import PriceIndicator from "@/components/PriceIndicator";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Divider, Typography } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GameTokensList from "../components/GameTokensList";
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
+import Leaderboard from "../components/Leaderboard";
 
 export default function LandingPage() {
   const { account } = useAccount();
@@ -17,6 +18,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const handleStartGame = () => {
     if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
@@ -52,11 +54,11 @@ export default function LandingPage() {
             width: "100%",
             gap: 2,
             textAlign: "center",
-            height: "375px",
+            height: "420px",
             position: "relative",
           }}
         >
-          {!showAdventurers && (
+          {!showAdventurers && !showLeaderboard && (
             <>
               <Box sx={styles.headerBox}>
                 <Typography sx={styles.gameTitle}>LOOT SURVIVOR 2</Typography>
@@ -99,6 +101,23 @@ export default function LandingPage() {
                 </Typography>
               </Button>
 
+              <Divider
+                sx={{ width: "100%", my: 0.5 }}
+              />
+
+              <Button
+                fullWidth
+                variant="contained"
+                size="large"
+                color="secondary"
+                onClick={() => setShowLeaderboard(true)}
+                sx={{ height: "36px", mt: 1, mb: 1 }}
+              >
+                <Typography variant="h5" color="#111111">
+                  Leaderboard
+                </Typography>
+              </Button>
+
               <Box sx={styles.bottom}>
                 {currentNetworkConfig.name === "Beast Mode" && (
                   <BeastsCollected />
@@ -136,6 +155,10 @@ export default function LandingPage() {
 
               <GameTokensList />
             </>
+          )}
+
+          {showLeaderboard && (
+            <Leaderboard onBack={() => setShowLeaderboard(false)} />
           )}
         </Box>
       </Box>

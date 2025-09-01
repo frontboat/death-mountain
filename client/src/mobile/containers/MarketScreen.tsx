@@ -1,4 +1,4 @@
-import { STARTING_HEALTH } from '@/constants/game';
+import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
@@ -156,6 +156,7 @@ export default function MarketScreen() {
   const maxPotionsByHealth = Math.ceil((maxHealth - (adventurer?.health || 0)) / 10);
   const maxPotionsByGold = Math.floor((adventurer!.gold - cart.items.reduce((sum, item) => sum + item.price, 0)) / potionCost);
   const maxPotions = Math.min(maxPotionsByHealth, maxPotionsByGold);
+  const inventoryFull = bag.length + cart.items.length === MAX_BAG_SIZE;
 
   const filteredItems = marketItems.filter(item => {
     if (slotFilter && item.slot !== slotFilter) return false;
@@ -468,7 +469,7 @@ export default function MarketScreen() {
                       <Button
                         variant="contained"
                         onClick={() => cart.items.some(cartItem => cartItem.id === item.id) ? handleRemoveItem(item) : handleBuyItem(item)}
-                        disabled={!cart.items.some(cartItem => cartItem.id === item.id) && (remainingGold < item.price || isItemOwned(item.id))}
+                        disabled={!cart.items.some(cartItem => cartItem.id === item.id) && (remainingGold < item.price || isItemOwned(item.id) || inventoryFull)}
                         sx={{
                           ...styles.buyButton,
                           ...(cart.items.some(cartItem => cartItem.id === item.id) && {
@@ -478,7 +479,7 @@ export default function MarketScreen() {
                         }}
                         size="small"
                       >
-                        {cart.items.some(cartItem => cartItem.id === item.id) ? 'Undo' : isItemOwned(item.id) ? 'Owned' : 'Buy'}
+                        {cart.items.some(cartItem => cartItem.id === item.id) ? 'Undo' : isItemOwned(item.id) ? 'Owned' : inventoryFull ? 'Bag Full' : 'Buy'}
                       </Button>
                     </Box>
                   </Box>

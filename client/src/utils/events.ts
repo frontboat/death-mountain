@@ -284,7 +284,9 @@ export const getEventIcon = (event: GameEvent) => {
       if (event.discovery?.type === 'Health') return '/images/mobile/health.png';
       if (event.discovery?.type === 'Loot') return ItemUtils.getItemImage(event.discovery?.amount!);
     case 'obstacle':
-      return '/images/mobile/barrier.png';
+      const obstacleName = OBSTACLE_NAMES[event.obstacle?.id!];
+      const snakeCaseName = obstacleName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      return `/images/obstacles/${snakeCaseName}.png`;
     case 'defeated_beast':
       return getBeastImageById(event.beast_id!);
     case 'fled_beast':
