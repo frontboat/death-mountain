@@ -60,7 +60,7 @@ export const useSystemCalls = () => {
       let tx = await account!.execute(calls);
       let receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200, successStates: ["PRE_CONFIRMED"] }
+        { retryInterval: 200, successStates: ["PRE_CONFIRMED", "ACCEPTED_ON_L2", "ACCEPTED_ON_L1"], errorStates: ["REVERTED"] }
       );
 
       if (receipt.execution_status === "REVERTED") {
@@ -126,7 +126,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, errorStates: ["REVERTED"] }
       );
 
       const tokenMetadataEvent = receipt.events.find(
@@ -169,7 +169,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, errorStates: ["REVERTED"] }
       );
 
       const tokenMetadataEvent = receipt.events.find(
@@ -318,7 +318,7 @@ export const useSystemCalls = () => {
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, errorStates: ["REVERTED"] }
       );
 
       const tokenId = parseInt(receipt.events[1].data[2], 16);
@@ -344,7 +344,7 @@ export const useSystemCalls = () => {
 
       await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, errorStates: ["REVERTED"] }
       );
     } catch (error) {
       console.error("Error minting sepolia lords:", error);

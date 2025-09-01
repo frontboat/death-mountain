@@ -59,7 +59,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     () => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl }),
     []
   );
-
+  
   useEffect(() => {
     if (account) {
       fetchTokenBalances();
