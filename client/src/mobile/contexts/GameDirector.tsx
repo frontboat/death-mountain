@@ -43,8 +43,6 @@ const GameDirectorContext = createContext<GameDirectorContext>(
  */
 const delayTimes: any = {
   level_up: 1000,
-  discovery: 1000,
-  obstacle: 1000,
   attack: 2000,
   beast_attack: 2000,
   flee: 1000,
