@@ -17,6 +17,7 @@ export const useSystemCalls = () => {
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
 
+  const TIP_AMOUNT = 10e18;
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const DUNGEON_ADDRESS = currentNetworkConfig.dungeon;
@@ -57,7 +58,7 @@ export const useSystemCalls = () => {
         await waitForGlobalState("action_count");
       }
 
-      let tx = await account!.execute(calls);
+      let tx = await account!.execute(calls, { tip: TIP_AMOUNT });
       let receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
         { retryInterval: 200, successStates: ["PRE_CONFIRMED", "ACCEPTED_ON_L2", "ACCEPTED_ON_L1"], errorStates: ["REVERTED"] }
@@ -120,7 +121,7 @@ export const useSystemCalls = () => {
             false, // soulbound
           ]),
         },
-      ]);
+      ], { tip: TIP_AMOUNT });
 
       callback();
 
@@ -165,7 +166,7 @@ export const useSystemCalls = () => {
             false, // soulbound
           ]),
         },
-      ]);
+      ], { tip: TIP_AMOUNT });
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
@@ -314,7 +315,7 @@ export const useSystemCalls = () => {
           entrypoint: "claim_beast",
           calldata: [gameId, beast.id, prefix, suffix],
         },
-      ]);
+      ], { tip: TIP_AMOUNT });
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
@@ -340,7 +341,7 @@ export const useSystemCalls = () => {
           entrypoint: "mint",
           calldata: [account.address, 100e18.toString(), "0x0"],
         },
-      ]);
+      ], { tip: TIP_AMOUNT });
 
       await account!.waitForTransaction(
         tx.transaction_hash,
