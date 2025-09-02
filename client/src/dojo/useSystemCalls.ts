@@ -3,17 +3,25 @@ import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameStore } from "@/stores/gameStore";
-import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
+import {
+  Beast,
+  GameSettingsData,
+  ItemPurchase,
+  Payment,
+  Stats,
+} from "@/types/game";
 import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
 import { stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
+import { useAnalytics } from "@/utils/analytics";
 
 export const useSystemCalls = () => {
   const { getBeastTokenURI } = useStarknetApi();
   const { setCollectableTokenURI } = useGameStore();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
+  const { txRevertedEvent } = useAnalytics();
 
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
@@ -59,9 +67,14 @@ export const useSystemCalls = () => {
 
       if (receipt.execution_status === "REVERTED") {
         forceResetAction();
+        txRevertedEvent({
+          txHash: tx.transaction_hash,
+        });
       }
 
-      const translatedEvents = receipt.events.map((event: any) => translateGameEvent(event, currentNetworkConfig.manifest))
+      const translatedEvents = receipt.events.map((event: any) =>
+        translateGameEvent(event, currentNetworkConfig.manifest)
+      );
       return translatedEvents.filter(Boolean);
     } catch (error) {
       console.error("Error executing action:", error);
@@ -76,8 +89,17 @@ export const useSystemCalls = () => {
    * @param name The name of the game
    * @param settingsId The settings ID for the game
    */
-  const buyGame = async (account: any, payment: Payment, name: string, preCalls: any[], callback: () => void) => {
-    let paymentData = payment.paymentType === 'Ticket' ? [0] : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
+  const buyGame = async (
+    account: any,
+    payment: Payment,
+    name: string,
+    preCalls: any[],
+    callback: () => void
+  ) => {
+    let paymentData =
+      payment.paymentType === "Ticket"
+        ? [0]
+        : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
 
     try {
       let tx = await account!.execute([
@@ -85,11 +107,7 @@ export const useSystemCalls = () => {
         {
           contractAddress: DUNGEON_TICKET,
           entrypoint: "approve",
-          calldata: CallData.compile([
-            DUNGEON_ADDRESS,
-            1e18,
-            "0",
-          ]),
+          calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
         },
         {
           contractAddress: DUNGEON_ADDRESS,
@@ -171,13 +189,14 @@ export const useSystemCalls = () => {
    */
   const startGame = (gameId: number) => {
     let starterWeapons = [12, 16, 46, 76];
-    let weapon = starterWeapons[Math.floor(Math.random() * starterWeapons.length)];
+    let weapon =
+      starterWeapons[Math.floor(Math.random() * starterWeapons.length)];
 
     return {
       contractAddress: GAME_ADDRESS,
       entrypoint: "start_game",
       calldata: [gameId, weapon],
-    }
+    };
   };
 
   /**
@@ -283,8 +302,14 @@ export const useSystemCalls = () => {
   };
 
   const claimBeast = async (gameId: number, beast: Beast) => {
-    let prefix = Object.keys(BEAST_NAME_PREFIXES).find((key: any) => BEAST_NAME_PREFIXES[key] === beast.specialPrefix) || 0;
-    let suffix = Object.keys(BEAST_NAME_SUFFIXES).find((key: any) => BEAST_NAME_SUFFIXES[key] === beast.specialSuffix) || 0;
+    let prefix =
+      Object.keys(BEAST_NAME_PREFIXES).find(
+        (key: any) => BEAST_NAME_PREFIXES[key] === beast.specialPrefix
+      ) || 0;
+    let suffix =
+      Object.keys(BEAST_NAME_SUFFIXES).find(
+        (key: any) => BEAST_NAME_SUFFIXES[key] === beast.specialSuffix
+      ) || 0;
 
     try {
       let tx = await account!.execute([
@@ -315,20 +340,20 @@ export const useSystemCalls = () => {
     try {
       let tx = await account!.execute([
         {
-          contractAddress: "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+          contractAddress:
+            "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
           entrypoint: "mint",
-          calldata: [account.address, 100e18.toString(), "0x0"],
+          calldata: [account.address, (100e18).toString(), "0x0"],
         },
       ]);
 
-      await account!.waitForTransaction(
-        tx.transaction_hash,
-        { retryInterval: 200 }
-      );
+      await account!.waitForTransaction(tx.transaction_hash, {
+        retryInterval: 200,
+      });
     } catch (error) {
       console.error("Error minting sepolia lords:", error);
     }
-  }
+  };
 
   const createSettings = async (settings: GameSettingsData) => {
     let bag = {
@@ -400,7 +425,7 @@ export const useSystemCalls = () => {
           ],
         },
       ],
-      () => { }
+      () => {}
     );
   };
 

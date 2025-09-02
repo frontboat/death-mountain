@@ -52,9 +52,16 @@ export const useAnalytics = () => {
     });
   };
 
+  const txRevertedEvent = ({ txHash }: { txHash: string }) => {
+    posthog?.capture("tx_reverted", {
+      txHash,
+    });
+  };
+
   return {
     identifyAddress,
     gameStartedEvent,
     playerDiedEvent,
+    txRevertedEvent,
   };
 };
