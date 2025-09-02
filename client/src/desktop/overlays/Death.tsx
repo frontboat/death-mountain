@@ -23,9 +23,12 @@ export default function DeathOverlay() {
 
   let link = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? `https://lootsurvivor.io/survivor/watch?mode=practice&id=${gameId}` : `https://lootsurvivor.io/survivor/watch?mode=real&id=${gameId}`;
 
-  const shareMessage = finalBattleEvent?.type === 'obstacle'
-    ? `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`
-    : `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. A ${beast?.name} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`;
+  const shareMessage =
+    finalBattleEvent?.type === "obstacle"
+      ? `I got a score of ${adventurer?.xp
+      } in the Loot Survivor 2 practice dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`
+      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 practice dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {

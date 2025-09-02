@@ -29,23 +29,17 @@ export default function DeathScreen() {
 
   let battleMessage = "";
   if (finalBattleEvent?.type === "obstacle") {
-    battleMessage = `${
-      OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
-    } hit your ${finalBattleEvent.obstacle?.location} for ${
-      finalBattleEvent.obstacle?.damage
-    } damage ${finalBattleEvent.obstacle?.critical_hit ? "CRITICAL HIT!" : ""}`;
+    battleMessage = `${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } hit your ${finalBattleEvent.obstacle?.location} for ${finalBattleEvent.obstacle?.damage
+      } damage ${finalBattleEvent.obstacle?.critical_hit ? "CRITICAL HIT!" : ""}`;
   } else if (finalBattleEvent?.type === "beast_attack") {
-    battleMessage = `${BEAST_NAMES[beast?.id!]} attacked your ${
-      battleEvent?.attack?.location
-    } for ${battleEvent?.attack?.damage} damage ${
-      battleEvent?.attack?.critical_hit ? "CRITICAL HIT!" : ""
-    }`;
+    battleMessage = `${BEAST_NAMES[beast?.id!]} attacked your ${battleEvent?.attack?.location
+      } for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? "CRITICAL HIT!" : ""
+      }`;
   } else if (finalBattleEvent?.type === "ambush") {
-    battleMessage = `${BEAST_NAMES[beast?.id!]} ambushed your ${
-      battleEvent?.attack?.location
-    } for ${battleEvent?.attack?.damage} damage ${
-      battleEvent?.attack?.critical_hit ? "CRITICAL HIT!" : ""
-    }`;
+    battleMessage = `${BEAST_NAMES[beast?.id!]} ambushed your ${battleEvent?.attack?.location
+      } for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? "CRITICAL HIT!" : ""
+      }`;
   }
 
   let link =
@@ -55,12 +49,10 @@ export default function DeathScreen() {
 
   const shareMessage =
     finalBattleEvent?.type === "obstacle"
-      ? `I got a score of ${
-          adventurer?.xp
-        } in the Loot Survivor practice dungeon. ${
-          OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
-        } ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`
-      : `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. A ${beast?.name} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`;
+      ? `I got a score of ${adventurer?.xp
+      } in the Loot Survivor 2 practice dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`
+      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 practice dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
@@ -113,9 +105,8 @@ export default function DeathScreen() {
         <Box sx={styles.messageContainer}>
           <Typography sx={styles.message}>
             {collectableCount > 0
-              ? `You've proven your worth in Death Mountain by collecting ${collectableCount} ${
-                  collectableCount === 1 ? "beast" : "beasts"
-                }. Your victories will echo through the halls of the great adventurers.`
+              ? `You've proven your worth in Death Mountain by collecting ${collectableCount} ${collectableCount === 1 ? "beast" : "beasts"
+              }. Your victories will echo through the halls of the great adventurers.`
               : `Though you fought valiantly in Death Mountain, the beasts proved too elusive this time. The mountain awaits your return, adventurer.`}
           </Typography>
         </Box>
