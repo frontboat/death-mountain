@@ -3,19 +3,27 @@ import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameStore } from "@/stores/gameStore";
-import { Beast, GameSettingsData, ItemPurchase, Payment, Stats } from "@/types/game";
+import {
+  Beast,
+  GameSettingsData,
+  ItemPurchase,
+  Payment,
+  Stats,
+} from "@/types/game";
 import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
 import { delay, stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
+import { useAnalytics } from "@/utils/analytics";
 import { useSnackbar } from "notistack";
 
 export const useSystemCalls = () => {
-  const { enqueueSnackbar } = useSnackbar()
+  const { enqueueSnackbar } = useSnackbar();
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
   const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
+  const { txRevertedEvent } = useAnalytics();
 
   const TIP_AMOUNT = 10e18;
   const namespace = currentNetworkConfig.namespace;
@@ -59,17 +67,19 @@ export const useSystemCalls = () => {
       }
 
       let tx = await account!.execute(calls, { tip: TIP_AMOUNT });
-      let receipt: any = await account!.waitForTransaction(
-        tx.transaction_hash,
-        { retryInterval: 200, successStates: ["PRE_CONFIRMED", "ACCEPTED_ON_L2", "ACCEPTED_ON_L1"], errorStates: ["REVERTED"] }
-      );
+      let receipt: any = await waitForPreConfirmedTransaction(tx.transaction_hash, 0);
 
       if (receipt.execution_status === "REVERTED") {
         forceResetAction();
-        return enqueueSnackbar('Action failed', { variant: 'warning', anchorOrigin: { vertical: 'bottom', horizontal: 'right' } })
+        txRevertedEvent({
+          txHash: tx.transaction_hash,
+        });
+        return enqueueSnackbar('Action failed', { variant: 'warning', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
       }
 
-      const translatedEvents = receipt.events.map((event: any) => translateGameEvent(event, currentNetworkConfig.manifest))
+      const translatedEvents = receipt.events.map((event: any) =>
+        translateGameEvent(event, currentNetworkConfig.manifest)
+      );
       return translatedEvents.filter(Boolean);
     } catch (error) {
       console.error("Error executing action:", error);
@@ -77,6 +87,43 @@ export const useSystemCalls = () => {
       throw error;
     }
   };
+
+  const waitForPreConfirmedTransaction = async (txHash: string, retries: number) => {
+    if (retries > 2) {
+      throw new Error("Transaction failed");
+    }
+
+    try {
+      const receipt: any = await account!.waitForTransaction(
+        txHash,
+        { retryInterval: 200, successStates: ["PRE_CONFIRMED", "ACCEPTED_ON_L2", "ACCEPTED_ON_L1"] }
+      );
+
+      return receipt;
+    } catch (error) {
+      await delay(500);
+      return waitForPreConfirmedTransaction(txHash, retries + 1);
+    }
+  }
+
+  const waitForTransaction = async (txHash: string, retries: number) => {
+    if (retries > 2) {
+      throw new Error("Transaction failed");
+    }
+
+    try {
+      const receipt: any = await account!.waitForTransaction(
+        txHash,
+        { retryInterval: 250 }
+      );
+
+      return receipt;
+    } catch (error) {
+      console.error("Error waiting for transaction:", error);
+      await delay(500);
+      return waitForTransaction(txHash, retries + 1);
+    }
+  }
 
   const waitForGlobalState = async (state: any, retries: number = 0): Promise<boolean> => {
     let adventurerState = await getAdventurerState(gameId!);
@@ -88,7 +135,7 @@ export const useSystemCalls = () => {
 
     await delay(500);
     return waitForGlobalState(state, retries + 1);
-  }
+  };
 
   /**
    * Mints a new game token.
@@ -96,38 +143,46 @@ export const useSystemCalls = () => {
    * @param name The name of the game
    * @param settingsId The settings ID for the game
    */
-  const buyGame = async (account: any, payment: Payment, name: string, preCalls: any[], callback: () => void) => {
-    let paymentData = payment.paymentType === 'Ticket' ? [0] : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
+  const buyGame = async (
+    account: any,
+    payment: Payment,
+    name: string,
+    preCalls: any[],
+    callback: () => void
+  ) => {
+    let paymentData =
+      payment.paymentType === "Ticket"
+        ? [0]
+        : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
 
     try {
-      let tx = await account!.execute([
-        ...preCalls,
-        {
-          contractAddress: DUNGEON_TICKET,
-          entrypoint: "approve",
-          calldata: CallData.compile([
-            DUNGEON_ADDRESS,
-            1e18,
-            "0",
-          ]),
-        },
-        {
-          contractAddress: DUNGEON_ADDRESS,
-          entrypoint: "buy_game",
-          calldata: CallData.compile([
-            ...paymentData,
-            new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
-            account!.address, // send game to this address
-            false, // soulbound
-          ]),
-        },
-      ], { tip: TIP_AMOUNT });
+      let tx = await account!.execute(
+        [
+          ...preCalls,
+          {
+            contractAddress: DUNGEON_TICKET,
+            entrypoint: "approve",
+            calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
+          },
+          {
+            contractAddress: DUNGEON_ADDRESS,
+            entrypoint: "buy_game",
+            calldata: CallData.compile([
+              ...paymentData,
+              new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
+              account!.address, // send game to this address
+              false, // soulbound
+            ]),
+          },
+        ],
+        { tip: TIP_AMOUNT }
+      );
 
       callback();
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200, errorStates: ["REVERTED"] }
+        { retryInterval: 250 }
       );
 
       const tokenMetadataEvent = receipt.events.find(
@@ -149,29 +204,29 @@ export const useSystemCalls = () => {
    */
   const mintGame = async (name: string, settingsId = 0) => {
     try {
-      let tx = await account!.execute([
-        {
-          contractAddress: GAME_TOKEN_ADDRESS,
-          entrypoint: "mint_game",
-          calldata: CallData.compile([
-            new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
-            new CairoOption(CairoOptionVariant.Some, settingsId),
-            1, // start
-            1, // end
-            1, // objective_ids
-            1, // context
-            1, // client_url
-            1, // renderer_address
-            account!.address,
-            false, // soulbound
-          ]),
-        },
-      ], { tip: TIP_AMOUNT });
-
-      const receipt: any = await account!.waitForTransaction(
-        tx.transaction_hash,
-        { retryInterval: 200, errorStates: ["REVERTED"] }
+      let tx = await account!.execute(
+        [
+          {
+            contractAddress: GAME_TOKEN_ADDRESS,
+            entrypoint: "mint_game",
+            calldata: CallData.compile([
+              new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
+              new CairoOption(CairoOptionVariant.Some, settingsId),
+              1, // start
+              1, // end
+              1, // objective_ids
+              1, // context
+              1, // client_url
+              1, // renderer_address
+              account!.address,
+              false, // soulbound
+            ]),
+          },
+        ],
+        { tip: TIP_AMOUNT }
       );
+
+      const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
 
       const tokenMetadataEvent = receipt.events.find(
         (event: any) => event.data.length === 14
@@ -191,13 +246,14 @@ export const useSystemCalls = () => {
    */
   const startGame = (gameId: number) => {
     let starterWeapons = [12, 16, 46, 76];
-    let weapon = starterWeapons[Math.floor(Math.random() * starterWeapons.length)];
+    let weapon =
+      starterWeapons[Math.floor(Math.random() * starterWeapons.length)];
 
     return {
       contractAddress: GAME_ADDRESS,
       entrypoint: "start_game",
       calldata: [gameId, weapon],
-    }
+    };
   };
 
   /**
@@ -303,24 +359,30 @@ export const useSystemCalls = () => {
   };
 
   const claimBeast = async (gameId: number, beast: Beast) => {
-    let prefix = Object.keys(BEAST_NAME_PREFIXES).find((key: any) => BEAST_NAME_PREFIXES[key] === beast.specialPrefix) || 0;
-    let suffix = Object.keys(BEAST_NAME_SUFFIXES).find((key: any) => BEAST_NAME_SUFFIXES[key] === beast.specialSuffix) || 0;
+    let prefix =
+      Object.keys(BEAST_NAME_PREFIXES).find(
+        (key: any) => BEAST_NAME_PREFIXES[key] === beast.specialPrefix
+      ) || 0;
+    let suffix =
+      Object.keys(BEAST_NAME_SUFFIXES).find(
+        (key: any) => BEAST_NAME_SUFFIXES[key] === beast.specialSuffix
+      ) || 0;
 
     try {
       await waitForGlobalState("beast_health");
 
-      let tx = await account!.execute([
-        {
-          contractAddress: DUNGEON_ADDRESS,
-          entrypoint: "claim_beast",
-          calldata: [gameId, beast.id, prefix, suffix],
-        },
-      ], { tip: TIP_AMOUNT });
-
-      const receipt: any = await account!.waitForTransaction(
-        tx.transaction_hash,
-        { retryInterval: 200, errorStates: ["REVERTED"] }
+      let tx = await account!.execute(
+        [
+          {
+            contractAddress: DUNGEON_ADDRESS,
+            entrypoint: "claim_beast",
+            calldata: [gameId, beast.id, prefix, suffix],
+          },
+        ],
+        { tip: TIP_AMOUNT }
       );
+
+      const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
 
       const tokenId = parseInt(receipt.events[1].data[2], 16);
       const tokenURI = await getBeastTokenURI(tokenId);
@@ -343,14 +405,11 @@ export const useSystemCalls = () => {
         },
       ], { tip: TIP_AMOUNT });
 
-      await account!.waitForTransaction(
-        tx.transaction_hash,
-        { retryInterval: 200, errorStates: ["REVERTED"] }
-      );
+      await waitForTransaction(tx.transaction_hash, 0);
     } catch (error) {
       console.error("Error minting sepolia lords:", error);
     }
-  }
+  };
 
   const createSettings = async (settings: GameSettingsData) => {
     let bag = {
