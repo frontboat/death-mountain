@@ -24,6 +24,7 @@ import {
   useState,
 } from "react";
 import { useAnalytics } from "@/utils/analytics";
+import { useMarketStore } from "@/stores/marketStore";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -106,6 +107,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     incrementBeastsCollected,
     setMetadata,
   } = useGameStore();
+  const { setIsOpen } = useMarketStore();
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
   const [spectating, setSpectating] = useState(false);
@@ -248,7 +250,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         event.adventurer!.stat_upgrades_available === 0 &&
         adventurer?.stat_upgrades_available! > 0
       ) {
-        setShowInventory(false);
+        setIsOpen(true);
       }
     }
 

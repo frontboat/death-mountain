@@ -63,6 +63,10 @@ export default function CombatOverlay() {
     setAttackInProgress(false);
     setFleeInProgress(false);
     setEquipInProgress(false);
+
+    if ([fleeMessage, attackMessage, equipMessage].includes(combatLog)) {
+      setCombatLog("");
+    }
   }, [actionFailed]);
 
   const handleAttack = () => {

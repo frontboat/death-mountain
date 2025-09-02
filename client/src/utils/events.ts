@@ -281,7 +281,7 @@ export const getEventIcon = (event: GameEvent) => {
   switch (event.type) {
     case 'discovery':
       if (event.discovery?.type === 'Gold') return '/images/mobile/gold.png';
-      if (event.discovery?.type === 'Health') return '/images/mobile/health.png';
+      if (event.discovery?.type === 'Health') return '/images/health.png';
       if (event.discovery?.type === 'Loot') return ItemUtils.getItemImage(event.discovery?.amount!);
     case 'obstacle':
       const obstacleName = OBSTACLE_NAMES[event.obstacle?.id!];

@@ -151,7 +151,7 @@ export default function BeastSlainScreen() {
                           animate="visible"
                         >
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Typography sx={styles.rewardValue}>+{defeatedBeastEvent.gold_reward}</Typography>
+                            <Typography sx={[styles.rewardValue, { color: '#EDCF33' }]}>+{defeatedBeastEvent.gold_reward}</Typography>
 
                             <Box
                               component="img"
@@ -231,18 +231,21 @@ export default function BeastSlainScreen() {
                         />
                       </Box>
                       <Box sx={styles.itemXpContainer}>
-                        <Typography sx={styles.itemXpLabel}>+{itemXpReward} xp</Typography>
+                        {equippedItem.xp < 400
+                          ? <Typography sx={styles.itemXpLabel}>+{itemXpReward} xp</Typography>
+                          : <Typography sx={styles.itemXpLabel}>MAX</Typography>
+                        }
                         <Box sx={styles.itemXpBarContainer}>
                           <Box sx={styles.itemXpBarBackground}>
                             <motion.div
+                              custom={Math.min(100, calculateProgress(equippedItem.xp, true))}
                               initial="hidden"
                               animate="visible"
-                              variants={progressVariants}
+                              variants={xpBarVariants}
                               style={{
                                 height: '100%',
                                 background: 'linear-gradient(90deg, #80FF00 0%, #9dff33 100%)',
                                 borderRadius: '2px',
-                                width: `${Math.min(100, calculateProgress(equippedItem.xp, true))}%`,
                               }}
                             />
                           </Box>

@@ -102,6 +102,10 @@ export default function BeastScreen() {
     setAttackInProgress(false);
     setFleeInProgress(false);
     setEquipInProgress(false);
+
+    if ([fleeMessage, attackMessage, equipMessage].includes(combatLog)) {
+      setCombatLog("");
+    }
   }, [actionFailed]);
 
   const handleAttack = () => {
@@ -375,6 +379,7 @@ export default function BeastScreen() {
 
               return (
                 <Tooltip
+                  key={slot}
                   title={equippedItem && equippedItem.id !== 0 ? <ItemTooltip itemSpecialsSeed={adventurer!.item_specials_seed} item={equippedItem} /> : null}
                   placement="top-start"
                   slotProps={{
@@ -403,7 +408,6 @@ export default function BeastScreen() {
                   }}
                 >
                   <Box
-                    key={slot}
                     onClick={(e) => {
                       setSelectedSlot(slot);
                       setMenuAnchor(e.currentTarget);
@@ -498,6 +502,7 @@ export default function BeastScreen() {
 
                   return (
                     <Tooltip
+                      key={item.id}
                       title={<ItemTooltip itemSpecialsSeed={adventurer!.item_specials_seed} item={item} />}
                       placement="top"
                       slotProps={{
@@ -526,7 +531,6 @@ export default function BeastScreen() {
                       }}
                     >
                       <Box
-                        key={item.id}
                         onClick={() => {
                           equipItem(item);
                           setMenuAnchor(null);

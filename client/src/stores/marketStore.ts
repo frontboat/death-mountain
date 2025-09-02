@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { MarketItem } from '@/utils/market';
 
 interface MarketState {
+  isOpen: boolean;
   cart: {
     potions: number;
     items: MarketItem[];
@@ -11,6 +12,7 @@ interface MarketState {
   inProgress: boolean;
   showFilters: boolean;
 
+  setIsOpen: (isOpen: boolean) => void;
   setSlotFilter: (filter: string | null) => void;
   setTypeFilter: (filter: string | null) => void;
   addToCart: (item: MarketItem) => void;
@@ -22,6 +24,7 @@ interface MarketState {
 }
 
 export const useMarketStore = create<MarketState>((set) => ({
+  isOpen: false,
   cart: {
     potions: 0,
     items: [],
@@ -31,6 +34,7 @@ export const useMarketStore = create<MarketState>((set) => ({
   inProgress: false,
   showFilters: false,
 
+  setIsOpen: (isOpen) => set({ isOpen }),
   setSlotFilter: (filter) => set({ slotFilter: filter }),
   setTypeFilter: (filter) => set({ typeFilter: filter }),
   addToCart: (item) => set((state) => ({
