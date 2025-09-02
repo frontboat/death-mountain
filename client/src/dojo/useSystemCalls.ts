@@ -119,6 +119,7 @@ export const useSystemCalls = () => {
 
       return receipt;
     } catch (error) {
+      console.error("Error waiting for transaction:", error);
       await delay(500);
       return waitForTransaction(txHash, retries + 1);
     }
@@ -179,7 +180,10 @@ export const useSystemCalls = () => {
 
       callback();
 
-      const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
+      const receipt: any = await account!.waitForTransaction(
+        tx.transaction_hash,
+        { retryInterval: 250 }
+      );
 
       const tokenMetadataEvent = receipt.events.find(
         (event: any) => event.data.length === 14
@@ -477,7 +481,7 @@ export const useSystemCalls = () => {
           ],
         },
       ],
-      () => {}
+      () => { }
     );
   };
 
