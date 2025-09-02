@@ -219,6 +219,7 @@ export default function BeastSlainScreen() {
                 {Object.entries(slotIcons).map(([slot, icon], index) => {
                   const equippedItem = adventurer?.equipment[slot.toLowerCase() as keyof typeof adventurer.equipment];
                   if (!equippedItem || equippedItem.id === 0) return null;
+                  let levelProgress = calculateProgress(equippedItem.xp, true);
 
                   return (
                     <Box key={slot} sx={styles.itemSlot}>
@@ -238,7 +239,7 @@ export default function BeastSlainScreen() {
                         <Box sx={styles.itemXpBarContainer}>
                           <Box sx={styles.itemXpBarBackground}>
                             <motion.div
-                              custom={Math.min(100, calculateProgress(equippedItem.xp, true))}
+                              custom={Math.min(100, levelProgress || 100)}
                               initial="hidden"
                               animate="visible"
                               variants={xpBarVariants}
