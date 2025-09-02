@@ -1,9 +1,9 @@
-import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { Metadata } from "@/types/game";
 import { NETWORKS } from "@/utils/networkConfig";
 import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
+import { hexToAscii } from "@dojoengine/utils";
 import { useAccount } from "@starknet-react/core";
 import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
@@ -22,7 +22,7 @@ export const useStarknetApi = () => {
           entry_point_selector: "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
           calldata: [address]
         },
-        "pending"
+        "latest"
       ]
     }));
 
@@ -33,6 +33,7 @@ export const useStarknetApi = () => {
     });
 
     const data = await response.json();
+
     return parseBalances(data || [], tokens);
   }
 
@@ -48,7 +49,7 @@ export const useStarknetApi = () => {
             entry_point_selector: "0x02f6ca94ed3ceec9e8b907a11317d8d624f94cf62d9c8112c658fd4d9f02b2d8",
             calldata: [goldenPassAddress, num.toHex(tokenId)]
           },
-          "pending"
+          "latest"
         ]
       }));
 
@@ -68,6 +69,40 @@ export const useStarknetApi = () => {
     }
   }
 
+  const getAdventurerState = async (adventurerId: number) => {
+    try {
+      const response = await fetch(currentNetworkConfig.rpcUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "starknet_call",
+          params: [
+            {
+              contract_address: getContractByName(currentNetworkConfig.manifest, currentNetworkConfig.namespace, "adventurer_systems")?.address,
+              entry_point_selector: "0x3d3148be1dfdfcfcd22f79afe7aee5a3147ef412bfb2ea27949e7f8c8937a7",
+              calldata: [num.toHex(adventurerId)],
+            },
+            "latest",
+          ],
+          id: 0,
+        }),
+      });
+
+      const data = await response.json();
+      return {
+        beast_health: parseInt(data?.result[3], 16),
+        action_count: parseInt(data?.result[29], 16)
+      }
+    } catch (error) {
+      console.log('error', error)
+    }
+
+    return null;
+  }
+
   const getGameState = async (adventurerId: number) => {
     try {
       const response = await fetch(currentNetworkConfig.rpcUrl, {
@@ -84,7 +119,7 @@ export const useStarknetApi = () => {
               entry_point_selector: "0x2305fda54e31f8525bf15eaf4f22b11a7d1d2a03f1b4d0602b9ead3c29533e",
               calldata: [num.toHex(adventurerId)],
             },
-            "pending",
+            "latest",
           ],
           id: 0,
         }),
@@ -248,7 +283,7 @@ export const useStarknetApi = () => {
               entry_point_selector: "0x226ad7e84c1fe08eb4c525ed93cccadf9517670341304571e66f7c4f95cbe54",
               calldata: [num.toHex(beastId), "0x0"],
             },
-            "pending",
+            "latest",
           ],
           id: 0,
         }),
@@ -285,7 +320,7 @@ export const useStarknetApi = () => {
               entry_point_selector: "0x212a142d787b7ccdf7549cce575f25c05823490271d294b08eceda21119475",
               calldata: [num.toHex(settingsId)],
             },
-            "pending",
+            "latest",
           ],
           id: 0,
         }),
@@ -322,30 +357,45 @@ export const useStarknetApi = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          method: "starknet_call",
-          params: [
-            {
-              contract_address: currentNetworkConfig.denshokan,
-              entry_point_selector: "0x20d82cc6889093dce20d92fc9daeda4498c9b99ae798fc2a6f4757e38fb1729",
-              calldata: [num.toHex(tokenId)],
-            },
-            "pending",
-          ],
-          id: 0,
-        }),
+        body: JSON.stringify([
+          {
+            jsonrpc: "2.0",
+            method: "starknet_call",
+            params: [
+              {
+                contract_address: currentNetworkConfig.denshokan,
+                entry_point_selector: "0x20d82cc6889093dce20d92fc9daeda4498c9b99ae798fc2a6f4757e38fb1729",
+                calldata: [num.toHex(tokenId)],
+              },
+              "latest",
+            ],
+            id: 0,
+          },
+          {
+            jsonrpc: "2.0",
+            method: "starknet_call",
+            params: [
+              {
+                contract_address: currentNetworkConfig.denshokan,
+                entry_point_selector: "0x170ac5a9fd747db6517bea85af33fcc77a61d4442c966b646a41fdf9ecca233",
+                calldata: [num.toHex(tokenId)],
+              },
+              "latest",
+            ],
+            id: 1,
+          }
+        ]),
       });
 
       const data = await response.json();
-      if (!data?.result) return null;
+      if (!data[0]?.result) return null;
 
       let tokenMetadata: Metadata = {
-        player_name: '',
-        settings_id: parseInt(data.result[2]),
-        expires_at: parseInt(data.result[3], 16) * 1000,
-        available_at: parseInt(data.result[4], 16) * 1000,
-        minted_by: data.result[5],
+        player_name: hexToAscii(data[1].result[0]),
+        settings_id: parseInt(data[0].result[2]),
+        expires_at: parseInt(data[0].result[3], 16) * 1000,
+        available_at: parseInt(data[0].result[4], 16) * 1000,
+        minted_by: data[0].result[5],
       }
 
       return tokenMetadata;
@@ -370,23 +420,26 @@ export const useStarknetApi = () => {
       0
     );
 
-    const account = new Account(rpcProvider, contractAddress, privateKey);
+    const account = new Account({
+      provider: rpcProvider,
+      address: contractAddress,
+      signer: privateKey,
+    });
+
     const { transaction_hash } = await account.deployAccount({
       classHash: accountClassHash,
       constructorCalldata: constructorCalldata,
       addressSalt: publicKey,
-    }, {
-      maxFee: num.toHex(0),
     });
 
     const receipt = await account.waitForTransaction(transaction_hash, { retryInterval: 100 });
 
     if (receipt) {
       localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey }))
-      localStorage.setItem('burner_version', "5")
+      localStorage.setItem('burner_version', "6")
       return account
     }
   };
 
-  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata };
+  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata, getAdventurerState };
 };

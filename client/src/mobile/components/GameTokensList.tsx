@@ -228,7 +228,7 @@ export default function GameTokensList() {
 const styles = {
   listContainer: {
     width: "100%",
-    maxHeight: "300px",
+    maxHeight: "345px",
     display: "flex",
     flexDirection: "column",
     gap: "6px",

@@ -3,7 +3,7 @@ import { Box, LinearProgress, Typography } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { LazyLoadImage } from 'react-lazy-load-image-component'
 
-const loadingBeasts = ["Warlock", "Manticore", "tarrasque", "Colossus", "Basilisk"]
+const loadingBeasts = ["Ammit", "Manticore", "tarrasque", "Colossus", "Basilisk"]
 
 function LoadingContainer(props: any) {
   const { loadingProgress } = props;

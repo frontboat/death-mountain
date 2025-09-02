@@ -11,7 +11,7 @@ export const useGameEvents = () => {
       SELECT data
         FROM "event_messages_historical"
         WHERE keys = "${num.toHex(gameId)}/"
-        LIMIT 1000`
+        LIMIT 10000`
 
       const sql = await fetch(url, {
         method: "GET",

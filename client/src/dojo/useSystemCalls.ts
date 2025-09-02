@@ -12,17 +12,20 @@ import {
 } from "@/types/game";
 import { translateGameEvent } from "@/utils/translation";
 import { getContractByName } from "@dojoengine/core";
-import { stringToFelt } from "@/utils/utils";
+import { delay, stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 import { useAnalytics } from "@/utils/analytics";
+import { useSnackbar } from "notistack";
 
 export const useSystemCalls = () => {
-  const { getBeastTokenURI } = useStarknetApi();
-  const { setCollectableTokenURI } = useGameStore();
+  const { enqueueSnackbar } = useSnackbar();
+  const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
+  const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
   const { txRevertedEvent } = useAnalytics();
 
+  const TIP_AMOUNT = 10e18;
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const DUNGEON_ADDRESS = currentNetworkConfig.dungeon;
@@ -59,16 +62,28 @@ export const useSystemCalls = () => {
    */
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
     try {
-      let tx = await account!.execute(calls);
+      if (adventurer) {
+        await waitForGlobalState("action_count");
+      }
+
+      let tx = await account!.execute(calls, { tip: TIP_AMOUNT });
       let receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        {
+          retryInterval: 200,
+          successStates: ["PRE_CONFIRMED", "ACCEPTED_ON_L2", "ACCEPTED_ON_L1"],
+          errorStates: ["REVERTED"],
+        }
       );
 
       if (receipt.execution_status === "REVERTED") {
         forceResetAction();
         txRevertedEvent({
           txHash: tx.transaction_hash,
+        });
+        return enqueueSnackbar("Action failed", {
+          variant: "warning",
+          anchorOrigin: { vertical: "bottom", horizontal: "right" },
         });
       }
 
@@ -81,6 +96,21 @@ export const useSystemCalls = () => {
       forceResetAction();
       throw error;
     }
+  };
+
+  const waitForGlobalState = async (
+    state: any,
+    retries: number = 0
+  ): Promise<boolean> => {
+    let adventurerState = await getAdventurerState(gameId!);
+
+    // @ts-ignore
+    if (adventurerState?.[state] === adventurer![state] || retries > 9) {
+      return true;
+    }
+
+    await delay(500);
+    return waitForGlobalState(state, retries + 1);
   };
 
   /**
@@ -102,30 +132,33 @@ export const useSystemCalls = () => {
         : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
 
     try {
-      let tx = await account!.execute([
-        ...preCalls,
-        {
-          contractAddress: DUNGEON_TICKET,
-          entrypoint: "approve",
-          calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
-        },
-        {
-          contractAddress: DUNGEON_ADDRESS,
-          entrypoint: "buy_game",
-          calldata: CallData.compile([
-            ...paymentData,
-            new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
-            account!.address, // send game to this address
-            false, // soulbound
-          ]),
-        },
-      ]);
+      let tx = await account!.execute(
+        [
+          ...preCalls,
+          {
+            contractAddress: DUNGEON_TICKET,
+            entrypoint: "approve",
+            calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
+          },
+          {
+            contractAddress: DUNGEON_ADDRESS,
+            entrypoint: "buy_game",
+            calldata: CallData.compile([
+              ...paymentData,
+              new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
+              account!.address, // send game to this address
+              false, // soulbound
+            ]),
+          },
+        ],
+        { tip: TIP_AMOUNT }
+      );
 
       callback();
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, errorStates: ["REVERTED"] }
       );
 
       const tokenMetadataEvent = receipt.events.find(
@@ -147,28 +180,31 @@ export const useSystemCalls = () => {
    */
   const mintGame = async (name: string, settingsId = 0) => {
     try {
-      let tx = await account!.execute([
-        {
-          contractAddress: GAME_TOKEN_ADDRESS,
-          entrypoint: "mint_game",
-          calldata: CallData.compile([
-            new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
-            new CairoOption(CairoOptionVariant.Some, settingsId),
-            1, // start
-            1, // end
-            1, // objective_ids
-            1, // context
-            1, // client_url
-            1, // renderer_address
-            account!.address,
-            false, // soulbound
-          ]),
-        },
-      ]);
+      let tx = await account!.execute(
+        [
+          {
+            contractAddress: GAME_TOKEN_ADDRESS,
+            entrypoint: "mint_game",
+            calldata: CallData.compile([
+              new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
+              new CairoOption(CairoOptionVariant.Some, settingsId),
+              1, // start
+              1, // end
+              1, // objective_ids
+              1, // context
+              1, // client_url
+              1, // renderer_address
+              account!.address,
+              false, // soulbound
+            ]),
+          },
+        ],
+        { tip: TIP_AMOUNT }
+      );
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, errorStates: ["REVERTED"] }
       );
 
       const tokenMetadataEvent = receipt.events.find(
@@ -312,17 +348,22 @@ export const useSystemCalls = () => {
       ) || 0;
 
     try {
-      let tx = await account!.execute([
-        {
-          contractAddress: DUNGEON_ADDRESS,
-          entrypoint: "claim_beast",
-          calldata: [gameId, beast.id, prefix, suffix],
-        },
-      ]);
+      await waitForGlobalState("beast_health");
+
+      let tx = await account!.execute(
+        [
+          {
+            contractAddress: DUNGEON_ADDRESS,
+            entrypoint: "claim_beast",
+            calldata: [gameId, beast.id, prefix, suffix],
+          },
+        ],
+        { tip: TIP_AMOUNT }
+      );
 
       const receipt: any = await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 200 }
+        { retryInterval: 200, errorStates: ["REVERTED"] }
       );
 
       const tokenId = parseInt(receipt.events[1].data[2], 16);
@@ -338,17 +379,21 @@ export const useSystemCalls = () => {
 
   const mintSepoliaLords = async (account: any) => {
     try {
-      let tx = await account!.execute([
-        {
-          contractAddress:
-            "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-          entrypoint: "mint",
-          calldata: [account.address, (100e18).toString(), "0x0"],
-        },
-      ]);
+      let tx = await account!.execute(
+        [
+          {
+            contractAddress:
+              "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+            entrypoint: "mint",
+            calldata: [account.address, (100e18).toString(), "0x0"],
+          },
+        ],
+        { tip: TIP_AMOUNT }
+      );
 
       await account!.waitForTransaction(tx.transaction_hash, {
         retryInterval: 200,
+        errorStates: ["REVERTED"],
       });
     } catch (error) {
       console.error("Error minting sepolia lords:", error);

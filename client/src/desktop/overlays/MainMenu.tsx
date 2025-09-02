@@ -25,6 +25,8 @@ import PriceIndicator from "../../components/PriceIndicator";
 import WalletConnect from "../components/WalletConnect";
 import StatisticsModal from "./StatisticsModal";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import Leaderboard from "../components/Leaderboard";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 
 export default function MainMenu() {
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ export default function MainMenu() {
   const { currentNetworkConfig } = useDynamicConnector();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [left, setLeft] = useState(getMenuLeftOffset());
@@ -77,9 +80,12 @@ export default function MainMenu() {
           {showAdventurers && (
             <AdventurersList onBack={() => setShowAdventurers(false)} />
           )}
+          {showLeaderboard && (
+            <Leaderboard onBack={() => setShowLeaderboard(false)} />
+          )}
           {showSettings && <Settings onBack={() => setShowSettings(false)} />}
 
-          {!showAdventurers && !showSettings && (
+          {!showAdventurers && !showSettings && !showLeaderboard && (
             <>
               <Box sx={styles.headerBox}>
                 <Typography sx={styles.gameTitle}>LOOT SURVIVOR 2</Typography>
@@ -139,6 +145,26 @@ export default function MainMenu() {
               </Button>
 
               <Divider sx={{ width: "100%", my: 0.5 }} />
+
+              <Button
+                variant="outlined"
+                fullWidth
+                size="large"
+                onClick={() => setShowLeaderboard(true)}
+                sx={{ pl: 1, height: "36px" }}
+              >
+                <LeaderboardIcon sx={{ fontSize: 20, mr: 1 }} />
+                <Typography
+                  sx={{
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    letterSpacing: 0.5,
+                    color: "#d0c98d",
+                  }}
+                >
+                  Leaderboard
+                </Typography>
+              </Button>
 
               <Button
                 variant="outlined"

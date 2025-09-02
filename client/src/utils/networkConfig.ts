@@ -1,7 +1,6 @@
 import { getContractByName } from "@dojoengine/core";
 import manifest_sepolia from "../../manifest_sepolia.json";
 import manifest_slot from "../../manifest_slot.json";
-import { Tokens } from "@cartridge/controller";
 
 export interface NetworkConfig {
   chainId: ChainId;
@@ -21,7 +20,7 @@ export interface NetworkConfig {
   chains: Array<{
     rpcUrl: string;
   }>;
-  tokens: Tokens;
+  tokens: any;
   denshokan: string;
   paymentTokens: any[];
   goldenToken: string;
@@ -44,7 +43,7 @@ export const NETWORKS = {
     status: "online",
     namespace: "ls_0_0_6",
     slot: "pg-sepolia-5",
-    rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
+    rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9",
     torii: "https://api.cartridge.gg/x/pg-sepolia-5/torii",
     tokens: {
       erc20: [],
@@ -54,9 +53,9 @@ export const NETWORKS = {
     denshokan:
       "0x0610aba32da98547f9f65fe0195cc60c08f1ef6fa2f2a0fc03e35f1c29319fd3",
     dungeon:
-      "0x0501c6e5f5c588bd3ae74b47c0dcde4acfe0c3243ce2b294ac3bce24e4e071a8",
+      "0x02b481049177d5947b7ac5b40ae231c14af517c8cdc5506fb2529f064fc47edd",
     dungeonTicket:
-      "0x035b77e467aa54686237533bb63e942b2a4c8c76f7321cf94ce8955030a8cc2e",
+      "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
     beasts:
       "0x03d6e75fd8270a5098987713fa2c766a3edd0b03161ffeebe81b27dc48a3f335",
     goldenToken:
@@ -64,12 +63,6 @@ export const NETWORKS = {
     ekuboRouter:
       "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
     paymentTokens: [
-      {
-        name: "SLORDS",
-        address:
-          "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-        displayDecimals: 0,
-      },
       {
         name: "ETH",
         address:
@@ -92,7 +85,7 @@ export const NETWORKS = {
       {
         name: "TICKET",
         address:
-          "0x035b77e467aa54686237533bb63e942b2a4c8c76f7321cf94ce8955030a8cc2e",
+          "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
         displayDecimals: 0,
       },
     ],

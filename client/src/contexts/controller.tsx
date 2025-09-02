@@ -59,7 +59,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     () => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl }),
     []
   );
-
+  
   useEffect(() => {
     if (account) {
       fetchTokenBalances();
@@ -70,11 +70,15 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (
       localStorage.getItem("burner") &&
-      localStorage.getItem("burner_version") === "5"
+      localStorage.getItem("burner_version") === "6"
     ) {
       let burner = JSON.parse(localStorage.getItem("burner") as string);
       setBurner(
-        new Account(demoRpcProvider, burner.address, burner.privateKey)
+        new Account({
+          provider: demoRpcProvider,
+          address: burner.address,
+          signer: burner.privateKey,
+        })
       );
     } else {
       createBurner();

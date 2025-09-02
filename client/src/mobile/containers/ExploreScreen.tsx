@@ -5,10 +5,12 @@ import { Box, Button, Typography, keyframes } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import AdventurerInfo from '../components/AdventurerInfo';
 import BeastCollectedPopup from '@/components/BeastCollectedPopup';
+import { useMarketStore } from '@/stores/marketStore';
 
 export default function ExploreScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { exploreLog, collectable, collectableTokenURI, setCollectable } = useGameStore();
+  const { adventurer, exploreLog, collectable, collectableTokenURI, setCollectable } = useGameStore();
+  const { inProgress, setInProgress } = useMarketStore();
 
   const [untilBeast, setUntilBeast] = useState(false);
   const [isExploring, setIsExploring] = useState(false);
@@ -24,7 +26,8 @@ export default function ExploreScreen() {
   useEffect(() => {
     scrollToTop();
     setIsExploring(false);
-  }, [exploreLog, actionFailed]);
+    setInProgress(false);
+  }, [adventurer!.action_count, actionFailed]);
 
   const handleExplore = async () => {
     setIsExploring(true);
@@ -56,7 +59,15 @@ export default function ExploreScreen() {
                 }}
               >
                 <Box sx={styles.encounterIcon}>
-                  <img src={getEventIcon(event)} alt={'encounter'} style={{ width: '100%', height: '100%' }} />
+                  <img 
+                    src={getEventIcon(event)} 
+                    alt={'encounter'} 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%',
+                      filter: event.type === 'obstacle' ? 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8))' : 'none'
+                    }} 
+                  />
                 </Box>
 
                 <Box sx={styles.encounterDetails}>
@@ -145,7 +156,7 @@ export default function ExploreScreen() {
           <Button
             variant="contained"
             onClick={handleExplore}
-            disabled={isExploring}
+            disabled={isExploring || inProgress}
             sx={styles.exploreButton}
           >
             {isExploring
@@ -155,9 +166,16 @@ export default function ExploreScreen() {
                 </Typography>
                 <div className='dotLoader green' />
               </Box>
-              : <Typography variant={'h4'} lineHeight={'16px'}>
-                EXPLORE
-              </Typography>
+              : inProgress ?
+                <Box display={'flex'} alignItems={'baseline'}>
+                  <Typography variant={'h4'} lineHeight={'16px'}>
+                    Purchasing Items
+                  </Typography>
+                  <div className='dotLoader green' />
+                </Box>
+                : <Typography variant={'h4'} lineHeight={'16px'}>
+                  EXPLORE
+                </Typography>
             }
           </Button>
         </Box>
