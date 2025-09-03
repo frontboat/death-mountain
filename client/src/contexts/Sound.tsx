@@ -4,7 +4,19 @@ import { calculateLevel } from '@/utils/game';
 import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
-const tracks: Record<string, string> = {
+const desktopTracks: Record<string, string> = {
+  Intro: "/audio/Intro.mp3",
+  Death: "/audio/Game_Over.mp3",
+  Beginning: "/audio/Start_Journey.mp3",
+  Early: "/audio/Vault_Of_Whispers.mp3",
+  RampUp: "/audio/Torchlit_Passage.mp3",
+  Mid: "/audio/Trap_Door.mp3",
+  Late: "/audio/Courage.mp3",
+  SuperLate: "/audio/Hall_Of_A_Thousand_Eyes.mp3",
+};
+
+
+const mobileTracks: Record<string, string> = {
   Intro: "/audio/Intro.mp3",
   Death: "/audio/Game_Over.mp3",
   Beginning: "/audio/Start_Journey.mp3",
@@ -38,7 +50,7 @@ const SoundContext = createContext<SoundContextType>({
 export const SoundProvider = ({ children }: PropsWithChildren) => {
   const { useMobileClient } = useUIStore();
   const { gameId, adventurer } = useGameStore();
-  const audioRef = useRef(new Audio(tracks.Intro));
+  const audioRef = useRef(new Audio(mobileTracks.Intro));
   audioRef.current.loop = true;
 
   const savedVolume = typeof window !== 'undefined' ? localStorage.getItem('soundVolume') : null;
@@ -98,24 +110,24 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     let newTrack = null;
     if (!gameId || !adventurer) {
-      newTrack = tracks.Intro;
+      newTrack = mobileTracks.Intro;
     } else {
       if (adventurer.health === 0) {
-        newTrack = tracks.Death;
+        newTrack = mobileTracks.Death;
       } else {
         const level = calculateLevel(adventurer.xp);
         if (level < 3) {
-          newTrack = tracks.Beginning;
+          newTrack = mobileTracks.Beginning;
         } else if (level < 6) {
-          newTrack = tracks.Early;
+          newTrack = mobileTracks.Early;
         } else if (level < 9) {
-          newTrack = tracks.RampUp;
+          newTrack = mobileTracks.RampUp;
         } else if (level < 15) {
-          newTrack = tracks.Mid;
+          newTrack = mobileTracks.Mid;
         } else if (level < 25) {
-          newTrack = tracks.Late;
+          newTrack = mobileTracks.Late;
         } else {
-          newTrack = tracks.SuperLate;
+          newTrack = mobileTracks.SuperLate;
         }
       }
     }

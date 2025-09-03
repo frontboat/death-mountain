@@ -32,13 +32,13 @@ export default function ExploreOverlay() {
 
   const [isExploring, setIsExploring] = useState(false);
   const [isSelectingStats, setIsSelectingStats] = useState(false);
-  const [selectedStats, setSelectedStats] = useState(NO_STATS);
+  const [selectedStats, setSelectedStats] = useState({ ...NO_STATS });
 
   useEffect(() => {
     setIsExploring(false);
     setIsSelectingStats(false);
     setInProgress(false);
-    setSelectedStats(NO_STATS);
+    setSelectedStats({ ...NO_STATS });
   }, [adventurer!.action_count, actionFailed]);
 
   const handleExplore = async () => {

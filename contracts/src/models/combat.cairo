@@ -272,7 +272,8 @@ pub impl ImplCombat of ICombat {
         if strength == 0 {
             0
         } else {
-            damage * strength.into() * STRENGTH_DAMAGE_BONUS.into() / 100
+            let damage: u32 = damage.into() * strength.into() * STRENGTH_DAMAGE_BONUS.into() / 100;
+            damage.try_into().unwrap()
         }
     }
 
@@ -1121,6 +1122,18 @@ mod tests {
         strength = 31;
         let strength_bonus = ImplCombat::strength_bonus(base_damage, strength);
         assert(strength_bonus == STRENGTH_DAMAGE_BONUS.into() * strength.into(), 'wrong 31 strength');
+    }
+
+    #[test]
+    #[available_gas(54110)]
+    fn max_strength_bonus() {
+        // Max base damage is 150
+        let base_damage = 150;
+
+        // test max strength for loot survivor
+        let strength = 55;
+        let strength_bonus = ImplCombat::strength_bonus(base_damage, strength);
+        assert(strength_bonus == 825, 'wrong 55 strength');
     }
 
     #[test]

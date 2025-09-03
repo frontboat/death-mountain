@@ -26,7 +26,7 @@ export default function WatchPage() {
   const { gameEventsQuery } = useQueries();
   const { getEntityModel } = useEntityModel();
   const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
-  const { gameId, adventurer, popExploreLog, setShowOverlay } = useGameStore();
+  const { gameId, adventurer, popExploreLog } = useGameStore();
   const { getGameState } = useStarknetApi();
 
   const [subscription, setSubscription] = useState<any>(null);

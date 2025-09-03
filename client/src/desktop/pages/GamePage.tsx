@@ -128,7 +128,6 @@ export default function GamePage() {
   async function mint() {
     if (!skipIntroOutro) {
       setVideoQueue([streamIds.start]);
-      setShowOverlay(false);
     }
 
     let tokenId = await mintGame(playerName, settings_id);
@@ -137,6 +136,10 @@ export default function GamePage() {
       }`,
       { replace: true }
     );
+
+    if (!skipIntroOutro) {
+      setShowOverlay(false);
+    }
   }
 
   const isLoading = !gameId || !adventurer;
