@@ -2,13 +2,19 @@ import { OBSTACLE_NAMES } from '@/constants/obstacle';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
 import { ChainId } from '@/utils/networkConfig';
+import { getContractByName } from '@dojoengine/core';
 import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { addAddressPadding } from 'starknet';
+import { useGameTokenRanking } from 'metagame-sdk/sql';
+import { useEffect } from 'react';
+import { useAnalytics } from '@/utils/analytics';
 
 export default function DeathOverlay() {
   const { currentNetworkConfig } = useDynamicConnector();
   const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
   const navigate = useNavigate();
+  const { playerDiedEvent } = useAnalytics();
 
   const finalBattleEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
 
@@ -21,11 +27,12 @@ export default function DeathOverlay() {
     battleMessage = `${beast?.name} ambushed your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
   }
 
-  let link = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? `https://lootsurvivor.io/survivor/watch?mode=practice&id=${gameId}` : `https://lootsurvivor.io/survivor/watch?mode=real&id=${gameId}`;
-
-  const shareMessage = finalBattleEvent?.type === 'obstacle'
-    ? `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`
-    : `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. A ${beast?.name} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`;
+  const shareMessage =
+    finalBattleEvent?.type === "obstacle"
+      ? `I got a score of ${adventurer?.xp
+      } in the Loot Survivor 2 practice dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`
+      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 practice dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
@@ -34,6 +41,27 @@ export default function DeathOverlay() {
       navigate('/survivor', { replace: true });
     }
   };
+
+  useEffect(() => {
+    if (gameId && adventurer) {
+      playerDiedEvent({
+        adventurerId: gameId,
+        xp: adventurer.xp,
+      });
+    }
+  }, [gameId, adventurer]);
+
+  const GAME_TOKEN_ADDRESS = getContractByName(
+    currentNetworkConfig.manifest,
+    currentNetworkConfig.namespace,
+    "game_token_systems"
+  )?.address;
+
+  let tokenResult = useGameTokenRanking({
+    tokenId: gameId!,
+    mintedByAddress: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon),
+    settings_id: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined
+  });
 
   return (
     <Box sx={styles.container}>
@@ -47,7 +75,11 @@ export default function DeathOverlay() {
         <Box sx={styles.statsContainer}>
           <Box sx={styles.statCard}>
             <Typography sx={styles.statLabel}>Final Score</Typography>
-            <Typography sx={styles.statValue}>{adventurer?.xp || 0}</Typography>
+            <Typography sx={styles.statValue}>{tokenResult.ranking?.score || adventurer?.xp || 0}</Typography>
+          </Box>
+          <Box sx={styles.statCard}>
+            <Typography sx={styles.statLabel}>Rank</Typography>
+            <Typography sx={styles.statValue}>{tokenResult.ranking?.rank || 0}</Typography>
           </Box>
         </Box>
 

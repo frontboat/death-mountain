@@ -67,24 +67,14 @@ export const useSystemCalls = () => {
       }
 
       let tx = await account!.execute(calls, { tip: TIP_AMOUNT });
-      let receipt: any = await account!.waitForTransaction(
-        tx.transaction_hash,
-        {
-          retryInterval: 200,
-          successStates: ["PRE_CONFIRMED", "ACCEPTED_ON_L2", "ACCEPTED_ON_L1"],
-          errorStates: ["REVERTED"],
-        }
-      );
+      let receipt: any = await waitForPreConfirmedTransaction(tx.transaction_hash, 0);
 
       if (receipt.execution_status === "REVERTED") {
         forceResetAction();
         txRevertedEvent({
           txHash: tx.transaction_hash,
         });
-        return enqueueSnackbar("Action failed", {
-          variant: "warning",
-          anchorOrigin: { vertical: "bottom", horizontal: "right" },
-        });
+        return enqueueSnackbar('Action failed', { variant: 'warning', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
       }
 
       const translatedEvents = receipt.events.map((event: any) =>
@@ -98,10 +88,44 @@ export const useSystemCalls = () => {
     }
   };
 
-  const waitForGlobalState = async (
-    state: any,
-    retries: number = 0
-  ): Promise<boolean> => {
+  const waitForPreConfirmedTransaction = async (txHash: string, retries: number) => {
+    if (retries > 2) {
+      throw new Error("Transaction failed");
+    }
+
+    try {
+      const receipt: any = await account!.waitForTransaction(
+        txHash,
+        { retryInterval: 200, successStates: ["PRE_CONFIRMED", "ACCEPTED_ON_L2", "ACCEPTED_ON_L1"] }
+      );
+
+      return receipt;
+    } catch (error) {
+      await delay(500);
+      return waitForPreConfirmedTransaction(txHash, retries + 1);
+    }
+  }
+
+  const waitForTransaction = async (txHash: string, retries: number, _account?: any) => {
+    if (retries > 2) {
+      throw new Error("Transaction failed");
+    }
+
+    try {
+      const receipt: any = await (_account || account!).waitForTransaction(
+        txHash,
+        { retryInterval: 250 }
+      );
+
+      return receipt;
+    } catch (error) {
+      console.error("Error waiting for transaction:", error);
+      await delay(500);
+      return waitForTransaction(txHash, retries + 1, _account);
+    }
+  }
+
+  const waitForGlobalState = async (state: any, retries: number = 0): Promise<boolean> => {
     let adventurerState = await getAdventurerState(gameId!);
 
     // @ts-ignore
@@ -156,10 +180,7 @@ export const useSystemCalls = () => {
 
       callback();
 
-      const receipt: any = await account!.waitForTransaction(
-        tx.transaction_hash,
-        { retryInterval: 200, errorStates: ["REVERTED"] }
-      );
+      const receipt: any = await waitForTransaction(tx.transaction_hash, 0, account!);
 
       const tokenMetadataEvent = receipt.events.find(
         (event: any) => event.data.length === 14
@@ -202,10 +223,7 @@ export const useSystemCalls = () => {
         { tip: TIP_AMOUNT }
       );
 
-      const receipt: any = await account!.waitForTransaction(
-        tx.transaction_hash,
-        { retryInterval: 200, errorStates: ["REVERTED"] }
-      );
+      const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
 
       const tokenMetadataEvent = receipt.events.find(
         (event: any) => event.data.length === 14
@@ -361,10 +379,7 @@ export const useSystemCalls = () => {
         { tip: TIP_AMOUNT }
       );
 
-      const receipt: any = await account!.waitForTransaction(
-        tx.transaction_hash,
-        { retryInterval: 200, errorStates: ["REVERTED"] }
-      );
+      const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
 
       const tokenId = parseInt(receipt.events[1].data[2], 16);
       const tokenURI = await getBeastTokenURI(tokenId);
@@ -379,22 +394,15 @@ export const useSystemCalls = () => {
 
   const mintSepoliaLords = async (account: any) => {
     try {
-      let tx = await account!.execute(
-        [
-          {
-            contractAddress:
-              "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-            entrypoint: "mint",
-            calldata: [account.address, (100e18).toString(), "0x0"],
-          },
-        ],
-        { tip: TIP_AMOUNT }
-      );
+      let tx = await account!.execute([
+        {
+          contractAddress: "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+          entrypoint: "mint",
+          calldata: [account.address, 100e18.toString(), "0x0"],
+        },
+      ], { tip: TIP_AMOUNT });
 
-      await account!.waitForTransaction(tx.transaction_hash, {
-        retryInterval: 200,
-        errorStates: ["REVERTED"],
-      });
+      await waitForTransaction(tx.transaction_hash, 0);
     } catch (error) {
       console.error("Error minting sepolia lords:", error);
     }
@@ -470,7 +478,7 @@ export const useSystemCalls = () => {
           ],
         },
       ],
-      () => {}
+      () => { }
     );
   };
 

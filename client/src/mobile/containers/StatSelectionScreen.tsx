@@ -187,9 +187,9 @@ export default function StatSelectionScreen() {
                 {description}
               </Typography>
 
-              <Typography sx={styles.statHelperText}>
+              <Box sx={styles.statHelperText}>
                 {STAT_HELPER_TEXT(stat as keyof Stats)}
-              </Typography>
+              </Box>
 
               <Box sx={styles.statControls}>
                 <Button

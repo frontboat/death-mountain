@@ -5,7 +5,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import { Box, Button, IconButton, Slider, Typography } from '@mui/material';
+import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 
 interface SettingsProps {
@@ -13,7 +13,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onBack }: SettingsProps) {
-  const { setUseMobileClient } = useUIStore();
+  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro } = useUIStore();
   const { volume, setVolume, muted, setMuted } = useSound();
 
   const handleSwitchToMobile = () => {
@@ -80,6 +80,40 @@ export default function Settings({ onBack }: SettingsProps) {
           </Box>
         </Box>
 
+        <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+        {/* Animations Section */}
+        <Box sx={styles.settingSection}>
+          <Typography sx={[styles.sectionTitle]}>Animations</Typography>
+          <Box sx={styles.animationsControl}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={skipIntroOutro}
+                  onChange={(e) => setSkipIntroOutro(e.target.checked)}
+                  sx={styles.checkbox}
+                />
+              }
+              label="Skip intro and outro"
+              sx={styles.checkboxLabel}
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={skipAllAnimations}
+                  onChange={(e) => setSkipAllAnimations(e.target.checked)}
+                  sx={styles.checkbox}
+                />
+              }
+              label="Skip all animations"
+              sx={styles.checkboxLabel}
+            />
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
         {/* Client Settings */}
         <Box sx={styles.settingSection}>
           <Typography sx={styles.sectionTitle} color="primary">
@@ -117,7 +151,7 @@ const styles = {
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    gap: 2,
+    gap: 1.5,
   },
   settingSection: {
     display: 'flex',
@@ -205,5 +239,28 @@ const styles = {
   },
   icon: {
     mr: 1,
+  },
+  animationsControl: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 0.75,
+  },
+  checkbox: {
+    color: '#d0c98d',
+    '&.Mui-checked': {
+      color: '#d0c98d',
+    },
+    '&:hover': {
+      backgroundColor: 'rgba(208, 201, 141, 0.08)',
+    },
+  },
+  checkboxLabel: {
+    color: '#d0c98d',
+    fontSize: '0.8rem',
+    fontFamily: 'Cinzel, Georgia, serif',
+    mb: -1.5,
+    '& .MuiFormControlLabel-label': {
+      fontWeight: 500,
+    },
   },
 }; 

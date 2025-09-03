@@ -185,6 +185,14 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
         "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
       method: "mint",
     },
+    {
+      target: "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+      method: "approve",
+    },
+    {
+      target: "0x02b481049177d5947b7ac5b40ae231c14af517c8cdc5506fb2529f064fc47edd",
+      method: "buy_game",
+    }
   ];
 
   return {

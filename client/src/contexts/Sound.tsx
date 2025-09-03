@@ -41,10 +41,27 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   const audioRef = useRef(new Audio(tracks.Intro));
   audioRef.current.loop = true;
 
+  const savedVolume = typeof window !== 'undefined' ? localStorage.getItem('soundVolume') : null;
+  const savedMuted = typeof window !== 'undefined' ? localStorage.getItem('soundMuted') : null;
+
   const [playing, setPlaying] = useState((isMobile || useMobileClient) ? true : false);
-  const [volume, setVolume] = useState(0.5);
-  const [muted, setMuted] = useState(false);
+  const [volume, setVolumeState] = useState(savedVolume ? parseFloat(savedVolume) : 0.5);
+  const [muted, setMutedState] = useState(savedMuted === 'true');
   const [hasInteracted, setHasInteracted] = useState(false)
+
+  const setVolume = (newVolume: number) => {
+    setVolumeState(newVolume);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('soundVolume', newVolume.toString());
+    }
+  };
+
+  const setMuted = (newMuted: boolean) => {
+    setMutedState(newMuted);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('soundMuted', newMuted.toString());
+    }
+  };
 
   useEffect(() => {
     audioRef.current.volume = volume;
@@ -53,26 +70,30 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (useMobileClient && !muted) {
       setPlaying(true);
-    } else {
+    } else if (useMobileClient && muted) {
       setPlaying(false);
     }
-  }, [useMobileClient]);
+  }, [useMobileClient, muted]);
 
   useEffect(() => {
     const handleFirstInteraction = () => {
       setHasInteracted(true);
-      if (playing) { audioRef.current.play().catch(() => { }); }
+      if (playing && !muted) { audioRef.current.play().catch(() => { }); }
       document.removeEventListener('click', handleFirstInteraction);
     };
     document.addEventListener('click', handleFirstInteraction);
     return () => {
       document.removeEventListener('click', handleFirstInteraction);
     };
-  }, []);
+  }, [playing, muted]);
 
   useEffect(() => {
-    playing ? audioRef.current.play().catch(() => { }) : audioRef.current.pause();
-  }, [playing]);
+    if (playing && !muted) {
+      audioRef.current.play().catch(() => { });
+    } else {
+      audioRef.current.pause();
+    }
+  }, [playing, muted]);
 
   useEffect(() => {
     let newTrack = null;

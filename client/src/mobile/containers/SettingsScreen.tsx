@@ -1,9 +1,5 @@
-import { useStarknetApi } from '@/api/starknet';
 import { useSound } from '@/contexts/Sound';
 import { useController } from '@/contexts/controller';
-import { useGameStore } from '@/stores/gameStore';
-import { Item } from '@/types/game';
-import { processGameEvent } from '@/utils/events';
 import { ellipseAddress } from '@/utils/utils';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MusicOffIcon from '@mui/icons-material/MusicOff';
@@ -13,28 +9,11 @@ import { useNavigate } from 'react-router-dom';
 
 export default function SettingsScreen() {
   const navigate = useNavigate();
-  const { gameId, setAdventurer, setBag, setMarketItemIds, setBeast, setCollectable } = useGameStore();
-  const { playing, setPlaying, volume, setVolume } = useSound();
+  const { muted, setMuted, volume, setVolume } = useSound();
   const { account, address, playerName, login, openProfile } = useController();
-  const { getGameState } = useStarknetApi();
 
   const handleExitGame = () => {
     navigate('/survivor');
-  };
-
-  const handleUnstuck = async () => {
-    const gameState = await getGameState(gameId!);
-    if (!gameState) return;
-
-    setAdventurer(gameState.adventurer);
-    setBag(Object.values(gameState.bag).filter((item: any) => typeof item === "object" && item.id !== 0) as Item[]);
-    setMarketItemIds(gameState.market);
-
-    if (gameState.adventurer.beast_health > 0) {
-      let beast = processGameEvent({ action_count: 0, details: { beast: gameState.beast } }).beast!;
-      setBeast(beast);
-      setCollectable(beast.isCollectable ? beast : null);
-    }
   };
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {
@@ -89,9 +68,9 @@ export default function SettingsScreen() {
                 alignItems: 'center',
                 '&:hover': { opacity: 0.8 }
               }}
-              onClick={() => setPlaying(!playing)}
+              onClick={() => setMuted(!muted)}
             >
-              {playing ?
+              {!muted ?
                 <MusicNoteIcon fontSize='medium' htmlColor='#80FF00' /> :
                 <MusicOffIcon fontSize='medium' htmlColor='#80FF00' />
               }
@@ -114,16 +93,6 @@ export default function SettingsScreen() {
       <Box sx={styles.section}>
         <Box sx={styles.sectionHeader}>
           <Typography sx={styles.sectionTitle}>Game</Typography>
-        </Box>
-        <Box sx={styles.settingItem}>
-          <Button
-            variant="contained"
-            onClick={handleUnstuck}
-            sx={styles.unstuckButton}
-            fullWidth
-          >
-            UNSTUCK ADVENTURER
-          </Button>
         </Box>
 
         <Box sx={styles.settingItem}>
@@ -194,20 +163,6 @@ const styles = {
     },
     '& .MuiSlider-rail': {
       backgroundColor: 'rgba(128, 255, 0, 0.2)',
-    },
-  },
-  unstuckButton: {
-    width: '100%',
-    background: 'rgba(128, 255, 0, 0.15)',
-    color: '#80FF00',
-    border: '1px solid rgba(128, 255, 0, 0.2)',
-    '&:hover': {
-      backgroundColor: 'rgba(128, 255, 0, 0.25)',
-    },
-    '&:disabled': {
-      background: 'rgba(128, 255, 0, 0.1)',
-      color: 'rgba(128, 255, 0, 0.5)',
-      border: '1px solid rgba(128, 255, 0, 0.1)',
     },
   },
   exitButton: {
