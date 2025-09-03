@@ -25,6 +25,7 @@ import {
 } from "react";
 import { useAnalytics } from "@/utils/analytics";
 import { useMarketStore } from "@/stores/marketStore";
+import { useUIStore } from "@/stores/uiStore";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -52,7 +53,6 @@ const delayTimes: any = {
   attack: 2000,
   beast_attack: 2000,
   flee: 1000,
-  level_up: 2000,
 };
 
 const ExplorerLogEvents = [
@@ -82,7 +82,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const { getSettingsDetails, getTokenMetadata, getGameState } =
     useStarknetApi();
   const { getGameEvents } = useGameEvents();
-  const { gameStartedEvent, playerDiedEvent } = useAnalytics();
+  const { gameStartedEvent } = useAnalytics();
 
   const {
     gameId,
@@ -108,6 +108,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setMetadata,
   } = useGameStore();
   const { setIsOpen } = useMarketStore();
+  const { skipAllAnimations, skipIntroOutro } = useUIStore();
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
   const [spectating, setSpectating] = useState(false);
@@ -223,19 +224,16 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
 
-      if (event.adventurer!.health === 0 && !skipDelay) {
+      if (event.adventurer!.health === 0 && !skipDelay && !skipIntroOutro) {
         setShowOverlay(false);
         setVideoQueue((prev) => [...prev, streamIds.death]);
-        playerDiedEvent({
-          adventurerId: event.adventurer!.id,
-          xp: event.adventurer!.xp,
-        });
       }
 
       if (
         !skipDelay &&
         event.adventurer!.item_specials_seed &&
-        event.adventurer!.item_specials_seed !== adventurer?.item_specials_seed
+        event.adventurer!.item_specials_seed !== adventurer?.item_specials_seed &&
+        !skipAllAnimations
       ) {
         setShowOverlay(false);
         setVideoQueue((prev) => [...prev, streamIds.specials_unlocked]);
@@ -291,7 +289,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setBattleEvent(event);
     }
 
-    if (getVideoId(event) && !skipDelay) {
+    if (getVideoId(event) && !skipDelay && !skipAllAnimations) {
       setShowOverlay(false);
       setVideoQueue((prev) => [...prev, getVideoId(event)!]);
     }

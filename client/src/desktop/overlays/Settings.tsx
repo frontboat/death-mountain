@@ -1,7 +1,7 @@
-import { useStarknetApi } from '@/api/starknet';
 import { useSound } from '@/contexts/Sound';
 import discordIcon from '@/desktop/assets/images/discord.png';
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import CloseIcon from '@mui/icons-material/Close';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -9,19 +9,15 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import XIcon from '@mui/icons-material/X';
-import { Box, Button, Divider, IconButton, Slider, Typography } from '@mui/material';
-import { useState } from 'react';
+import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import WalletConnect from '../components/WalletConnect';
-import { processGameEvent } from '@/utils/events';
-import { Item } from '@/types/game';
 
 export default function SettingsOverlay() {
-  const { gameId, showSettings, setShowSettings, setAdventurer, setBag, setMarketItemIds, setBeast, setCollectable } = useGameStore();
+  const { showSettings, setShowSettings } = useGameStore();
   const { volume, setVolume, muted, setMuted } = useSound();
-  const { getGameState } = useStarknetApi();
+  const { skipAllAnimations, setSkipAllAnimations } = useUIStore();
   const navigate = useNavigate();
-  const [unstuckLoading, setUnstuckLoading] = useState(false);
 
   const handleExitGame = () => {
     navigate('/');
@@ -31,24 +27,6 @@ export default function SettingsOverlay() {
     setVolume((newValue as number) / 100);
   };
 
-  const handleUnstuck = async () => {
-    setUnstuckLoading(true);
-
-    const gameState = await getGameState(gameId!);
-    if (!gameState) return;
-
-    setAdventurer(gameState.adventurer);
-    setBag(Object.values(gameState.bag).filter((item: any) => typeof item === "object" && item.id !== 0) as Item[]);
-    setMarketItemIds(gameState.market);
-
-    if (gameState.adventurer.beast_health > 0) {
-      let beast = processGameEvent({ action_count: 0, details: { beast: gameState.beast } }).beast!;
-      setBeast(beast);
-      setCollectable(beast.isCollectable ? beast : null);
-    }
-
-    setUnstuckLoading(false);
-  };
 
   return (
     <>
@@ -119,18 +97,29 @@ export default function SettingsOverlay() {
 
               <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
+              {/* Animations Section */}
+              <Box sx={styles.section}>
+                <Typography sx={[styles.sectionTitle, { mb: -0.5 }]}>Animations</Typography>
+                <Box sx={styles.animationsControl}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={skipAllAnimations}
+                        onChange={(e) => setSkipAllAnimations(e.target.checked)}
+                        sx={styles.checkbox}
+                      />
+                    }
+                    label="Skip all animations"
+                    sx={styles.checkboxLabel}
+                  />
+                </Box>
+              </Box>
+
+              <Divider sx={{ mb: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
               {/* Game Section */}
               <Box sx={styles.section}>
                 <Typography sx={styles.sectionTitle}>Game</Typography>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  onClick={handleUnstuck}
-                  disabled={unstuckLoading}
-                  sx={styles.unstuckButton}
-                >
-                  Unstuck Adventurer
-                </Button>
 
                 <Button
                   variant="contained"
@@ -303,25 +292,6 @@ const styles = {
       border: '2px solid #d0c98d',
     },
   },
-  unstuckButton: {
-    background: 'rgba(128, 255, 0, 0.15)',
-    border: '2px solid rgba(128, 255, 0, 0.3)',
-    color: '#80FF00',
-    fontFamily: 'Cinzel, Georgia, serif',
-    fontWeight: 500,
-    fontSize: '0.8rem',
-    letterSpacing: '0.5px',
-    transition: 'all 0.2s',
-    '&:hover': {
-      background: 'rgba(128, 255, 0, 0.25)',
-      border: '2px solid rgba(128, 255, 0, 0.4)',
-    },
-    '&:disabled': {
-      background: 'rgba(128, 255, 0, 0.1)',
-      border: '2px solid rgba(128, 255, 0, 0.2)',
-      color: 'rgba(128, 255, 0, 0.5)',
-    },
-  },
   exitGameButton: {
     background: 'rgba(255, 0, 0, 0.15)',
     border: '2px solid rgba(255, 0, 0, 0.3)',
@@ -351,5 +321,27 @@ const styles = {
       background: 'rgba(24, 40, 24, 0.5)',
     },
     padding: '8px',
+  },
+  checkbox: {
+    color: '#d0c98d',
+    '&.Mui-checked': {
+      color: '#d0c98d',
+    },
+    '&:hover': {
+      backgroundColor: 'rgba(208, 201, 141, 0.08)',
+    },
+  },
+  checkboxLabel: {
+    color: '#d0c98d',
+    fontSize: '0.8rem',
+    fontFamily: 'Cinzel, Georgia, serif',
+    '& .MuiFormControlLabel-label': {
+      fontWeight: 500,
+    },
+  },
+  animationsControl: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 0.75,
   },
 };

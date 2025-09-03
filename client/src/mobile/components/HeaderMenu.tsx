@@ -26,7 +26,7 @@ interface HeaderMenuProps {
 }
 
 function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
-  const { playing, setPlaying, volume, setVolume } = useSound();
+  const { muted, setMuted, volume, setVolume } = useSound();
   const { setGameSettingsListOpen, setUseMobileClient } = useUIStore();
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {
@@ -73,9 +73,9 @@ function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
               alignItems: "center",
               "&:hover": { opacity: 0.8 },
             }}
-            onClick={() => setPlaying(!playing)}
+            onClick={() => setMuted(!muted)}
           >
-            {playing ? (
+            {!muted ? (
               <VolumeUpIcon fontSize="medium" sx={{ color: "#80FF00" }} />
             ) : (
               <VolumeOffIcon fontSize="medium" sx={{ color: "#80FF00" }} />

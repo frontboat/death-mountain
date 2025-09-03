@@ -4,13 +4,14 @@ import { getContractByName } from "@dojoengine/core";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import TheatersIcon from '@mui/icons-material/Theaters';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Box, Button, IconButton, Pagination, Typography } from "@mui/material";
+import { Box, Button, IconButton, Pagination, Skeleton, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import {
-  useSubscribeGameTokens
-} from "metagame-sdk";
+import { useGameTokenRanking, useGameTokens } from "metagame-sdk/sql";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
+import { useController } from "@/contexts/controller";
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 interface LeaderboardProps {
   onBack: () => void;
@@ -18,7 +19,10 @@ interface LeaderboardProps {
 
 export default function Leaderboard({ onBack }: LeaderboardProps) {
   const navigate = useNavigate();
+  const { address } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
+
+  const [playerBestGame, setPlayerBestGame] = useState<any>(null);
 
   const handleChange = (event: any, newValue: number) => {
     goToPage(newValue - 1);
@@ -29,23 +33,47 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     currentNetworkConfig.namespace,
     "game_token_systems"
   )?.address;
+  let mintedByAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon);
+  let settings_id = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined;
 
   const {
+    loading,
     games,
     pagination: {
       currentPage,
       totalPages,
       goToPage,
     },
-  } = useSubscribeGameTokens({
+  } = useGameTokens({
     pagination: {
       pageSize: 10,
-      sortBy: "score",
-      sortOrder: "desc",
     },
-    minted_by_address: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon),
-    settings_id: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined,
+    sortBy: "score",
+    sortOrder: "desc",
+    mintedByAddress,
+    settings_id,
   });
+
+  const { games: playerBestGames } = useGameTokens({
+    owner: address,
+    limit: 1,
+    sortBy: "score",
+    sortOrder: "desc",
+    mintedByAddress,
+    settings_id,
+  });
+
+  let tokenResult = useGameTokenRanking({
+    tokenId: playerBestGames[0]?.token_id || 0,
+    mintedByAddress,
+    settings_id,
+  });
+
+  useEffect(() => {
+    if (address && tokenResult.ranking) {
+      setPlayerBestGame(tokenResult.ranking);
+    }
+  }, [tokenResult.ranking]);
 
   const watchGame = (gameId: number) => {
     navigate(`/survivor/watch?id=${gameId}`);
@@ -69,6 +97,20 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
         >
           Leaderboard
         </Button>
+
+        {playerBestGame && <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Box textAlign={'center'}>
+            <Typography color='secondary' sx={{ fontSize: "13px" }}>
+              Your Rank: {playerBestGame.rank}
+            </Typography>
+          </Box>
+        </Box>}
       </Box>
 
       <Box sx={styles.listContainer}>
@@ -77,76 +119,63 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
             Loading...
           </Typography>
         ) : games.map((game: any, index: number) => (
-          <motion.div
-            key={game.token_id}
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
-              mass: 1,
-              delay: index * 0.1,
-            }}
-          >
-            <Box sx={styles.listItem}>
+          <Box sx={styles.listItem} key={game.token_id}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                maxWidth: "30vw",
+                flex: 1,
+              }}
+            >
+              <Box textAlign={'center'} width='20px'>
+                <Typography>{currentPage * 10 + index + 1}.</Typography>
+              </Box>
+
               <Box
                 sx={{
                   display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  maxWidth: "30vw",
-                  flex: 1,
+                  flexDirection: "column",
+                  textAlign: "left",
+                  overflow: "hidden",
                 }}
               >
-                <Box textAlign={'center'} width='20px'>
-                  <Typography>{currentPage * 10 + index + 1}.</Typography>
-                </Box>
-
-                <Box
+                {loading ? <Skeleton variant="text" sx={{ fontSize: '12px' }} /> : <Typography
+                  color="primary"
+                  lineHeight={1}
                   sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    textAlign: "left",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    width: "100%",
                     overflow: "hidden",
                   }}
                 >
-                  <Typography
-                    color="primary"
-                    lineHeight={1}
-                    sx={{
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      width: "100%",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {game.player_name}
-                  </Typography>
-                  <Typography
-                    color="secondary"
-                    sx={{ fontSize: "12px", opacity: 0.8 }}
-                  >
-                    ID: #{game.token_id}
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box textAlign={'center'} display={'flex'} alignItems={'center'} gap={1}>
-                <Typography>{game.score} xp</Typography>
-
-                <Box textAlign={'center'}>
-                  {game.game_over && <IconButton onClick={() => watchGame(game.token_id)}>
-                    <TheatersIcon fontSize='small' color='primary' />
-                  </IconButton>}
-
-                  {!game.game_over && <IconButton onClick={() => watchGame(game.token_id)}>
-                    <VisibilityIcon fontSize='small' color='primary' />
-                  </IconButton>}
-                </Box>
+                  {game.player_name}
+                </Typography>}
+                <Typography
+                  color="secondary"
+                  sx={{ fontSize: "12px", opacity: 0.8 }}
+                >
+                  ID: #{game.token_id}
+                </Typography>
               </Box>
             </Box>
-          </motion.div>
+
+            <Box textAlign={'center'} display={'flex'} alignItems={'center'} gap={1}>
+              <Typography>{game.score} xp</Typography>
+
+              <Box textAlign={'center'}>
+                {game.game_over && <IconButton onClick={() => watchGame(game.token_id)}>
+                  <TheatersIcon fontSize='small' color='primary' />
+                </IconButton>}
+
+                {!game.game_over && <IconButton onClick={() => watchGame(game.token_id)}>
+                  <VisibilityIcon fontSize='small' color='primary' />
+                </IconButton>}
+              </Box>
+            </Box>
+          </Box>
         ))}
 
         {games.length > 0 && <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', my: '2px' }}>
@@ -161,8 +190,11 @@ const styles = {
   adventurersHeader: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between",
     width: "100%",
     mb: 1,
+    pr: 1,
+    boxSizing: "border-box",
   },
   backButton: {
     minWidth: "auto",

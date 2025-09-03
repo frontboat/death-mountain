@@ -12,30 +12,43 @@ import InventoryOverlay from './Inventory';
 import MarketOverlay from './Market';
 import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
+import { useUIStore } from '@/stores/uiStore';
+
+const NO_STATS = {
+  strength: 0,
+  dexterity: 0,
+  vitality: 0,
+  intelligence: 0,
+  wisdom: 0,
+  charisma: 0,
+  luck: 0,
+};
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue, spectating } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI, setCollectable } = useGameStore();
   const { cart, inProgress, setInProgress } = useMarketStore();
+  const { skipAllAnimations } = useUIStore();
+
+  const [isExploring, setIsExploring] = useState(false);
   const [isSelectingStats, setIsSelectingStats] = useState(false);
-  const [selectedStats, setSelectedStats] = useState({
-    strength: 0,
-    dexterity: 0,
-    vitality: 0,
-    intelligence: 0,
-    wisdom: 0,
-    charisma: 0,
-    luck: 0
-  });
+  const [selectedStats, setSelectedStats] = useState(NO_STATS);
 
   useEffect(() => {
+    setIsExploring(false);
     setIsSelectingStats(false);
     setInProgress(false);
-  }, [actionFailed]);
+    setSelectedStats(NO_STATS);
+  }, [adventurer!.action_count, actionFailed]);
 
   const handleExplore = async () => {
-    setShowOverlay(false);
-    setVideoQueue([streamIds.explore]);
+    if (!skipAllAnimations) {
+      setShowOverlay(false);
+      setVideoQueue([streamIds.explore]);
+    } else {
+      setIsExploring(true);
+    }
+
     executeGameAction({ type: 'explore', untilBeast: false });
   };
 
@@ -189,11 +202,16 @@ export default function ExploreOverlay() {
             variant="contained"
             onClick={cart.items.length > 0 || cart.potions > 0 ? handleCheckout : handleExplore}
             sx={styles.exploreButton}
-            disabled={inProgress}
+            disabled={inProgress || isExploring}
           >
             {inProgress ? (
               <Box display={'flex'} alignItems={'baseline'}>
                 <Typography sx={styles.buttonText}>Processing</Typography>
+                <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
+              </Box>
+            ) : isExploring ? (
+              <Box display={'flex'} alignItems={'baseline'}>
+                <Typography sx={styles.buttonText}>Exploring</Typography>
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
               </Box>
             ) : (
