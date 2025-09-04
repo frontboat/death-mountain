@@ -14,31 +14,20 @@ import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
 import { useUIStore } from '@/stores/uiStore';
 
-const NO_STATS = {
-  strength: 0,
-  dexterity: 0,
-  vitality: 0,
-  intelligence: 0,
-  wisdom: 0,
-  charisma: 0,
-  luck: 0,
-};
-
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue, spectating } = useGameDirector();
-  const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI, setCollectable } = useGameStore();
+  const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI, setCollectable, selectedStats, setSelectedStats } = useGameStore();
   const { cart, inProgress, setInProgress } = useMarketStore();
   const { skipAllAnimations } = useUIStore();
 
   const [isExploring, setIsExploring] = useState(false);
   const [isSelectingStats, setIsSelectingStats] = useState(false);
-  const [selectedStats, setSelectedStats] = useState({ ...NO_STATS });
 
   useEffect(() => {
     setIsExploring(false);
     setIsSelectingStats(false);
     setInProgress(false);
-    setSelectedStats({ ...NO_STATS });
+    setSelectedStats({ strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 });
   }, [adventurer!.action_count, actionFailed]);
 
   const handleExplore = async () => {
@@ -58,10 +47,6 @@ export default function ExploreOverlay() {
       type: 'select_stat_upgrades',
       statUpgrades: selectedStats
     });
-  };
-
-  const handleStatsChange = (stats: typeof selectedStats) => {
-    setSelectedStats(stats);
   };
 
   const handleCheckout = () => {
@@ -171,7 +156,7 @@ export default function ExploreOverlay() {
         </Box>
       </Box>
 
-      <InventoryOverlay onStatsChange={handleStatsChange} />
+      <InventoryOverlay />
       <TipsOverlay />
       <SettingsOverlay />
 
