@@ -1,5 +1,5 @@
 import { useGameDirector } from "@/desktop/contexts/GameDirector";
-import { useSound } from "@/contexts/Sound";
+import { useSound } from "@/desktop/contexts/Sound";
 import { useGameStore } from "@/stores/gameStore";
 import { streamIds } from "@/utils/cloudflare";
 import { transitionVideos } from "@/utils/events";

@@ -1,4 +1,4 @@
-import { useSound } from '@/contexts/Sound';
+import { useSound } from '@/mobile/contexts/Sound';
 import { useController } from '@/contexts/controller';
 import { ellipseAddress } from '@/utils/utils';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';

@@ -55,7 +55,7 @@ function DojoApp() {
     <DojoSdkProvider
       sdk={sdk}
       dojoConfig={createDojoConfig(currentNetworkConfig)}
-      clientFn={() => {}}
+      clientFn={() => { }}
     >
       <MetagameProvider>
         <App />

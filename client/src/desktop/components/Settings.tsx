@@ -1,5 +1,4 @@
-
-import { useSound } from '@/contexts/Sound';
+import { useSound } from '@/desktop/contexts/Sound';
 import { useUIStore } from '@/stores/uiStore';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
@@ -14,7 +13,7 @@ interface SettingsProps {
 
 export default function Settings({ onBack }: SettingsProps) {
   const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro } = useUIStore();
-  const { volume, setVolume, muted, setMuted } = useSound();
+  const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
 
   const handleSwitchToMobile = () => {
     setUseMobileClient(true);
@@ -22,6 +21,10 @@ export default function Settings({ onBack }: SettingsProps) {
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {
     setVolume((newValue as number) / 100);
+  };
+
+  const handleMusicVolumeChange = (_: Event, newValue: number | number[]) => {
+    setMusicVolume((newValue as number) / 100);
   };
 
   return (
@@ -47,11 +50,11 @@ export default function Settings({ onBack }: SettingsProps) {
       <Box sx={styles.settingsContainer}>
         {/* Sound Settings */}
         <Box sx={styles.settingSection}>
-          <Typography sx={styles.sectionTitle} color="primary">
-            Sound
-          </Typography>
+          <Typography sx={styles.sectionTitle}>Sound</Typography>
 
           <Box sx={styles.soundControl}>
+            <Typography width="45px">Sfx</Typography>
+
             <IconButton
               size="small"
               onClick={() => setMuted(!muted)}
@@ -76,6 +79,37 @@ export default function Settings({ onBack }: SettingsProps) {
             />
             <Typography sx={{ color: '#d0c98d', fontSize: '12px', minWidth: '35px', textAlign: 'right' }}>
               {Math.round(volume * 100)}%
+            </Typography>
+          </Box>
+
+
+          <Box sx={styles.soundControl}>
+            <Typography width="45px">Music</Typography>
+
+            <IconButton
+              size="small"
+              onClick={() => setMusicMuted(!musicMuted)}
+              sx={{ color: !musicMuted ? '#d0c98d' : '#666', padding: '4px' }}
+            >
+              {musicMuted ? (
+                <VolumeOffIcon sx={{ fontSize: 22 }} />
+              ) : (
+                <VolumeUpIcon sx={{ fontSize: 22 }} />
+              )}
+            </IconButton>
+            <Slider
+              value={Math.round(musicVolume * 100)}
+              onChange={handleMusicVolumeChange}
+              disabled={musicMuted}
+              aria-labelledby="volume-slider"
+              valueLabelDisplay="auto"
+              step={1}
+              min={0}
+              max={100}
+              sx={styles.volumeSlider}
+            />
+            <Typography sx={{ color: '#d0c98d', fontSize: '12px', minWidth: '35px', textAlign: 'right' }}>
+              {Math.round(musicVolume * 100)}%
             </Typography>
           </Box>
         </Box>
@@ -132,7 +166,7 @@ export default function Settings({ onBack }: SettingsProps) {
           </Button>
         </Box>
       </Box>
-    </motion.div>
+    </motion.div >
   );
 }
 
@@ -151,7 +185,7 @@ const styles = {
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    gap: 1.5,
+    gap: 1,
   },
   settingSection: {
     display: 'flex',
@@ -178,7 +212,7 @@ const styles = {
   soundControl: {
     display: 'flex',
     alignItems: 'center',
-    gap: 1.5,
+    gap: 1,
     padding: '6px 10px',
     background: 'rgba(24, 40, 24, 0.3)',
     border: '1px solid rgba(8, 62, 34, 0.5)',

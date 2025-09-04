@@ -4,7 +4,8 @@ import { SnackbarProvider } from 'notistack';
 import { BrowserRouter, Route, Routes, } from "react-router-dom";
 
 import { ControllerProvider } from '@/contexts/controller';
-import { SoundProvider } from '@/contexts/Sound';
+import { SoundProvider } from '@/desktop/contexts/Sound';
+import { SoundProvider as MobileSoundProvider } from '@/mobile/contexts/Sound';
 import { GameDirector } from '@/desktop/contexts/GameDirector';
 import { GameDirector as MobileGameDirector } from '@/mobile/contexts/GameDirector';
 import { useUIStore } from '@/stores/uiStore';
@@ -26,10 +27,10 @@ function App() {
         <SnackbarProvider anchorOrigin={{ vertical: 'top', horizontal: 'center' }} preventDuplicate autoHideDuration={3000}>
           <ControllerProvider>
             <StatisticsProvider>
-              <SoundProvider>
 
-                {!shouldShowMobile && (
-                  <ThemeProvider theme={desktopTheme}>
+              {!shouldShowMobile && (
+                <ThemeProvider theme={desktopTheme}>
+                  <SoundProvider>
                     <GameDirector>
                       <Box className='main'>
 
@@ -41,11 +42,13 @@ function App() {
 
                       </Box>
                     </GameDirector>
-                  </ThemeProvider>
-                )}
+                  </SoundProvider>
+                </ThemeProvider>
+              )}
 
-                {shouldShowMobile && (
-                  <ThemeProvider theme={mobileTheme}>
+              {shouldShowMobile && (
+                <ThemeProvider theme={mobileTheme}>
+                  <MobileSoundProvider>
                     <Box className='bgImage'>
                       <MobileGameDirector>
                         <Box className='main'>
@@ -62,15 +65,15 @@ function App() {
                         </Box>
                       </MobileGameDirector>
                     </Box>
-                  </ThemeProvider>
-                )}
+                  </MobileSoundProvider>
+                </ThemeProvider>
+              )}
 
-              </SoundProvider>
             </StatisticsProvider>
           </ControllerProvider>
         </SnackbarProvider>
       </StyledEngineProvider>
-    </BrowserRouter>
+    </BrowserRouter >
   );
 }
 

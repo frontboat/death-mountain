@@ -15,7 +15,7 @@ import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import XIcon from "@mui/icons-material/X";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import ComputerIcon from "@mui/icons-material/Computer";
-import { useSound } from "@/contexts/Sound";
+import { useSound } from "@/mobile/contexts/Sound";
 import { useUIStore } from "@/stores/uiStore";
 import { isDesktop } from "react-device-detect";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
