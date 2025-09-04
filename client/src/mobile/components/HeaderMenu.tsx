@@ -15,7 +15,7 @@ import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import XIcon from "@mui/icons-material/X";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import ComputerIcon from "@mui/icons-material/Computer";
-import { useSound } from "@/contexts/Sound";
+import { useSound } from "@/mobile/contexts/Sound";
 import { useUIStore } from "@/stores/uiStore";
 import { isDesktop } from "react-device-detect";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
@@ -26,7 +26,7 @@ interface HeaderMenuProps {
 }
 
 function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
-  const { playing, setPlaying, volume, setVolume } = useSound();
+  const { muted, setMuted, volume, setVolume } = useSound();
   const { setGameSettingsListOpen, setUseMobileClient } = useUIStore();
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {
@@ -73,9 +73,9 @@ function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
               alignItems: "center",
               "&:hover": { opacity: 0.8 },
             }}
-            onClick={() => setPlaying(!playing)}
+            onClick={() => setMuted(!muted)}
           >
-            {playing ? (
+            {!muted ? (
               <VolumeUpIcon fontSize="medium" sx={{ color: "#80FF00" }} />
             ) : (
               <VolumeOffIcon fontSize="medium" sx={{ color: "#80FF00" }} />

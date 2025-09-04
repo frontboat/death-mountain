@@ -11,7 +11,7 @@ import { Box, Button, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import {
   useGameTokens as useMetagameTokens
-} from "metagame-sdk";
+} from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -30,7 +30,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
     namespace,
     "game_token_systems"
   )?.address;
-  const { data: gamesData, loading: gamesLoading } = useMetagameTokens({
+  const { games: gamesData, loading: gamesLoading } = useMetagameTokens({
     gameAddresses: [GAME_TOKEN_ADDRESS],
     owner: address,
   });

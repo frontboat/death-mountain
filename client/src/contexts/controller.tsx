@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
 import { useAnalytics } from "@/utils/analytics";
+import { useUIStore } from "@/stores/uiStore";
 
 export interface ControllerContext {
   account: any;
@@ -48,6 +49,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { createBurnerAccount, getTokenBalances, goldenPassReady } =
     useStarknetApi();
   const { getGameTokens } = useGameTokens();
+  const { skipIntroOutro } = useUIStore();
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
   const [creatingBurner, setCreatingBurner] = useState(false);
@@ -59,7 +61,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     () => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl }),
     []
   );
-  
+
   useEffect(() => {
     if (account) {
       fetchTokenBalances();
@@ -112,8 +114,10 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
     if (gameId) {
       navigate(`/survivor/play?id=${gameId}`, { replace: true });
-      setShowOverlay(false);
       fetchTokenBalances();
+      if (!skipIntroOutro) {
+        setShowOverlay(false);
+      }
     } else {
       navigate(`/`, { replace: true });
     }
@@ -135,7 +139,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         .paymentTokens
     );
     setTokenBalances(balances);
-
     if (
       parseInt(balances.TICKET) < 10 &&
       import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA"

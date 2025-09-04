@@ -114,7 +114,7 @@ export default function CombatOverlay() {
         </Box>
       </Box>
 
-      <InventoryOverlay />
+      <InventoryOverlay disabledEquip={attackInProgress || fleeInProgress || equipInProgress} />
       <TipsOverlay combatStats={combatStats} />
       <SettingsOverlay />
 

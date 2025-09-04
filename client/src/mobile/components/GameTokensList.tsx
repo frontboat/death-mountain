@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getContractByName } from "@dojoengine/core";
 import { useDynamicConnector } from "@/contexts/starknet";
-import { useGameTokens as useMetagameTokens } from "metagame-sdk";
+import { useGameTokens as useMetagameTokens } from "metagame-sdk/sql";
 import { motion } from "framer-motion";
 
 export default function GameTokensList() {
@@ -29,7 +29,7 @@ export default function GameTokensList() {
     "game_token_systems"
   )?.address;
 
-  const { data: gamesData } = useMetagameTokens({
+  const { games: gamesData } = useMetagameTokens({
     gameAddresses: [GAME_TOKEN_ADDRESS],
     owner: account?.address,
   });

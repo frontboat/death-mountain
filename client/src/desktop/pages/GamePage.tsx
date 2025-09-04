@@ -8,6 +8,7 @@ import ExploreOverlay from "@/desktop/overlays/Explore";
 import LoadingOverlay from "@/desktop/overlays/Loading";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
+import { useUIStore } from "@/stores/uiStore";
 import { streamIds } from "@/utils/cloudflare";
 import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
@@ -38,7 +39,7 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
-  
+
   const {
     account,
     playerName,
@@ -55,6 +56,7 @@ export default function GamePage() {
     showOverlay,
     setShowOverlay,
   } = useGameStore();
+  const { skipIntroOutro } = useUIStore();
   const { setVideoQueue, actionFailed, spectating } = useGameDirector();
   const [padding, setPadding] = useState(getMenuLeftOffset());
 
@@ -95,7 +97,9 @@ export default function GamePage() {
     if (isPending) return;
 
     if (mode === "entering") {
-      setVideoQueue([streamIds.start]);
+      if (!skipIntroOutro) {
+        setVideoQueue([streamIds.start]);
+      }
       return;
     }
 
@@ -122,14 +126,20 @@ export default function GamePage() {
   }, []);
 
   async function mint() {
-    setVideoQueue([streamIds.start]);
+    if (!skipIntroOutro) {
+      setVideoQueue([streamIds.start]);
+    }
+
     let tokenId = await mintGame(playerName, settings_id);
     navigate(
       `/survivor/play?id=${tokenId}${mode === "practice" ? "&mode=practice" : ""
       }`,
       { replace: true }
     );
-    setShowOverlay(false);
+
+    if (!skipIntroOutro) {
+      setShowOverlay(false);
+    }
   }
 
   const isLoading = !gameId || !adventurer;

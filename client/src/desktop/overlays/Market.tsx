@@ -222,10 +222,21 @@ export default function MarketOverlay() {
               </Box>
               <Button
                 variant="outlined"
-                sx={{ height: '34px', width: '120px', justifyContent: 'center' }}
-                onClick={() => setShowCart(!showCart)}
+                onClick={handleCheckout}
+                disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0}
+                sx={{ height: '34px', width: '170px', justifyContent: 'center' }}
               >
-                Cart ({cart.potions + cart.items.length})
+                {inProgress
+                  ? <Box display={'flex'} alignItems={'baseline'}>
+                    <Typography>
+                      Processing
+                    </Typography>
+                    <div className='dotLoader yellow' />
+                  </Box>
+                  : <Typography>
+                    Purchase ({cart.potions + cart.items.length})
+                  </Typography>
+                }
               </Button>
             </Box>
 

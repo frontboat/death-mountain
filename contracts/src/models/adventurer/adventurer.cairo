@@ -561,16 +561,21 @@ pub impl ImplAdventurer of IAdventurer {
         }
     }
 
+    /// !IMPORTANT: Maximum base_damage is 2400. Increasing constants of name match bonuses can cause this function to
+    /// overflow.
     /// @notice Calculates the bonus damage provided by the jewelry when the attacker's
     /// weapon name matches the beast's name
     /// @param self: Item to calculate name match bonus damage for
     /// @param base_damage: Base damage amount before the jewelry bonus is applied
     /// @return The amount of bonus damage, or 0 if the item does not provide a name match damage
     /// bonus
-
     fn name_match_bonus_damage(self: Item, base_damage: u16) -> u16 {
         if (self.id == ItemId::PlatinumRing) {
-            base_damage * JEWELRY_BONUS_NAME_MATCH_PERCENT_PER_GREATNESS.into() * self.get_greatness().into() / 100
+            let bonus_damage: u32 = base_damage.into()
+                * JEWELRY_BONUS_NAME_MATCH_PERCENT_PER_GREATNESS.into()
+                * self.get_greatness().into()
+                / 100;
+            bonus_damage.try_into().unwrap()
         } else {
             0
         }
@@ -1422,6 +1427,15 @@ mod tests {
                 .into(),
             'should be 60hp name bonus',
         );
+    }
+
+    #[test]
+    #[available_gas(60180)]
+    fn max_name_match_bonus_damage() {
+        let base_damage = 2400;
+
+        let platinum_ring = Item { id: ItemId::PlatinumRing, xp: 400 };
+        assert(platinum_ring.name_match_bonus_damage(base_damage) == 1440, 'should be 1440 name bonus');
     }
 
     #[test]

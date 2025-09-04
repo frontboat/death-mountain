@@ -401,10 +401,17 @@ export default function MarketScreen() {
         {/* Items Grid */}
         <Box sx={styles.itemsGrid}>
           {filteredItems.map((item) => {
+            const canAfford = remainingGold >= item.price;
+            const inCart = cart.items.some(cartItem => cartItem.id === item.id);
+            const isOwned = isItemOwned(item.id);
+            const shouldGrayOut = (!canAfford && !isOwned && !inCart) || isOwned;
             return (
               <Paper
                 key={item.id}
-                sx={styles.itemCard}
+                sx={[
+                  styles.itemCard,
+                  shouldGrayOut && styles.itemUnaffordable
+                ]}
               >
                 <Box sx={styles.itemImageContainer}>
                   <Box
@@ -770,7 +777,7 @@ const styles = {
     minWidth: '60px',
     '&:disabled': {
       background: 'rgba(128, 255, 0, 0.1)',
-      color: 'rgba(128, 255, 0, 0.5)',
+      color: 'rgba(128, 255, 0, 1)',
     },
   },
   cartTitle: {
@@ -926,5 +933,8 @@ const styles = {
     '&:hover': {
       background: 'rgba(255, 165, 0, 0.2)',
     },
+  },
+  itemUnaffordable: {
+    opacity: 0.5,
   },
 };

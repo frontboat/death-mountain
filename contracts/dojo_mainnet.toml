@@ -1,22 +1,40 @@
 [world]
-name = "Realms World"
-website = "https://realms.world/"
+name = "Provable Games"
 description = "DNC"
 seed = "DNC"
 
 [env]
-chain_id = "SN_MAINNET"
-rpc_url = "https://api.cartridge.gg/x/starknet/mainnet"
-world_address = "0x06a9e4c6f0799160ea8ddc43ff982a5f83d7f633e9732ce42701de1288ff705f"
-world_block = 948010
+rpc_url = "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_8"
+world_address = "0x6f32bbc0defe926365f4b43d758453e3daae99e92dcd062bcb4c0eaa2b5c3e4"
 
 [namespace]
-default = "ls_0_0_1"
+default = "ls_0_0_6"
 
 [writers]
-"ls_0_0_1" = ["ls_0_0_1-game_systems", "ls_0_0_1-game_token_systems"]
+"ls_0_0_6" = [
+    "ls_0_0_6-game_systems", 
+    "ls_0_0_6-game_token_systems", 
+    "ls_0_0_6-settings_systems",
+    "ls_0_0_6-beast_systems",
+    "ls_0_0_6-adventurer_systems",
+    "ls_0_0_6-objectives_systems"
+]
+
+[migration]
+order_inits = [
+    "ls_0_0_6-game_systems",
+    "ls_0_0_6-loot_systems",
+    "ls_0_0_6-renderer_systems",
+    "ls_0_0_6-adventurer_systems",
+    "ls_0_0_6-beast_systems",
+    "ls_0_0_6-game_token_systems", 
+    "ls_0_0_6-settings_systems", 
+    "ls_0_0_6-objectives_systems"
+]
 
 [init_call_args]
-"ls_0_0_1-game_token_systems" = [
-    "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
+"ls_0_0_6-game_token_systems" = [
+    "0x1aebeb03d574e1b6c1c6d4e988b3cc3914705de9ec76b62d49967f26e616d4e", # account address
+    "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc", # denshokan address
+    "1" # Option::None for renderer address
 ]

@@ -9,6 +9,9 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAnalytics } from "@/utils/analytics";
 import { useEffect } from "react";
+import { useGameTokenRanking } from "metagame-sdk/sql";
+import { addAddressPadding } from "starknet";
+import { getContractByName } from "@dojoengine/core";
 
 export default function DeathScreen() {
   const { currentNetworkConfig } = useDynamicConnector();
@@ -42,11 +45,6 @@ export default function DeathScreen() {
       }`;
   }
 
-  let link =
-    currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
-      ? `https://lootsurvivor.io/survivor/watch?mode=practice&id=${gameId}`
-      : `https://lootsurvivor.io/survivor/watch?mode=real&id=${gameId}`;
-
   const shareMessage =
     finalBattleEvent?.type === "obstacle"
       ? `I got a score of ${adventurer?.xp
@@ -73,6 +71,18 @@ export default function DeathScreen() {
     }
   }, [gameId, adventurer]);
 
+  const GAME_TOKEN_ADDRESS = getContractByName(
+    currentNetworkConfig.manifest,
+    currentNetworkConfig.namespace,
+    "game_token_systems"
+  )?.address;
+
+  let tokenResult = useGameTokenRanking({
+    tokenId: gameId!,
+    mintedByAddress: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon),
+    settings_id: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined
+  });
+
   return (
     <motion.div
       initial="initial"
@@ -89,7 +99,12 @@ export default function DeathScreen() {
         <Box sx={styles.statsContainer}>
           <Box sx={styles.statCard}>
             <Typography sx={styles.statLabel}>Final Score</Typography>
-            <Typography sx={styles.statValue}>{adventurer?.xp || 0}</Typography>
+            <Typography sx={styles.statValue}>{tokenResult.ranking?.score || adventurer?.xp || 0}</Typography>
+          </Box>
+
+          <Box sx={styles.statCard}>
+            <Typography sx={styles.statLabel}>Rank</Typography>
+            <Typography sx={styles.statValue}>{tokenResult.ranking?.rank || 0}</Typography>
           </Box>
         </Box>
 
@@ -175,7 +190,7 @@ const styles = {
     background: "rgba(128, 255, 0, 0.1)",
     borderRadius: "12px",
     border: "1px solid rgba(128, 255, 0, 0.2)",
-    minWidth: "200px",
+    minWidth: "40%",
   },
   statLabel: {
     color: "rgba(128, 255, 0, 0.7)",
