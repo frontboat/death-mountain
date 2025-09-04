@@ -402,7 +402,7 @@ export const useSystemCalls = () => {
         },
       ], { tip: TIP_AMOUNT });
 
-      await waitForTransaction(tx.transaction_hash, 0);
+      await waitForTransaction(tx.transaction_hash, 0, account!);
     } catch (error) {
       console.error("Error minting sepolia lords:", error);
     }

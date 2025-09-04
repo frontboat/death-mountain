@@ -140,7 +140,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     );
     setTokenBalances(balances);
     if (
-      parseInt(balances.SLORDS) < 10 &&
+      parseInt(balances.TICKET) < 10 &&
       import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA"
     ) {
       await mintSepoliaLords(account);
