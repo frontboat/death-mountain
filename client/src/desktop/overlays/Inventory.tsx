@@ -24,6 +24,7 @@ const equipmentSlots = [
 ];
 
 interface InventoryOverlayProps {
+  disabledEquip?: boolean;
   onStatsChange?: (stats: {
     strength: number;
     dexterity: number;
@@ -297,7 +298,7 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
   );
 }
 
-export default function InventoryOverlay({ onStatsChange }: InventoryOverlayProps) {
+export default function InventoryOverlay({ onStatsChange, disabledEquip }: InventoryOverlayProps) {
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, bag, showInventory, setShowInventory } = useGameStore();
   const { equipItem, newInventoryItems, setNewInventoryItems } = useGameStore();
@@ -323,6 +324,10 @@ export default function InventoryOverlay({ onStatsChange }: InventoryOverlayProp
   }, [adventurer?.equipment, bag, actionFailed]);
 
   const handleItemClick = useCallback((item: any) => {
+    if (disabledEquip) {
+      return;
+    }
+
     if (isDropMode) {
       setItemsToDrop(prev => {
         if (prev.includes(item.id)) {
@@ -334,7 +339,7 @@ export default function InventoryOverlay({ onStatsChange }: InventoryOverlayProp
     } else {
       equipItem(item);
     }
-  }, [isDropMode, equipItem]);
+  }, [isDropMode, equipItem, disabledEquip]);
 
   const handleConfirmDrop = () => {
     setDropInProgress(true);
