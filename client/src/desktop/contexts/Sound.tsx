@@ -116,27 +116,6 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
     }
   }, [musicMuted]);
 
-  // Handle route-based music changes
-  useEffect(() => {
-    const currentPath = location.pathname;
-
-    // When navigating to /survivor/play, you can trigger specific music changes
-    if (currentPath === '/survivor/play') {
-      // Example: Start with Beginning track when entering play mode
-      if (gameId && adventurer) {
-        const level = calculateLevel(adventurer.xp);
-        if (level < 2) {
-          audioRef.current.src = tracks.Beginning;
-          if (!musicMuted) {
-            audioRef.current.load();
-            audioRef.current.play();
-            audioBackgroundRef.current.pause();
-          }
-        }
-      }
-    }
-  }, [location.pathname, gameId, adventurer, musicMuted]);
-
   useEffect(() => {
     let newTrack = null;
     if (location.pathname !== '/survivor/play') {
