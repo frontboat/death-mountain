@@ -91,7 +91,7 @@ class AudioManager {
   }
 
   private async crossfade(from: HTMLAudioElement, to: HTMLAudioElement, targetVolume: number) {
-    const duration = 3000;
+    const duration = 2000;
     const startTime = Date.now();
     const fromStartVolume = from.volume;
     const toStartVolume = to.volume;
