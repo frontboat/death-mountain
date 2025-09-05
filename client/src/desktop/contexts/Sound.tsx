@@ -1,5 +1,4 @@
 import { useGameStore } from '@/stores/gameStore';
-import { calculateLevel } from '@/utils/game';
 import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -10,52 +9,130 @@ const tracks: Record<string, string> = {
   Background: "/audio/background.mp3",
 };
 
-// Crossfade utility function
-const crossfade = (
-  fadeOutAudio: HTMLAudioElement,
-  fadeInAudio: HTMLAudioElement,
-  duration: number = 2000,
-  targetVolume: number = 1
-) => {
-  // Ensure both audio elements are ready
-  if (!fadeOutAudio || !fadeInAudio) return;
-  
-  // Ensure the fade-in audio is actually playing
-  if (fadeInAudio.paused) {
-    fadeInAudio.play().catch(() => {});
+class AudioManager {
+  private primary: HTMLAudioElement;
+  private background: HTMLAudioElement;
+  private isTransitioning = false;
+  private currentTrack: string | null = null;
+
+  constructor() {
+    this.primary = new Audio();
+    this.primary.loop = true;
+    this.background = new Audio(tracks.Background);
+    this.background.loop = true;
   }
-  
-  const startTime = Date.now();
-  const fadeOutStartVolume = fadeOutAudio.volume;
-  const fadeInStartVolume = fadeInAudio.volume;
 
-  const animate = () => {
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
+  setVolume(volume: number) {
+    this.primary.volume = volume;
+    this.background.volume = volume;
+  }
 
-    // Ease-in-out curve for smoother transition
-    const easeInOut = progress < 0.5 
-      ? 2 * progress * progress 
-      : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+  async play() {
+    await Promise.all([
+      this.primary.play().catch(() => { }),
+      this.background.play().catch(() => { })
+    ]);
+  }
 
-    // Fade out the first audio
-    fadeOutAudio.volume = fadeOutStartVolume * (1 - easeInOut);
-    
-    // Fade in the second audio
-    fadeInAudio.volume = fadeInStartVolume + (targetVolume - fadeInStartVolume) * easeInOut;
+  pause() {
+    this.primary.pause();
+    this.background.pause();
+  }
 
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      // Ensure final volumes are set correctly
-      fadeOutAudio.volume = 0;
-      fadeInAudio.volume = targetVolume;
-      fadeOutAudio.pause();
+  async switchToTrack(trackPath: string | null, volume: number) {
+    // If we're already playing background and want to play background, just return
+    if (!trackPath && !this.currentTrack && !this.isTransitioning) {
+      return;
     }
-  };
 
-  requestAnimationFrame(animate);
-};
+    // Allow overriding transitions when switching between specific tracks
+    // Only block transitions when switching to/from background
+    const isSwitchingToBackground = !trackPath;
+    const isSwitchingFromBackground = !this.currentTrack;
+
+    if (this.isTransitioning && (isSwitchingToBackground || isSwitchingFromBackground)) {
+      return; // Block only background-related transitions
+    }
+
+    this.isTransitioning = true;
+    this.currentTrack = trackPath;
+
+    if (!trackPath) {
+      // Switch to background
+      await this.crossfade(this.primary, this.background, volume);
+      this.primary.src = '';
+    } else {
+      // Switch to specific track
+      this.primary.src = trackPath;
+      await this.primary.load();
+      await this.crossfade(this.background, this.primary, volume);
+    }
+
+    this.isTransitioning = false;
+  }
+
+  private async crossfade(from: HTMLAudioElement, to: HTMLAudioElement, targetVolume: number) {
+    const duration = 3000;
+    const startTime = Date.now();
+    const fromStartVolume = from.volume;
+    const toStartVolume = to.volume;
+
+    // Start the target audio
+    await to.play().catch(() => { });
+
+    return new Promise<void>((resolve) => {
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeInOut = progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        from.volume = fromStartVolume * (1 - easeInOut);
+        to.volume = toStartVolume + (targetVolume - toStartVolume) * easeInOut;
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          from.volume = 0;
+          to.volume = targetVolume;
+          from.pause();
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(animate);
+    });
+  }
+
+  // Force stop current transition and immediately switch to new track
+  async forceSwitchToTrack(trackPath: string | null, volume: number) {
+    this.isTransitioning = false; // Stop any current transition
+    this.currentTrack = trackPath;
+
+    if (!trackPath) {
+      // Switch to background
+      this.primary.pause();
+      this.primary.src = '';
+      this.background.volume = volume;
+      await this.background.play().catch(() => { });
+    } else {
+      // Switch to specific track
+      this.background.pause();
+      this.primary.src = trackPath;
+      await this.primary.load();
+      this.primary.volume = volume;
+      await this.primary.play().catch(() => { });
+    }
+  }
+
+  destroy() {
+    this.primary.pause();
+    this.primary.src = '';
+    this.background.pause();
+    this.background.src = '';
+  }
+}
 
 interface SoundContextType {
   muted: boolean;
@@ -82,7 +159,7 @@ const SoundContext = createContext<SoundContextType>({
 });
 
 export const SoundProvider = ({ children }: PropsWithChildren) => {
-  const { gameId, adventurer, beast, showOverlay } = useGameStore();
+  const { gameId, adventurer, beast } = useGameStore();
   const location = useLocation();
 
   const savedVolume = typeof window !== 'undefined' ? localStorage.getItem('soundVolume') : null;
@@ -96,13 +173,8 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   const [musicVolume, setMusicVolumeState] = useState(savedMusicVolume ? parseFloat(savedMusicVolume) : 0.25);
   const [musicMuted, setMusicMutedState] = useState(savedMusicMuted === 'true');
   const [startTimestamp, setStartTimestamp] = useState(0);
-  const [isCrossfading, setIsCrossfading] = useState(false);
 
-  const audioRef = useRef(new Audio(tracks.Intro));
-  audioRef.current.loop = true;
-
-  const audioBackgroundRef = useRef(new Audio(tracks.Background));
-  audioBackgroundRef.current.loop = true;
+  const audioManager = useRef(new AudioManager());
 
   const setVolume = (newVolume: number) => {
     setVolumeState(newVolume);
@@ -133,19 +205,15 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
-    audioRef.current.volume = musicVolume;
-    audioBackgroundRef.current.volume = musicVolume;
+    audioManager.current.setVolume(musicVolume);
   }, [musicVolume]);
 
   useEffect(() => {
     const handleFirstInteraction = () => {
       setHasInteracted(true);
-
       if (!musicMuted) {
-        audioRef.current.play().catch(() => { });
-        audioBackgroundRef.current.play().catch(() => { });
+        audioManager.current.play();
       }
-
       document.removeEventListener('click', handleFirstInteraction);
     };
     document.addEventListener('click', handleFirstInteraction);
@@ -156,27 +224,22 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (!musicMuted) {
-      audioRef.current.play().catch(() => { });
-      audioBackgroundRef.current.play().catch(() => { });
+      audioManager.current.play();
     } else {
-      audioRef.current.pause();
-      audioBackgroundRef.current.pause();
+      audioManager.current.pause();
     }
   }, [musicMuted]);
 
   useEffect(() => {
-    if (isCrossfading) return; // Prevent overlapping crossfades
-
     let newTrack = null;
-    if (location.pathname !== '/survivor/play') {
+    let isCriticalTrack = false;
+
+    if (location.pathname === '/survivor/watch') {
+      newTrack = null;
+    } else if (location.pathname !== '/survivor/play') {
       newTrack = tracks.Intro;
-      audioBackgroundRef.current.src = "";
       setStartTimestamp(0);
     } else {
-      if (new URL(audioBackgroundRef.current.src).pathname !== tracks.Background) {
-        audioBackgroundRef.current.src = tracks.Background;
-      }
-
       if (startTimestamp === 0) {
         setStartTimestamp(Date.now());
       }
@@ -185,6 +248,7 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
         newTrack = null;
       } else if (adventurer.health === 0) {
         newTrack = tracks.Death;
+        isCriticalTrack = true;
       } else if (Date.now() - startTimestamp < 122000) {
         newTrack = null;
       } else if (beast) {
@@ -192,71 +256,18 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
       }
     }
 
-    if (!newTrack) {
-      // Switch to background music
-      if (!musicMuted) {
-        const currentAudioSrc = audioRef.current.src;
-        const backgroundAudioSrc = audioBackgroundRef.current.src;
-        
-        if (currentAudioSrc && backgroundAudioSrc) {
-          // Crossfade from current track to background
-          setIsCrossfading(true);
-          audioBackgroundRef.current.play().catch(() => { });
-          crossfade(audioRef.current, audioBackgroundRef.current, 2000, musicVolume);
-          setTimeout(() => setIsCrossfading(false), 2000);
-        } else {
-          audioBackgroundRef.current.play().catch(() => { });
-          audioRef.current.pause();
-        }
-      }
-      audioRef.current.src = "";
-    } else if (newTrack !== new URL(audioRef.current.src).pathname) {
-      // Switch to a specific track
-      audioRef.current.src = newTrack;
-      if (!musicMuted) {
-        const currentAudioSrc = audioBackgroundRef.current.src;
-        
-        if (currentAudioSrc) {
-          // Crossfade from background to new track
-          setIsCrossfading(true);
-          audioRef.current.load();
-          
-          // Wait for the new track to be ready before starting crossfade
-          audioRef.current.addEventListener('canplaythrough', () => {
-            audioRef.current.play().catch(() => { });
-            crossfade(audioBackgroundRef.current, audioRef.current, 2000, musicVolume);
-            setTimeout(() => setIsCrossfading(false), 2000);
-          }, { once: true });
-          
-          // Fallback in case canplaythrough doesn't fire
-          setTimeout(() => {
-            if (isCrossfading) {
-              audioRef.current.play().catch(() => { });
-              crossfade(audioBackgroundRef.current, audioRef.current, 2000, musicVolume);
-              setTimeout(() => setIsCrossfading(false), 2000);
-            }
-          }, 1000);
-        } else {
-          audioRef.current.load();
-          audioRef.current.play().catch(() => { });
-        }
+    if (!musicMuted) {
+      if (isCriticalTrack) {
+        audioManager.current.forceSwitchToTrack(newTrack, musicVolume);
+      } else {
+        audioManager.current.switchToTrack(newTrack, musicVolume);
       }
     }
-  }, [gameId, adventurer, beast, musicMuted, showOverlay, location.pathname, isCrossfading]);
+  }, [gameId, adventurer, beast, musicMuted, location.pathname]);
 
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-        audioRef.current.load();
-      }
-
-      if (audioBackgroundRef.current) {
-        audioBackgroundRef.current.pause();
-        audioBackgroundRef.current.src = '';
-        audioBackgroundRef.current.load();
-      }
+      audioManager.current.destroy();
     };
   }, []);
 
