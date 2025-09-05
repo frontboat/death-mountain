@@ -107,8 +107,16 @@ class AudioManager {
           ? 2 * progress * progress
           : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
-        from.volume = fromStartVolume * (1 - easeInOut);
-        to.volume = toStartVolume + (targetVolume - toStartVolume) * easeInOut;
+        // Ensure combined volume never exceeds target volume
+        const fromVolume = fromStartVolume * (1 - easeInOut);
+        const toVolume = toStartVolume + (targetVolume - toStartVolume) * easeInOut;
+        
+        // Scale down both volumes if their sum exceeds target volume
+        const combinedVolume = fromVolume + toVolume;
+        const scaleFactor = combinedVolume > targetVolume ? targetVolume / combinedVolume : 1;
+        
+        from.volume = fromVolume * scaleFactor;
+        to.volume = toVolume * scaleFactor;
 
         if (progress < 1) {
           requestAnimationFrame(animate);
