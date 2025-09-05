@@ -250,12 +250,14 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   }, [musicMuted]);
 
   useEffect(() => {
-    if (!musicMuted) {
-      audioManager.current.play();
-    } else {
-      audioManager.current.pause();
+    if (hasInteracted) {
+      if (!musicMuted) {
+        audioManager.current.play();
+      } else {
+        audioManager.current.pause();
+      }
     }
-  }, [musicMuted]);
+  }, [musicMuted, hasInteracted]);
 
   useEffect(() => {
     let newTrack = null;
