@@ -22,32 +22,11 @@ const COMBAT_STAT_DESCRIPTIONS = {
   gearScore: "Combined power of your equipment and bag."
 } as const;
 
-type Stats = {
-  [K in keyof typeof STAT_DESCRIPTIONS]: number;
-};
-
-interface AdventurerStatsProps {
-  onStatsChange?: (stats: Stats) => void;
-}
-
 type ViewMode = 'stats' | 'combat';
 
-export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps) {
-  const { adventurer, bag, beast } = useGameStore();
+export default function AdventurerStats() {
+  const { adventurer, bag, beast, selectedStats, setSelectedStats } = useGameStore();
   const [viewMode, setViewMode] = useState<ViewMode>('stats');
-  const [selectedStats, setSelectedStats] = useState({
-    strength: 0,
-    dexterity: 0,
-    vitality: 0,
-    intelligence: 0,
-    wisdom: 0,
-    charisma: 0,
-    luck: 0
-  });
-
-  useEffect(() => {
-    onStatsChange?.(selectedStats);
-  }, [selectedStats, onStatsChange]);
 
   useEffect(() => {
     setViewMode((beast && adventurer?.beast_health! > 0) ? 'combat' : 'stats');
@@ -66,19 +45,19 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
 
   const handleStatIncrement = (stat: keyof typeof STAT_DESCRIPTIONS) => {
     if (pointsRemaining > 0 && (selectedStats[stat] + adventurer!.stats[stat]) < (MAX_STAT_VALUE + equippedItemStats[stat])) {
-      setSelectedStats(prev => ({
-        ...prev,
-        [stat]: prev[stat] + 1
-      }));
+      setSelectedStats({
+        ...selectedStats,
+        [stat]: selectedStats[stat] + 1
+      });
     }
   };
 
   const handleStatDecrement = (stat: keyof typeof STAT_DESCRIPTIONS) => {
     if (selectedStats[stat] > 0) {
-      setSelectedStats(prev => ({
-        ...prev,
-        [stat]: prev[stat] - 1
-      }));
+      setSelectedStats({
+        ...selectedStats,
+        [stat]: selectedStats[stat] - 1
+      });
     }
   };
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Adventurer, Beast, Item, Metadata, Quest } from '@/types/game';
+import { Adventurer, Beast, Item, Metadata, Quest, Stats } from '@/types/game';
 import { GameEvent } from '@/utils/events';
 import { ItemUtils } from '@/utils/loot';
 import { getNewItemsEquipped } from '@/utils/game';
@@ -26,6 +26,7 @@ interface GameState {
   collectable: Beast | null;
   collectableTokenURI: string | null;
   collectableCount: number;
+  selectedStats: Stats;
 
   setGameId: (gameId: number) => void;
   exitGame: () => void;
@@ -51,6 +52,7 @@ interface GameState {
   setCollectable: (data: Beast | null) => void;
   setCollectableTokenURI: (tokenURI: string | null) => void;
   incrementBeastsCollected: () => void;
+  setSelectedStats: (data: Stats) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -74,6 +76,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   collectable: null,
   collectableTokenURI: null,
   collectableCount: 0,
+  selectedStats: { strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 },
 
   setGameId: (gameId: number) => {
     set({ gameId });
@@ -100,6 +103,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       collectable: null,
       collectableTokenURI: null,
       collectableCount: 0,
+      selectedStats: { strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 },
     });
   },
 
@@ -203,4 +207,5 @@ export const useGameStore = create<GameState>((set, get) => ({
   setCollectable: (data: Beast | null) => set({ collectable: data, collectableTokenURI: null }),
   setCollectableTokenURI: (tokenURI: string | null) => set({ collectableTokenURI: tokenURI }),
   incrementBeastsCollected: () => set({ collectableCount: get().collectableCount + 1 }),
+  setSelectedStats: (data: Stats) => set({ selectedStats: data }),
 }));

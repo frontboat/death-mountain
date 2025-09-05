@@ -63,7 +63,7 @@ export const useSystemCalls = () => {
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
     try {
       if (adventurer) {
-        await waitForGlobalState("action_count");
+        await waitForGlobalState();
       }
 
       let tx = await account!.execute(calls, { tip: TIP_AMOUNT });
@@ -125,16 +125,15 @@ export const useSystemCalls = () => {
     }
   }
 
-  const waitForGlobalState = async (state: any, retries: number = 0): Promise<boolean> => {
+  const waitForGlobalState = async (retries: number = 0): Promise<boolean> => {
     let adventurerState = await getAdventurerState(gameId!);
 
-    // @ts-ignore
-    if (adventurerState?.[state] === adventurer![state] || retries > 9) {
+    if (adventurerState?.action_count === adventurer!.action_count || retries > 9) {
       return true;
     }
 
     await delay(500);
-    return waitForGlobalState(state, retries + 1);
+    return waitForGlobalState(retries + 1);
   };
 
   /**
@@ -355,6 +354,18 @@ export const useSystemCalls = () => {
     };
   };
 
+  const waitForClaimBeast = async (retries: number = 0): Promise<boolean> => {
+    let adventurerState = await getAdventurerState(gameId!);
+
+    if (adventurerState?.beast_health === 0 || retries > 9) {
+      return true;
+    }
+
+    await delay(500);
+    return waitForClaimBeast(retries + 1);
+  };
+
+
   const claimBeast = async (gameId: number, beast: Beast) => {
     let prefix =
       Object.keys(BEAST_NAME_PREFIXES).find(
@@ -366,7 +377,7 @@ export const useSystemCalls = () => {
       ) || 0;
 
     try {
-      await waitForGlobalState("beast_health");
+      await waitForClaimBeast();
 
       let tx = await account!.execute(
         [
