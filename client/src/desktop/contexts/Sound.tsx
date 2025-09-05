@@ -28,10 +28,12 @@ class AudioManager {
   }
 
   async play() {
-    await Promise.all([
-      this.primary.play().catch(() => { }),
-      this.background.play().catch(() => { })
-    ]);
+    // Only start background if we're currently playing background track
+    if (!this.currentTrack) {
+      await this.background.play().catch(() => { });
+    } else {
+      await this.primary.play().catch(() => { });
+    }
   }
 
   pause() {
@@ -245,14 +247,19 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
       }
 
       if (!gameId || !adventurer) {
+        // Only play background music when we have a game and adventurer
         newTrack = null;
       } else if (adventurer.health === 0) {
         newTrack = tracks.Death;
         isCriticalTrack = true;
       } else if (Date.now() - startTimestamp < 122000) {
+        // Play background music during the first 122 seconds of gameplay
         newTrack = null;
       } else if (beast) {
         newTrack = tracks.Battle;
+      } else {
+        // Continue playing background music after intro period
+        newTrack = null;
       }
     }
 
