@@ -11,25 +11,30 @@ const tracks: Record<string, string> = {
 
 class AudioManager {
   private primary: HTMLAudioElement;
-  private background: HTMLAudioElement;
+  private background: HTMLAudioElement | null = null;
   private isTransitioning = false;
   private currentTrack: string | null = null;
 
   constructor() {
     this.primary = new Audio();
     this.primary.loop = true;
-    this.background = new Audio(tracks.Background);
-    this.background.loop = true;
+    // Don't create background audio until we need it
   }
 
   setVolume(volume: number) {
     this.primary.volume = volume;
-    this.background.volume = volume;
+    if (this.background) {
+      this.background.volume = volume;
+    }
   }
 
   async play() {
     // Only start background if we're currently playing background track
     if (!this.currentTrack) {
+      if (!this.background) {
+        this.background = new Audio(tracks.Background);
+        this.background.loop = true;
+      }
       await this.background.play().catch(() => { });
     } else {
       await this.primary.play().catch(() => { });
@@ -38,7 +43,9 @@ class AudioManager {
 
   pause() {
     this.primary.pause();
-    this.background.pause();
+    if (this.background) {
+      this.background.pause();
+    }
   }
 
   async switchToTrack(trackPath: string | null, volume: number) {
@@ -61,13 +68,23 @@ class AudioManager {
 
     if (!trackPath) {
       // Switch to background
+      if (!this.background) {
+        this.background = new Audio(tracks.Background);
+        this.background.loop = true;
+      }
       await this.crossfade(this.primary, this.background, volume);
       this.primary.src = '';
     } else {
       // Switch to specific track
       this.primary.src = trackPath;
       await this.primary.load();
-      await this.crossfade(this.background, this.primary, volume);
+      if (this.background) {
+        await this.crossfade(this.background, this.primary, volume);
+      } else {
+        // No background to crossfade from, just start the primary track
+        this.primary.volume = volume;
+        await this.primary.play().catch(() => { });
+      }
     }
 
     this.isTransitioning = false;
@@ -116,11 +133,17 @@ class AudioManager {
       // Switch to background
       this.primary.pause();
       this.primary.src = '';
+      if (!this.background) {
+        this.background = new Audio(tracks.Background);
+        this.background.loop = true;
+      }
       this.background.volume = volume;
       await this.background.play().catch(() => { });
     } else {
       // Switch to specific track
-      this.background.pause();
+      if (this.background) {
+        this.background.pause();
+      }
       this.primary.src = trackPath;
       await this.primary.load();
       this.primary.volume = volume;
@@ -131,8 +154,10 @@ class AudioManager {
   destroy() {
     this.primary.pause();
     this.primary.src = '';
-    this.background.pause();
-    this.background.src = '';
+    if (this.background) {
+      this.background.pause();
+      this.background.src = '';
+    }
   }
 }
 
