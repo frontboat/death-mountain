@@ -151,6 +151,12 @@ class AudioManager {
     }
   }
 
+  resetBackgroundMusic() {
+    if (this.background) {
+      this.background.currentTime = 0;
+    }
+  }
+
   destroy() {
     this.primary.pause();
     this.primary.src = '';
@@ -268,6 +274,7 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
     } else if (location.pathname !== '/survivor/play') {
       newTrack = tracks.Intro;
       setStartTimestamp(0);
+      audioManager.current.resetBackgroundMusic();
     } else {
       if (startTimestamp === 0) {
         setStartTimestamp(Date.now());
