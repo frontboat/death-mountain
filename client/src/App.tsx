@@ -17,8 +17,8 @@ import Header from './mobile/components/Header';
 import { desktopRoutes, mobileRoutes } from './utils/routes';
 import { desktopTheme, mobileTheme } from './utils/themes';
 import { StatisticsProvider } from './contexts/Statistics';
-import { ChatBox } from './components/ChatBox';
-import { ChatToggle } from './components/ChatToggle';
+import { AgentProvider } from './contexts/AgentContext';
+import { AgentRunner } from './components/AgentRunner';
 
 function App() {
   const { useMobileClient } = useUIStore();
@@ -31,60 +31,50 @@ function App() {
         <SnackbarProvider anchorOrigin={{ vertical: 'top', horizontal: 'center' }} preventDuplicate autoHideDuration={3000}>
           <ControllerProvider>
             <StatisticsProvider>
+              <AgentProvider>
 
-              {!shouldShowMobile && (
-                <ThemeProvider theme={desktopTheme}>
-                  <SoundProvider>
-                    <GameDirector>
-                      <Box className='main'>
-
-                        <Routes>
-                          {desktopRoutes.map((route, index) => {
-                            return <Route key={index} path={route.path} element={route.content} />
-                          })}
-                        </Routes>
-
-                        {showChat ? (
-                          <ChatBox onClose={() => setShowChat(false)} />
-                        ) : (
-                          <ChatToggle onClick={() => setShowChat(true)} />
-                        )}
-
-                      </Box>
-                    </GameDirector>
-                  </SoundProvider>
-                </ThemeProvider>
-              )}
-
-              {shouldShowMobile && (
-                <ThemeProvider theme={mobileTheme}>
-                  <MobileSoundProvider>
-                    <Box className='bgImage'>
-                      <MobileGameDirector>
+                {!shouldShowMobile && (
+                  <ThemeProvider theme={desktopTheme}>
+                    <SoundProvider>
+                      <GameDirector>
                         <Box className='main'>
-                          <Header />
-
+                          <AgentRunner />
                           <Routes>
-                            {mobileRoutes.map((route, index) => {
+                            {desktopRoutes.map((route, index) => {
                               return <Route key={index} path={route.path} element={route.content} />
                             })}
                           </Routes>
 
-                          <GameSettingsList />
-                          <GameSettings />
-
-                          {showChat ? (
-                            <ChatBox onClose={() => setShowChat(false)} />
-                          ) : (
-                            <ChatToggle onClick={() => setShowChat(true)} />
-                          )}
                         </Box>
-                      </MobileGameDirector>
-                    </Box>
-                  </MobileSoundProvider>
-                </ThemeProvider>
-              )}
+                      </GameDirector>
+                    </SoundProvider>
+                  </ThemeProvider>
+                )}
 
+                {shouldShowMobile && (
+                  <ThemeProvider theme={mobileTheme}>
+                    <MobileSoundProvider>
+                      <Box className='bgImage'>
+                        <MobileGameDirector>
+                          <Box className='main'>
+                            <Header />
+                            <AgentRunner />
+                            <Routes>
+                              {mobileRoutes.map((route, index) => {
+                                return <Route key={index} path={route.path} element={route.content} />
+                              })}
+                            </Routes>
+
+                            <GameSettingsList />
+                            <GameSettings />
+
+                          </Box>
+                        </MobileGameDirector>
+                      </Box>
+                    </MobileSoundProvider>
+                  </ThemeProvider>
+                )}
+              </AgentProvider>
             </StatisticsProvider>
           </ControllerProvider>
         </SnackbarProvider>

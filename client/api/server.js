@@ -1,3 +1,5 @@
+// note this is deprecated, just keeping it for now bc docs
+
 import express from 'express';
 import cors from 'cors';
 import { openai } from '@ai-sdk/openai';

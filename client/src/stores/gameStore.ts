@@ -5,7 +5,13 @@ import { ItemUtils } from '@/utils/loot';
 import { getNewItemsEquipped } from '@/utils/game';
 import { Settings } from '@/dojo/useGameSettings';
 
-interface GameState {
+interface AbilityPercentages {
+  fleeChance: number;
+  obstacleAvoidance: number;
+  ambushAvoidance: number;
+}
+
+export interface GameState {
   gameId: number | null;
   gameSettings: Settings | null;
   adventurer: Adventurer | null;
@@ -27,6 +33,9 @@ interface GameState {
   collectableTokenURI: string | null;
   collectableCount: number;
   selectedStats: Stats;
+  abilityPercentages?: AbilityPercentages;
+  combatStats?: any;
+  potionPrice?: number;
 
   setGameId: (gameId: number) => void;
   exitGame: () => void;
