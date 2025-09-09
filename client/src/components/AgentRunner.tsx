@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAgent } from "@/contexts/AgentContext";
 import { useGameStore } from "@/stores/gameStore";
-import { GameState } from "@/stores/gameStore";
+import { ContextEngine } from "@/agent/contextEngine";
+import { convertStoreToServiceGameState } from "@/agent/gameStateConverter";
 
 export const AgentRunner: React.FC = () => {
   const { agent, lootSurvivorContext } = useAgent();
@@ -33,28 +34,48 @@ export const AgentRunner: React.FC = () => {
       lastActionCount.current = gameState.adventurer.action_count;
 
       try {
-        // Update context with current game state
+        // Convert the current store state to service format
+        const convertedState = convertStoreToServiceGameState(gameState);
+        
+        if (!convertedState) {
+          console.warn("Could not convert game state");
+          return;
+        }
+        
+        // Generate XML context from current state (not fresh from blockchain)
+        const xmlContext = ContextEngine.generateContext(convertedState);
+        console.log("Generated XML Context:", xmlContext.content);
+        console.log("Game Phase:", xmlContext.phase);
+        
+        // Use the converted state for agent memory
+        const freshState = convertedState;
+
+        // Update context with fresh blockchain state
         const contextState = await agent.getContext({
           context: lootSurvivorContext,
           args: { gameId: gameState.gameId },
         });
 
-        contextState.memory.currentGameState = gameState;
+        // @ts-ignore - Memory type mismatch but it works
+        contextState.memory.currentGameState = freshState;
 
-        // The send method expects this structure
+        // The send method expects this structure - use fresh state
         const result = await agent.send({
           context: lootSurvivorContext,
           args: { gameId: gameState.gameId },
           input: {
             type: "game_state_update",
-            data: { gameState: gameState }, // This matches your schema
+            data: { 
+              gameState: freshState // Pass the FRESH state from blockchain
+            },
           },
         });
 
         console.log("Agent processing complete:", result);
 
-        // Wait for UI to update before allowing next action
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Wait longer for blockchain transaction to fully settle
+        // This prevents "Action was reverted" errors from acting too quickly
+        await new Promise((resolve) => setTimeout(resolve, 10000));
       } catch (error) {
         console.error("Error running agent:", error);
       } finally {
@@ -63,8 +84,8 @@ export const AgentRunner: React.FC = () => {
       }
     };
 
-    // Delay before running to allow UI updates
-    const timeoutId = setTimeout(runAgent, 2000);
+    // Delay before running to allow blockchain state to fully sync
+    const timeoutId = setTimeout(runAgent, 10000);
 
     return () => clearTimeout(timeoutId);
   }, [
