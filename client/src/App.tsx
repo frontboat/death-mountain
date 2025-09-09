@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { SnackbarProvider } from 'notistack';
 import { BrowserRouter, Route, Routes, } from "react-router-dom";
+import { useState } from 'react';
 
 import { ControllerProvider } from '@/contexts/controller';
 import { SoundProvider } from '@/desktop/contexts/Sound';
@@ -16,10 +17,13 @@ import Header from './mobile/components/Header';
 import { desktopRoutes, mobileRoutes } from './utils/routes';
 import { desktopTheme, mobileTheme } from './utils/themes';
 import { StatisticsProvider } from './contexts/Statistics';
+import { ChatBox } from './components/ChatBox';
+import { ChatToggle } from './components/ChatToggle';
 
 function App() {
   const { useMobileClient } = useUIStore();
   const shouldShowMobile = isMobile || (isBrowser && useMobileClient);
+  const [showChat, setShowChat] = useState(false);
 
   return (
     <BrowserRouter>
@@ -39,6 +43,12 @@ function App() {
                             return <Route key={index} path={route.path} element={route.content} />
                           })}
                         </Routes>
+
+                        {showChat ? (
+                          <ChatBox onClose={() => setShowChat(false)} />
+                        ) : (
+                          <ChatToggle onClick={() => setShowChat(true)} />
+                        )}
 
                       </Box>
                     </GameDirector>
@@ -62,6 +72,12 @@ function App() {
 
                           <GameSettingsList />
                           <GameSettings />
+
+                          {showChat ? (
+                            <ChatBox onClose={() => setShowChat(false)} />
+                          ) : (
+                            <ChatToggle onClick={() => setShowChat(true)} />
+                          )}
                         </Box>
                       </MobileGameDirector>
                     </Box>
