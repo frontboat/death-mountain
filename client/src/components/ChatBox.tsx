@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useGameStore } from '@/stores/gameStore';
 import { ItemUtils } from '@/utils/loot';
 import { calculateCombatStats, calculateAttackDamage, calculateBeastDamage, ability_based_percentage, calculateLevel } from '@/utils/game';
+import { potionPrice } from '@/utils/market';
 
 const ChatContainer = styled(Paper)(({ theme }) => ({
   position: 'fixed',
@@ -85,11 +86,11 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ onClose }) => {
   useEffect(() => {
     if (!hasInitialized) {
       setHasInitialized(true);
-      handleSendMessage("what do i do? respond in 1 sentence.");
+      handleSendMessage("what do i do? respond in 1 sentence.", true);
     }
   }, [hasInitialized]);
 
-  const handleSendMessage = async (messageText: string) => {
+  const handleSendMessage = async (messageText: string, isInitialMessage: boolean = false) => {
     if (isLoading) return;
 
     const userMessage: ChatMessage = {
@@ -218,6 +219,20 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ onClose }) => {
       };
     }
 
+    // Enrich market items with type, tier, and price
+    const enrichedMarketItems = gameState.marketItemIds && enrichedAdventurer ? 
+      gameState.marketItemIds.map(id => ({
+        id,
+        name: ItemUtils.getItemName(id),
+        type: ItemUtils.getItemType(id),
+        tier: ItemUtils.getItemTier(id),
+        price: ItemUtils.getItemPrice(ItemUtils.getItemTier(id), enrichedAdventurer.stats.charisma)
+      })) : [];
+
+    // Calculate potion price
+    const currentPotionPrice = enrichedAdventurer ? 
+      potionPrice(enrichedAdventurer.level, enrichedAdventurer.stats.charisma) : null;
+
     const gameContext = {
       gameId: gameState.gameId,
       gameSettings: serializeBigInt(gameState.gameSettings),
@@ -229,7 +244,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ onClose }) => {
       abilityPercentages: abilityPercentages,
       showBeastRewards: gameState.showBeastRewards,
       newMarket: gameState.newMarket,
-      marketItemIds: gameState.marketItemIds,
+      marketItems: enrichedMarketItems,
+      potionPrice: currentPotionPrice,
       newInventoryItems: gameState.newInventoryItems,
       metadata: serializeBigInt(gameState.metadata),
       battleEvent: serializeBigInt(gameState.battleEvent),
@@ -254,6 +270,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ onClose }) => {
             content: m.content,
           })),
           gameContext,
+          isInitialMessage,
         }),
       });
 

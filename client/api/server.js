@@ -11,13 +11,14 @@ app.use(cors());
 app.use(express.json());
 
 app.post('/api/chat', async (req, res) => {
-  const { messages, gameContext } = req.body;
+  const { messages, gameContext, isInitialMessage } = req.body;
   
   // Debug logging to see the actual game state
   console.log('Game Context received:', JSON.stringify(gameContext, null, 2));
+  console.log('Is initial message:', isInitialMessage);
 
-  // Build a comprehensive system prompt with the game context
-  let systemPrompt = `# Loot Survivor
+  // Static game documentation (only for initial message)
+  const gameDocumentation = `# Loot Survivor
 
 Loot Survivor is a fully onchain dungeon crawler RPG built on Starknet using the Dojo engine. Navigate through procedurally generated dungeons, battle fierce beasts, overcome deadly obstacles, and collect legendary loot in your quest for survival and glory. The items in the game are dervied from the Loot project.
 
@@ -833,9 +834,10 @@ XP Reward = Minimum 4 + beast tier bonuses
 - Name match bonuses (weapon/armor names matching beast names)
 - Type advantage damage (+50%)
 
-You are a helpful AI assistant for the Loot Survivor dungeon crawler game. You have access to the player's current game state to provide personalized advice.
+You are a helpful AI assistant for the Loot Survivor dungeon crawler game. You have access to the player's current game state to provide personalized advice.`;
 
-CURRENT GAME STATE:
+  // Dynamic game state (sent every message)
+  const gameStateContext = `CURRENT GAME STATE:
 ${gameContext.gameId ? `Game ID: ${gameContext.gameId}` : 'No active game'}
 ${gameContext.adventurer ? `
 Adventurer:
@@ -893,15 +895,37 @@ COMBAT ANALYSIS:
 ${gameContext.combatStats.bestItems && gameContext.combatStats.bestItems.length > 0 ? `- Recommended Equipment: ${gameContext.combatStats.bestItems.map(item => item.name || `Item #${item.id}`).join(', ')}` : ''}` : ''}
 ${gameContext.selectedStats ? `
 Unallocated Stat Points - Strength: ${gameContext.selectedStats.strength}, Dexterity: ${gameContext.selectedStats.dexterity}, Vitality: ${gameContext.selectedStats.vitality}, Intelligence: ${gameContext.selectedStats.intelligence}, Wisdom: ${gameContext.selectedStats.wisdom}, Charisma: ${gameContext.selectedStats.charisma}, Luck: ${gameContext.selectedStats.luck}` : ''}
-${gameContext.marketItemIds && gameContext.marketItemIds.length > 0 ? `
-Market has ${gameContext.marketItemIds.length} items available` : ''}
+${gameContext.marketItems && gameContext.marketItems.length > 0 ? `
+Market Items Available for purchase:
+${gameContext.marketItems.map(item => `- ${item.name} (${item.type}, Tier ${item.tier}, Price: ${item.price} gold)`).join('\n')}` : ''}
+${gameContext.potionPrice !== null && gameContext.potionPrice !== undefined ? `
+Health Potion Price: ${gameContext.potionPrice} gold` : ''}
 
-Use this game state information to provide contextual, helpful advice about strategies, next steps, equipment choices, stat allocation, and combat tactics. Be specific to the player's current situation. Note: market is not available when in combat. Combat must be resolved via successfully fleeing or successfully defeating the beast. Critical strikes are random, adventurers do not know if an attack will crit or not. Attack locations are random, adventurers do not know where an enemy attack will land.`;
+Use this game state information to provide contextual, helpful advice about strategies, next steps, equipment choices, stat allocation, and combat tactics. Be specific to the player's current situation. Note: market is not available when in combat. Combat must be resolved via successfully fleeing or successfully defeating the beast. Critical strikes are random, adventurers do not know if an attack will crit or not. Attack locations are random, adventurers do not know where an enemy attack will land. Equipment tier and potions are more important than jewelry during the early game (pre adventurer level 15). Remember, you cannot sell items. Consider the adventurer's currently equipped items before suggesting purchases in the store.`;
+
+  // Build messages with appropriate context
+  let finalMessages = [...messages];
+  let systemPrompt = undefined;
+  
+  if (isInitialMessage) {
+    // First message: include full documentation as system prompt
+    systemPrompt = gameDocumentation + '\n\n' + gameStateContext;
+  } else {
+    // Subsequent messages: inject game state as a system message
+    const lastUserMessage = finalMessages.pop();
+    finalMessages.push({
+      role: 'system',
+      content: gameStateContext
+    });
+    if (lastUserMessage) {
+      finalMessages.push(lastUserMessage);
+    }
+  }
 
   try {
     const result = await streamText({
       model: openai('gpt-4o'),
-      messages,
+      messages: finalMessages,
       system: systemPrompt,
     });
 
