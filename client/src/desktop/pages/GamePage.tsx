@@ -17,6 +17,7 @@ import { useAccount } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { GameAIAssistant } from "@/daydreams";
 
 interface AnimatedOverlayProps {
   children: React.ReactNode;
@@ -184,6 +185,32 @@ export default function GamePage() {
             </AnimatePresence>
           )}
         </Box>
+      )}
+
+      {/* AI Assistant - appears as floating chat widget */}
+      {controllerAddress && gameId && (
+        <GameAIAssistant 
+          playerId={controllerAddress}
+          sessionId={`game-${gameId}`}
+          className="z-[9999]" // Ensure it appears above all other UI elements
+        />
+      )}
+      
+      {/* Debug: Show when AI should render */}
+      {import.meta.env.DEV && (
+        <div className="fixed top-4 left-4 bg-black text-white p-2 text-xs z-[10000]">
+          AI Debug: Address={controllerAddress ? 'Yes' : 'No'}, GameId={gameId || 'None'}
+        </div>
+      )}
+
+      {/* Temporary debug button to test visibility */}
+      {import.meta.env.DEV && controllerAddress && gameId && (
+        <div 
+          className="fixed bottom-20 right-4 bg-red-500 text-white p-4 rounded-lg z-[10001] cursor-pointer"
+          onClick={() => console.log("Debug button clicked!")}
+        >
+          TEST BUTTON
+        </div>
       )}
     </Box>
   );

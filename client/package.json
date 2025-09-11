@@ -15,6 +15,7 @@
     "@cartridge/connector": "^0.10.0-alpha.1",
     "@cartridge/controller": "^0.10.0-alpha.1",
     "@cloudflare/stream-react": "^1.9.3",
+    "@daydreamsai/ai-sdk-provider": "^0.1.5",
     "@daydreamsai/core": "^0.3.22",
     "@dojoengine/core": "^1.6.0-beta.4",
     "@dojoengine/sdk": "^1.6.0-beta.4",

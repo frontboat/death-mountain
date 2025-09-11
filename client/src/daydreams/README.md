@@ -12,6 +12,105 @@ The integration consists of several key components:
 - **React Hook** (`useDaydreamsGame.ts`) - React hook for easy integration
 - **UI Component** (`GameAIAssistant.tsx`) - Chat interface for the AI assistant
 
+## How it works
+
+### Model and initialization
+
+- The agent is created in `gameIntegration.ts` using `createDreams` with an OpenAI client from `@ai-sdk/openai`.
+- API key is provided at runtime via browser-safe initialization: `createOpenAI({ apiKey })`.
+- The React hook `useDaydreamsGame` initializes the agent and passes the GameDirector reference to the agent’s memory (for Daydreams actions).
+
+Environment variable (Vite):
+
+```bash
+VITE_OPENAI_API_KEY=sk-...
+```
+
+You can also pass `apiKey` directly when using the hook.
+
+### Context memory and render
+
+The Daydreams context (`gameContext.ts`) maintains a structured memory snapshot that is rendered to the model each turn. It includes:
+
+- Identity and status: `currentGameId`, `gameStarted`, `lastAction`, `lastActionTime`
+- Adventurer summary: derived `adventurerStats` (health, xp, gold, level) and full `adventurer`, `adventurerState`
+- Inventory/market: `bag` (full items), `marketItemIds` (rendered with names/tiers/prices)
+- World: `beast` (active encounter), `battleEvent` (recent combat), `collectable`, `collectableTokenURI`, `collectableCount`
+- Preferences: `preferences`
+- Selected upgrades: `selectedStats`
+
+For readability and reasoning, the render uses existing utils:
+
+- Item details: `ItemUtils.getItemName`, `getItemTier`, `getItemSlot`, and `calculateLevel`
+- Market details: `generateMarketItems(marketItemIds, adventurer.stats.charisma)` (name, slot, tier, price)
+- Combat stats (when a beast is active): `calculateCombatStats(adventurer, bag, beast)`
+
+### In-combat detection
+
+The agent treats “in combat” as:
+
+```ts
+Boolean(memory.beast) && (memory.adventurer?.beast_health ?? 0) > 0
+```
+
+This is kept up-to-date via state sync described below.
+
+### State sync (AI memory ← UI store)
+
+`useDaydreamsGame` mirrors the game store state into AI memory through `syncGameState`:
+
+- Auto-sync on store changes (unthrottled)
+- Periodic background sync (`pollIntervalMs`, default 5000 ms)
+- Forced sync right before each `sendMessage`
+
+You can trigger an immediate sync at any time:
+
+```ts
+await syncState(true);
+```
+
+To confirm, use the “Dump” button in `GameAIAssistant` to log both the AI memory and UI store snapshots.
+
+### Action execution and duplicate prevention
+
+Daydreams actions in `gameActions.ts` bridge the model’s intents to the GameDirector. To prevent duplicate actions while a transaction is processing, the agent uses an in-flight gate:
+
+- Memory fields: `actionInFlight`, `inFlightAction`, `inFlightSince`
+- Each action sets `actionInFlight = true` before calling `gameDirector.executeGameAction(...)` and clears it in a `finally` block
+- While in-flight, subsequent actions return an error: “Action already in progress”
+
+This prevents the model from re-issuing the same action while the game is still processing.
+
+### Output handling
+
+Responses are returned via the configured `outputs.text` channel. The integration extracts the response robustly, handling both `{ ref: "text", data: string }` and `{ data: { content: string } }` shapes, so the UI displays exactly what the model replied.
+
+### Event-driven updates (optional)
+
+In addition to the automatic syncing above, you can push updates to the agent immediately after processing a new game event:
+
+1. Normalize the event using the existing utils:
+   - Torii tuples → `translateGameEvent(raw, manifest)`
+   - Variant object → `processGameEvent({ action_count, details })`
+2. Call `syncGameState(agent, playerId, { ...updatedFields }, sessionId)` with only the fields that changed (e.g., `adventurer`, `bag`, `beast`, `marketItemIds`, `battleEvent`).
+
+### Configuration knobs
+
+- `autoSync`: enable/disable automatic store → memory sync (default true)
+- `pollIntervalMs`: periodic sync cadence (default 5000)
+- `apiKey`: override `VITE_OPENAI_API_KEY`
+
+Example:
+
+```tsx
+const ai = useDaydreamsGame({
+  playerId,
+  sessionId,
+  autoSync: true,
+  pollIntervalMs: 3000,
+});
+```
+
 ## Quick Start
 
 ### 1. Install Dependencies
@@ -22,13 +121,16 @@ First, install the Daydreams dependencies:
 npm install @daydreamsai/core @ai-sdk/openai zod
 ```
 
-### 2. Set up Environment Variables
+### 2. Set up Environment Variables (Vite)
 
-Add your OpenAI API key to your environment:
+Create a file at `client/.env.local` and add your OpenAI API key using Vite's client-exposed prefix:
 
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
+VITE_OPENAI_API_KEY=your_openai_api_key_here
 ```
+
+- Do not commit `.env.local` to git.
+- Restart the dev server after adding or changing env vars.
 
 ### 3. Add the AI Assistant to Your Game
 

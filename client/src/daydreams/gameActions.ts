@@ -41,6 +41,17 @@ export const startGameAction = action({
     settings: GameSettingsSchema.describe("Game configuration settings"),
   }),
   handler: async ({ gameId, settings }, ctx) => {
+    if (ctx.memory.actionInFlight) {
+      return {
+        success: false,
+        error: "Action already in progress",
+        message: `Currently processing: ${ctx.memory.inFlightAction}`,
+      };
+    }
+
+    ctx.memory.actionInFlight = true;
+    ctx.memory.inFlightAction = "start_game";
+    ctx.memory.inFlightSince = Date.now();
     const gameAction: GameAction = {
       type: "start_game",
       gameId,
@@ -79,6 +90,11 @@ export const startGameAction = action({
         message: "Failed to start game",
       };
     }
+    finally {
+      ctx.memory.actionInFlight = false;
+      ctx.memory.inFlightAction = undefined as any;
+      ctx.memory.inFlightSince = undefined as any;
+    }
   },
 });
 
@@ -92,6 +108,16 @@ export const exploreAction = action({
     untilBeast: z.boolean().default(false).describe("Whether to continue exploring until finding a beast"),
   }),
   handler: async ({ untilBeast }, ctx) => {
+    if (ctx.memory.actionInFlight) {
+      return {
+        success: false,
+        error: "Action already in progress",
+        message: `Currently processing: ${ctx.memory.inFlightAction}`,
+      };
+    }
+    ctx.memory.actionInFlight = true;
+    ctx.memory.inFlightAction = "explore";
+    ctx.memory.inFlightSince = Date.now();
     const gameId = ctx.memory.currentGameId;
     if (!gameId) {
       return {
@@ -133,6 +159,11 @@ export const exploreAction = action({
         message: "Failed to explore",
       };
     }
+    finally {
+      ctx.memory.actionInFlight = false;
+      ctx.memory.inFlightAction = undefined as any;
+      ctx.memory.inFlightSince = undefined as any;
+    }
   },
 });
 
@@ -146,6 +177,16 @@ export const attackAction = action({
     untilDeath: z.boolean().default(false).describe("Whether to continue attacking until the beast or adventurer dies"),
   }),
   handler: async ({ untilDeath }, ctx) => {
+    if (ctx.memory.actionInFlight) {
+      return {
+        success: false,
+        error: "Action already in progress",
+        message: `Currently processing: ${ctx.memory.inFlightAction}`,
+      };
+    }
+    ctx.memory.actionInFlight = true;
+    ctx.memory.inFlightAction = "attack";
+    ctx.memory.inFlightSince = Date.now();
     const gameId = ctx.memory.currentGameId;
     if (!gameId) {
       return {
@@ -187,6 +228,11 @@ export const attackAction = action({
         message: "Failed to attack",
       };
     }
+    finally {
+      ctx.memory.actionInFlight = false;
+      ctx.memory.inFlightAction = undefined as any;
+      ctx.memory.inFlightSince = undefined as any;
+    }
   },
 });
 
@@ -200,6 +246,16 @@ export const fleeAction = action({
     untilDeath: z.boolean().default(false).describe("Whether to continue fleeing until successful or death"),
   }),
   handler: async ({ untilDeath }, ctx) => {
+    if (ctx.memory.actionInFlight) {
+      return {
+        success: false,
+        error: "Action already in progress",
+        message: `Currently processing: ${ctx.memory.inFlightAction}`,
+      };
+    }
+    ctx.memory.actionInFlight = true;
+    ctx.memory.inFlightAction = "flee";
+    ctx.memory.inFlightSince = Date.now();
     const gameId = ctx.memory.currentGameId;
     if (!gameId) {
       return {
@@ -241,6 +297,11 @@ export const fleeAction = action({
         message: "Failed to flee",
       };
     }
+    finally {
+      ctx.memory.actionInFlight = false;
+      ctx.memory.inFlightAction = undefined as any;
+      ctx.memory.inFlightSince = undefined as any;
+    }
   },
 });
 
@@ -255,6 +316,16 @@ export const buyItemsAction = action({
     itemPurchases: z.array(ItemPurchaseSchema).default([]).describe("Array of items to purchase"),
   }),
   handler: async ({ potions, itemPurchases }, ctx) => {
+    if (ctx.memory.actionInFlight) {
+      return {
+        success: false,
+        error: "Action already in progress",
+        message: `Currently processing: ${ctx.memory.inFlightAction}`,
+      };
+    }
+    ctx.memory.actionInFlight = true;
+    ctx.memory.inFlightAction = "buy_items";
+    ctx.memory.inFlightSince = Date.now();
     const gameId = ctx.memory.currentGameId;
     if (!gameId) {
       return {
@@ -306,6 +377,11 @@ export const buyItemsAction = action({
         message: "Failed to purchase items",
       };
     }
+    finally {
+      ctx.memory.actionInFlight = false;
+      ctx.memory.inFlightAction = undefined as any;
+      ctx.memory.inFlightSince = undefined as any;
+    }
   },
 });
 
@@ -319,6 +395,16 @@ export const selectStatUpgradesAction = action({
     statUpgrades: StatsSchema.describe("Stat points to allocate to each stat"),
   }),
   handler: async ({ statUpgrades }, ctx) => {
+    if (ctx.memory.actionInFlight) {
+      return {
+        success: false,
+        error: "Action already in progress",
+        message: `Currently processing: ${ctx.memory.inFlightAction}`,
+      };
+    }
+    ctx.memory.actionInFlight = true;
+    ctx.memory.inFlightAction = "select_stat_upgrades";
+    ctx.memory.inFlightSince = Date.now();
     const gameId = ctx.memory.currentGameId;
     if (!gameId) {
       return {
@@ -371,6 +457,11 @@ export const selectStatUpgradesAction = action({
         message: "Failed to allocate stat points",
       };
     }
+    finally {
+      ctx.memory.actionInFlight = false;
+      ctx.memory.inFlightAction = undefined as any;
+      ctx.memory.inFlightSince = undefined as any;
+    }
   },
 });
 
@@ -384,6 +475,16 @@ export const equipAction = action({
     items: z.array(z.number().positive()).min(1).describe("Array of item IDs to equip"),
   }),
   handler: async ({ items }, ctx) => {
+    if (ctx.memory.actionInFlight) {
+      return {
+        success: false,
+        error: "Action already in progress",
+        message: `Currently processing: ${ctx.memory.inFlightAction}`,
+      };
+    }
+    ctx.memory.actionInFlight = true;
+    ctx.memory.inFlightAction = "equip";
+    ctx.memory.inFlightSince = Date.now();
     const gameId = ctx.memory.currentGameId;
     if (!gameId) {
       return {
@@ -425,6 +526,11 @@ export const equipAction = action({
         message: "Failed to equip items",
       };
     }
+    finally {
+      ctx.memory.actionInFlight = false;
+      ctx.memory.inFlightAction = undefined as any;
+      ctx.memory.inFlightSince = undefined as any;
+    }
   },
 });
 
@@ -438,6 +544,16 @@ export const dropAction = action({
     items: z.array(z.number().positive()).min(1).describe("Array of item IDs to drop"),
   }),
   handler: async ({ items }, ctx) => {
+    if (ctx.memory.actionInFlight) {
+      return {
+        success: false,
+        error: "Action already in progress",
+        message: `Currently processing: ${ctx.memory.inFlightAction}`,
+      };
+    }
+    ctx.memory.actionInFlight = true;
+    ctx.memory.inFlightAction = "drop";
+    ctx.memory.inFlightSince = Date.now();
     const gameId = ctx.memory.currentGameId;
     if (!gameId) {
       return {
@@ -478,6 +594,11 @@ export const dropAction = action({
         error: error instanceof Error ? error.message : "Unknown error",
         message: "Failed to drop items",
       };
+    }
+    finally {
+      ctx.memory.actionInFlight = false;
+      ctx.memory.inFlightAction = undefined as any;
+      ctx.memory.inFlightSince = undefined as any;
     }
   },
 });

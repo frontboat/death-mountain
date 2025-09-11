@@ -1,7 +1,6 @@
 // Main integration exports
-export { default as createGameAgent } from "./gameIntegration";
-export type { DaydreamsGameIntegration } from "./gameIntegration";
 export { createGameAgent, syncGameState, useDaydreamsIntegration } from "./gameIntegration";
+export type { DaydreamsGameIntegration } from "./gameIntegration";
 
 // Context and actions
 export { default as gameContext } from "./gameContext";
