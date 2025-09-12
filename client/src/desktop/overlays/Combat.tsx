@@ -9,6 +9,8 @@ import Beast from './Beast';
 import InventoryOverlay from './Inventory';
 import SettingsOverlay from './Settings';
 import TipsOverlay from './Tips';
+import { JACKPOT_BEASTS } from '@/constants/beast';
+import { useDynamicConnector } from '@/contexts/starknet';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -16,6 +18,7 @@ const equipMessage = "Equipping items";
 
 export default function CombatOverlay() {
   const { executeGameAction, actionFailed, spectating } = useGameDirector();
+  const { currentNetworkConfig } = useDynamicConnector();
   const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment } = useGameStore();
 
   const [untilDeath, setUntilDeath] = useState(false);
@@ -95,9 +98,13 @@ export default function CombatOverlay() {
     return getNewItemsEquipped(adventurer.equipment, adventurerState.equipment).length > 0;
   }, [adventurer?.equipment]);
 
+  const isJackpot = useMemo(() => {
+    return currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
+  }, [beast]);
+
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
-      <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${beast!.baseName.toLowerCase()}.png')` }]} />
+      <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${isJackpot ? `jackpot_${beast!.baseName.toLowerCase()}` : beast!.baseName.toLowerCase()}.png')` }]} />
 
       {/* Adventurer */}
       <Adventurer combatStats={combatStats} />

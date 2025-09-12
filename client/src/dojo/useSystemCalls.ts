@@ -25,7 +25,6 @@ export const useSystemCalls = () => {
   const { currentNetworkConfig } = useDynamicConnector();
   const { txRevertedEvent } = useAnalytics();
 
-  const TIP_AMOUNT = 10e18;
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const DUNGEON_ADDRESS = currentNetworkConfig.dungeon;
@@ -66,7 +65,7 @@ export const useSystemCalls = () => {
         await waitForGlobalState();
       }
 
-      let tx = await account!.execute(calls, { tip: TIP_AMOUNT });
+      let tx = await account!.execute(calls);
       let receipt: any = await waitForPreConfirmedTransaction(tx.transaction_hash, 0);
 
       if (receipt.execution_status === "REVERTED") {
@@ -89,7 +88,7 @@ export const useSystemCalls = () => {
   };
 
   const waitForPreConfirmedTransaction = async (txHash: string, retries: number) => {
-    if (retries > 2) {
+    if (retries > 5) {
       throw new Error("Transaction failed");
     }
 
@@ -101,13 +100,14 @@ export const useSystemCalls = () => {
 
       return receipt;
     } catch (error) {
+      console.error("Error waiting for pre confirmed transaction:", error);
       await delay(500);
       return waitForPreConfirmedTransaction(txHash, retries + 1);
     }
   }
 
   const waitForTransaction = async (txHash: string, retries: number, _account?: any) => {
-    if (retries > 2) {
+    if (retries > 9) {
       throw new Error("Transaction failed");
     }
 
@@ -154,15 +154,18 @@ export const useSystemCalls = () => {
         ? [0]
         : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
 
+    if (payment.paymentType === "Ticket") {
+      preCalls.push({
+        contractAddress: DUNGEON_TICKET,
+        entrypoint: "approve",
+        calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
+      });
+    }
+
     try {
       let tx = await account!.execute(
         [
           ...preCalls,
-          {
-            contractAddress: DUNGEON_TICKET,
-            entrypoint: "approve",
-            calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
-          },
           {
             contractAddress: DUNGEON_ADDRESS,
             entrypoint: "buy_game",
@@ -173,8 +176,7 @@ export const useSystemCalls = () => {
               false, // soulbound
             ]),
           },
-        ],
-        { tip: TIP_AMOUNT }
+        ]
       );
 
       callback();
@@ -219,7 +221,6 @@ export const useSystemCalls = () => {
             ]),
           },
         ],
-        { tip: TIP_AMOUNT }
       );
 
       const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
@@ -365,6 +366,17 @@ export const useSystemCalls = () => {
     return waitForClaimBeast(retries + 1);
   };
 
+  const fetchTokenURI = async (tokenId: number, retries: number = 0) => {
+    const tokenURI = await getBeastTokenURI(tokenId);
+
+    if (tokenURI || retries > 9) {
+      return tokenURI;
+    }
+
+    await delay(1000);
+    return fetchTokenURI(tokenId, retries + 1);
+  };
+
 
   const claimBeast = async (gameId: number, beast: Beast) => {
     let prefix =
@@ -387,20 +399,42 @@ export const useSystemCalls = () => {
             calldata: [gameId, beast.id, prefix, suffix],
           },
         ],
-        { tip: TIP_AMOUNT }
       );
 
       const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
+      const tokenId = parseInt(receipt.events[2].data[2], 16);
 
-      const tokenId = parseInt(receipt.events[1].data[2], 16);
-      const tokenURI = await getBeastTokenURI(tokenId);
+      const tokenURI = await fetchTokenURI(tokenId);
+
       setCollectableTokenURI(tokenURI);
+
+      if ((beast.id === 29 && prefix === 18 && suffix === 6) ||
+        (beast.id === 1 && prefix === 47 && suffix === 11) ||
+        (beast.id === 53 && prefix === 61 && suffix === 1)) {
+        await claimJackpot(tokenId);
+      }
 
       return tokenId;
     } catch (error) {
       console.error("Error claiming beast:", error);
       throw error;
     }
+  };
+
+  const claimSurvivorTokens = async (gameId: number) => {
+    await executeAction([{
+      contractAddress: DUNGEON_ADDRESS,
+      entrypoint: "claim_reward_token",
+      calldata: [gameId],
+    }], () => { });
+  };
+
+  const claimJackpot = async (tokenId: number) => {
+    await executeAction([{
+      contractAddress: DUNGEON_ADDRESS,
+      entrypoint: "claim_jackpot",
+      calldata: [tokenId],
+    }], () => { });
   };
 
   const mintSepoliaLords = async (account: any) => {
@@ -411,7 +445,7 @@ export const useSystemCalls = () => {
           entrypoint: "mint",
           calldata: [account.address, 100e18.toString(), "0x0"],
         },
-      ], { tip: TIP_AMOUNT });
+      ]);
 
       await waitForTransaction(tx.transaction_hash, 0, account!);
     } catch (error) {
@@ -503,11 +537,13 @@ export const useSystemCalls = () => {
     buyItems,
     selectStatUpgrades,
     claimBeast,
+    claimJackpot,
     createSettings,
     buyGame,
     mintGame,
     requestRandom,
     executeAction,
     mintSepoliaLords,
+    claimSurvivorTokens,
   };
 };

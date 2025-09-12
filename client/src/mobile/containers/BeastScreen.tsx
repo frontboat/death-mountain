@@ -16,6 +16,8 @@ import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
 import ItemTooltip from '../components/ItemTooltip';
+import { JACKPOT_AMOUNT } from '@/contexts/Statistics';
+import { JACKPOT_BEASTS } from '@/constants/beast';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -152,6 +154,7 @@ export default function BeastScreen() {
   const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
   const collectable = beast ? beast!.isCollectable : false;
   const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
+  const isJackpot = currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
 
   const hasNewItemsEquipped = useMemo(() => {
     if (!adventurer?.equipment || !adventurerState?.equipment) return false;
@@ -216,6 +219,11 @@ export default function BeastScreen() {
                   <Typography sx={styles.collectableText}>
                     {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
                   </Typography>
+                  {isJackpot && (
+                    <Typography sx={styles.traitBox}>
+                      {`${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!`}
+                    </Typography>
+                  )}
                   {collectableTraits && (
                     <Box sx={styles.traitIndicators}>
                       {collectableTraits.shiny && (

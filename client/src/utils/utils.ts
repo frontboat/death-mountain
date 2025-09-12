@@ -94,8 +94,10 @@ export function extractImageFromTokenURI(tokenURI: string): string | null {
 
       // Decode base64 to string
       const jsonString = atob(paddedBase64);
+      // Clean the JSON string to remove control characters
+      const cleanJsonString = jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
       // Parse the JSON
-      const metadata = JSON.parse(jsonString);
+      const metadata = JSON.parse(cleanJsonString);
       // Return the image field
       return metadata.image || null;
     }
@@ -164,3 +166,12 @@ export const formatAmount = (value: number): string => {
     return Math.round(value).toString();
   }
 };
+
+export function formatRewardNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(2) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toLocaleString();
+}

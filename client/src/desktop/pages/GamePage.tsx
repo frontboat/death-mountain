@@ -79,11 +79,6 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
-    if (mode === "real" && currentNetworkConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
-      setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
-      return;
-    }
-
     if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
@@ -103,7 +98,7 @@ export default function GamePage() {
       return;
     }
 
-    if (!controllerAddress && mode === "real") {
+    if (!controllerAddress && mode !== "practice") {
       login();
       return;
     }
