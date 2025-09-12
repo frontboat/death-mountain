@@ -19,12 +19,12 @@ const useGameDirector = () => {
       return useDesktopGameDirector();
     }
   } catch (error) {
-    console.warn("Failed to load GameDirector:", error);
+    console.warn("[Daydreams] Failed to load GameDirector:", error);
     // Try fallback
     try {
       return useDesktopGameDirector();
     } catch (fallbackError) {
-      console.error("Both GameDirectors failed:", fallbackError);
+      console.error("[Daydreams] Both GameDirectors failed:", fallbackError);
       return null;
     }
   }
@@ -85,17 +85,14 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
   // Ref to prevent multiple initializations
   const initializationRef = useRef(false);
   const lastSyncRef = useRef<number>(0); // retained but unused after removing throttle
+  const lastEventProcessedRef = useRef<number>(0); // Track last processed event
 
   // Initialize the Daydreams agent
   const initializeAgent = useCallback(async () => {
     if (initializationRef.current) return;
     initializationRef.current = true;
 
-    console.log("🤖 Starting Daydreams agent initialization...", {
-      playerId,
-      gameDirector: !!gameDirector,
-      apiKeySet: !!apiKey,
-    });
+    console.log("[Daydreams] Initializing AI assistant for player:", playerId);
 
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -109,13 +106,12 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
       }
 
       // Create the Daydreams agent
-      console.log("🤖 Creating Daydreams agent...");
       const agent = await createGameAgent({
         apiKey,
       });
 
       // Initialize with the GameDirector
-      console.log("🤖 Initializing with GameDirector...");
+      console.log("[Daydreams] Step 4: Connecting to game engine");
       await agent.initializeWithGameDirector(gameDirector);
 
       setState(prev => ({
@@ -125,9 +121,9 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
         isLoading: false,
       }));
 
-      console.log("🤖 Daydreams agent initialized successfully!");
+      console.log("[Daydreams] Step 5: AI assistant ready");
     } catch (error) {
-      console.error("🚨 Failed to initialize Daydreams agent:", error);
+      console.error("[Daydreams] Initialization failed:", error);
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -142,6 +138,24 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
     if (!state.agent || !autoSync) return;
 
     try {
+      // Collect all recent events - these are REAL processed GameEvents from the blockchain
+      let events: any[] = [];
+      
+      // exploreLog is an array of exploration events (discoveries, obstacles, defeated beasts, etc.)
+      // The log appears to be stored with newest first and may contain duplicates
+      if (exploreLog && exploreLog.length > 0) {
+        // Deduplicate by action_count and take the most recent (first) 10 unique events
+        const uniqueExploreEvents = Array.from(
+          new Map(exploreLog.map(e => [e.action_count, e])).values()
+        ).slice(0, 10);
+        events.push(...uniqueExploreEvents);
+      }
+      
+      // battleEvent is the most recent combat event
+      if (battleEvent) {
+        events.push(battleEvent);
+      }
+
       await syncGameState(
         state.agent.agent,
         playerId,
@@ -154,6 +168,8 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
           beast,
           marketItemIds,
           battleEvent,
+          exploreLog,
+          events, // These are actual GameEvent objects with type, xp_reward, gold_reward, etc.
           collectable,
           collectableTokenURI,
           collectableCount,
@@ -164,7 +180,7 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
       // keep timestamp updated if needed for future diagnostics
       lastSyncRef.current = Date.now();
     } catch (error) {
-      console.warn("Failed to sync game state:", error);
+      console.warn("[Daydreams] State sync failed:", error);
     }
   }, [
     state.agent,
@@ -187,6 +203,7 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
     collectableCount,
     selectedStats,
     autoSync,
+    gameDirector,
   ]);
 
   // Send a message to the AI
@@ -317,6 +334,28 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
     return () => clearInterval(interval);
   }, [state.isInitialized, autoSync, pollIntervalMs, syncState]);
 
+  // Episode-related methods
+  const getRecentGames = useCallback(async (limit: number = 10) => {
+    if (!state.agent) {
+      throw new Error("Agent not initialized");
+    }
+    return await state.agent.getRecentEpisodes(playerId, limit);
+  }, [state.agent, playerId]);
+
+  const findSimilarGames = useCallback(async (query: string, limit: number = 5) => {
+    if (!state.agent) {
+      throw new Error("Agent not initialized");
+    }
+    return await state.agent.findSimilarSituations(playerId, query, limit);
+  }, [state.agent, playerId]);
+
+  const analyzeStrategy = useCallback(async (situation: string) => {
+    if (!state.agent) {
+      throw new Error("Agent not initialized");
+    }
+    return await state.agent.analyzeStrategies(playerId, situation);
+  }, [state.agent, playerId]);
+
   return {
     // State
     isInitialized: state.isInitialized,
@@ -324,7 +363,7 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
     error: state.error,
     lastResponse: state.lastResponse,
 
-    // Methods
+    // Core Methods
     sendMessage,
     getGameStatus,
     getAdvice,
@@ -332,6 +371,11 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
     syncState,
     getContextState,
     getGameStateSnapshot,
+
+    // Episode Methods
+    getRecentGames,
+    findSimilarGames,
+    analyzeStrategy,
 
     // Utility methods
     retry: () => {

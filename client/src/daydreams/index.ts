@@ -8,6 +8,9 @@ export { explorationContext } from "./contexts/explorationContext";
 export { combatContext } from "./contexts/combatContext";
 export { levelUpContext } from "./contexts/levelUpContext";
 
+// Episode hooks and analytics
+export { gameEpisodeHooks, analyzeGameHistory } from "./episodeHooks";
+
 // React hooks and components
 export { useDaydreamsGame, useGameCommands } from "./useDaydreamsGame";
 export { default as GameAIAssistant } from "./GameAIAssistant";

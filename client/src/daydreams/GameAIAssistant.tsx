@@ -55,29 +55,29 @@ export const GameAIAssistant: React.FC<GameAIAssistantProps> = ({
     autoSync: true,
   });
 
-  // Debug logging
-  useEffect(() => {
-    console.log("🤖 GameAIAssistant state:", {
-      playerId,
-      sessionId,
-      gameId,
-      adventurer,
-      isInitialized,
-      isLoading,
-      error,
-      isExpanded,
-    });
-  }, [playerId, sessionId, gameId, adventurer, isInitialized, isLoading, error, isExpanded]);
+  // Debug logging - uncomment if needed for troubleshooting
+  // useEffect(() => {
+  //   console.log("[Daydreams] Assistant state:", {
+  //     playerId,
+  //     sessionId,
+  //     gameId,
+  //     adventurer,
+  //     isInitialized,
+  //     isLoading,
+  //     error,
+  //     isExpanded,
+  //   });
+  // }, [playerId, sessionId, gameId, adventurer, isInitialized, isLoading, error, isExpanded]);
 
   const handleDumpState = async () => {
     try {
       await syncState(true);
       const ai = await getContextState();
       const ui = getGameStateSnapshot();
-      console.log("🧠 AI context memory:", ai?.memory);
-      console.log("📦 UI store snapshot:", ui);
+      console.log("[Daydreams] AI memory state:", ai?.memory);
+      console.log("[Daydreams] UI store state:", ui);
     } catch (e) {
-      console.warn("Failed to dump state:", e);
+      console.warn("[Daydreams] State dump failed:", e);
     }
   };
 

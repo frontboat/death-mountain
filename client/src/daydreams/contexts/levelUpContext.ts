@@ -1,5 +1,6 @@
 import { context, action } from "@daydreamsai/core";
 import * as z from "zod";
+import { GameEvent, getEventTitle } from "@/utils/events";
 
 interface LevelUpMemory {
   gameDirector?: any; // Reference to the GameDirector
@@ -17,11 +18,13 @@ interface LevelUpMemory {
     wisdom: number;
     charisma: number;
   };
+  recentEvents?: GameEvent[]; // Recent events leading to level up
   
   // Tracking
   lastAction?: string;
   lastActionTime?: number;
   totalPointsAllocated: number;
+  recentAllocationHash?: string; // Track recent allocation to prevent duplicates
   
   preferences: {
     preferredStats: string[];
@@ -52,20 +55,31 @@ export const levelUpContext = context<LevelUpMemory>({
   <status>No stat points available</status>`;
     }
     
+    // Calculate max health: 100 base + (vitality * 15)
+    const maxHealth = 100 + ((adventurer.stats?.vitality || 0) * 15);
+    
     return `<phase>level_up</phase>
-  <level>${adventurer.level}</level>
-  <points>${adventurer.stat_upgrades_available}</points>
-  <stats>
+  <adventurer health="${adventurer.health}" maxHealth="${maxHealth}" level="${adventurer.level}"/>
+  <points_to_allocate>${adventurer.stat_upgrades_available}</points_to_allocate>
+  <current_stats>
     <str>${adventurer.stats?.strength || 0}</str>
     <dex>${adventurer.stats?.dexterity || 0}</dex>
     <vit>${adventurer.stats?.vitality || 0}</vit>
     <int>${adventurer.stats?.intelligence || 0}</int>
     <wis>${adventurer.stats?.wisdom || 0}</wis>
     <cha>${adventurer.stats?.charisma || 0}</cha>
-  </stats>`;
+    <luck>${adventurer.stats?.luck || 0}</luck>
+  </current_stats>
+  <instructions>Allocate exactly ${adventurer.stat_upgrades_available} point${adventurer.stat_upgrades_available > 1 ? 's' : ''} to stats. Values are points to ADD, not new totals.</instructions>`;
   },
   
   instructions: `You have stat points to allocate! This MUST be done before any other action.
+  
+IMPORTANT: The values you provide are the NUMBER OF POINTS TO ADD to each stat, NOT the total value!
+- If you have 1 point available, the sum of all values must equal exactly 1
+- If you have 3 points available, the sum of all values must equal exactly 3
+- Example: With 1 point, use {strength:1, dexterity:0, vitality:0, intelligence:0, wisdom:0, charisma:0} to add 1 to STR
+- Example: With 3 points, use {strength:0, dexterity:1, vitality:2, intelligence:0, wisdom:0, charisma:0} to add 1 to DEX and 2 to VIT
   
 Stats and their benefits:
 - STR: +10% attack damage per point
@@ -74,6 +88,7 @@ Stats and their benefits:
 - INT: Avoid obstacle damage (INT/Level ratio)
 - WIS: Avoid ambush penalties (WIS/Level ratio)
 - CHA: Market discounts (reduces prices)
+- LUCK: Critical hit chance (cannot be upgraded with stat points, only from items)
 
 Recommended allocations:
 - Balanced: Spread points between VIT, DEX, and your damage stat
@@ -81,21 +96,20 @@ Recommended allocations:
 - Damage: Focus on STR for maximum damage output
 - Escape Artist: Focus on DEX to guarantee flee success
 - Explorer: Balance INT and WIS to avoid hazards
-
-You MUST allocate ALL available points before continuing!`,
+`,
   
 }).setActions([
   // Allocate stat points action
   action({
     name: "allocate-stats",
-    description: "Allocate available stat points (REQUIRED before other actions)",
+    description: "Allocate available stat points (REQUIRED before other actions). The values are the NUMBER OF POINTS TO ADD, not total values. Sum must equal available points exactly.",
     schema: z.object({
-      strength: z.number().min(0).default(0).describe("Points to add to strength"),
-      dexterity: z.number().min(0).default(0).describe("Points to add to dexterity"),
-      vitality: z.number().min(0).default(0).describe("Points to add to vitality"),
-      intelligence: z.number().min(0).default(0).describe("Points to add to intelligence"),
-      wisdom: z.number().min(0).default(0).describe("Points to add to wisdom"),
-      charisma: z.number().min(0).default(0).describe("Points to add to charisma"),
+      strength: z.number().min(0).default(0).describe("Number of points to ADD to strength (not the total value)"),
+      dexterity: z.number().min(0).default(0).describe("Number of points to ADD to dexterity (not the total value)"),
+      vitality: z.number().min(0).default(0).describe("Number of points to ADD to vitality (not the total value)"),
+      intelligence: z.number().min(0).default(0).describe("Number of points to ADD to intelligence (not the total value)"),
+      wisdom: z.number().min(0).default(0).describe("Number of points to ADD to wisdom (not the total value)"),
+      charisma: z.number().min(0).default(0).describe("Number of points to ADD to charisma (not the total value)"),
     }),
     handler: async ({ strength, dexterity, vitality, intelligence, wisdom, charisma }, ctx) => {
       if (ctx.memory.actionInFlight) {
@@ -109,6 +123,21 @@ You MUST allocate ALL available points before continuing!`,
       const totalPoints = strength + dexterity + vitality + intelligence + wisdom + charisma;
       const availablePoints = ctx.memory.adventurer?.stat_upgrades_available || 0;
       
+      // Create a hash of this allocation to detect duplicates
+      const allocationHash = `${strength}-${dexterity}-${vitality}-${intelligence}-${wisdom}-${charisma}`;
+      
+      // Check if this exact allocation was recently attempted (within 10 seconds)
+      if (ctx.memory.recentAllocationHash === allocationHash && 
+          ctx.memory.lastActionTime && 
+          Date.now() - ctx.memory.lastActionTime < 10000) {
+        return {
+          success: false,
+          error: "Duplicate allocation detected",
+          message: "This exact stat allocation was just processed. Please wait for the transaction to confirm.",
+          hint: "The blockchain is still processing your previous allocation.",
+        };
+      }
+      
       if (totalPoints === 0) {
         return {
           success: false,
@@ -121,7 +150,10 @@ You MUST allocate ALL available points before continuing!`,
         return {
           success: false,
           error: "Too many points",
-          message: `You only have ${availablePoints} points available, but tried to allocate ${totalPoints}`,
+          message: `You only have ${availablePoints} points available, but tried to allocate ${totalPoints}. Remember: values are points to ADD, not total stat values.`,
+          availablePoints,
+          attemptedPoints: totalPoints,
+          hint: `Use values that sum to exactly ${availablePoints}. For example: {strength:${availablePoints}, dexterity:0, vitality:0, intelligence:0, wisdom:0, charisma:0}`,
         };
       }
       
@@ -129,8 +161,9 @@ You MUST allocate ALL available points before continuing!`,
         return {
           success: false,
           error: "Points remaining",
-          message: `You must allocate all ${availablePoints} points. You only allocated ${totalPoints}`,
+          message: `You must allocate all ${availablePoints} points. You only allocated ${totalPoints}. Remember: you must use ALL available points.`,
           remaining: availablePoints - totalPoints,
+          hint: `Add ${availablePoints - totalPoints} more points to your allocation.`,
         };
       }
       
@@ -160,7 +193,7 @@ You MUST allocate ALL available points before continuing!`,
         
         await gameDirector.executeGameAction({
           type: "select_stat_upgrades",
-          stats: {
+          statUpgrades: {
             strength,
             dexterity,
             vitality,
@@ -174,6 +207,13 @@ You MUST allocate ALL available points before continuing!`,
         ctx.memory.lastAction = "allocate_stats";
         ctx.memory.lastActionTime = Date.now();
         ctx.memory.totalPointsAllocated += totalPoints;
+        ctx.memory.recentAllocationHash = allocationHash;
+        
+        // Mark that we've used the stat points (prevents double allocation)
+        // This is a temporary fix until state syncs from blockchain
+        if (ctx.memory.adventurer) {
+          ctx.memory.adventurer.stat_upgrades_available = 0;
+        }
         
         // Build allocation summary
         const allocations = [];
@@ -186,7 +226,7 @@ You MUST allocate ALL available points before continuing!`,
         
         return {
           success: true,
-          message: `Allocated ${totalPoints} stat points: ${allocations.join(", ")}`,
+          message: `Allocated ${totalPoints} stat points: ${allocations.join(", ")}. Please wait for the transaction to confirm before taking further actions.`,
           allocated: {
             strength,
             dexterity,
@@ -196,6 +236,7 @@ You MUST allocate ALL available points before continuing!`,
             charisma,
           },
           totalPoints,
+          note: "State will update once the blockchain confirms the transaction",
         };
       } catch (error) {
         return {

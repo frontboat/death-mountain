@@ -1,7 +1,15 @@
 import { context, action } from "@daydreamsai/core";
 import * as z from "zod";
 import { ItemUtils } from "@/utils/loot";
-import { calculateLevel, calculateCombatStats, calculateAttackDamage, calculateBeastDamage } from "@/utils/game";
+import { 
+  calculateLevel, 
+  calculateCombatStats, 
+  calculateAttackDamage, 
+  calculateBeastDamage,
+  ability_based_percentage 
+} from "@/utils/game";
+import { getAttackType, getArmorType } from "@/utils/beast";
+import { GameEvent, getEventTitle } from "@/utils/events";
 
 interface CombatMemory {
   gameDirector?: any; // Reference to the GameDirector
@@ -15,6 +23,7 @@ interface CombatMemory {
   beast?: any;
   battleEvent?: any;
   bag?: any[];
+  recentEvents?: GameEvent[]; // Recent combat events
   
   // Combat tracking
   lastAction?: string;
@@ -25,47 +34,74 @@ interface CombatMemory {
 
 // Helper function to format equipment for XML
 const formatEquip = (item: any) => {
-  if (!item || !item.id) return "None";
+  if (!item || !item.id || item.id === 0) return "None";
   const name = ItemUtils.getItemName(item.id);
   const tier = ItemUtils.getItemTier(item.id);
   const level = calculateLevel(item.xp || 0);
-  return `${name} T${tier} Lv${level}`;
+  const type = ItemUtils.getItemType(item.id);
+  
+  // Format: "Name:L{level}:T{tier}:{type}"
+  return `${name}:L${level}:T${tier}:${type}`;
 };
 
 // Calculate combat preview/estimates
 const getCombatPreview = (adventurer: any, beast: any, bag: any[]) => {
   if (!adventurer || !beast) return null;
   
-  const combatStats = calculateCombatStats(adventurer, bag || [], beast);
+  // Calculate actual damage values using game utils
+  const { baseDamage, criticalDamage } = calculateAttackDamage(
+    adventurer.equipment?.weapon, 
+    adventurer, 
+    beast
+  );
   
-  // Calculate flee chance based on DEX
-  const fleeChance = Math.min(100, Math.max(0, 
-    (adventurer.stats?.dexterity || 0) / adventurer.level * 100
-  ));
+  // Calculate beast damage against each armor piece
+  let totalBeastDamage = 0;
+  let armorCount = 0;
+  const armorSlots = ['chest', 'head', 'waist', 'hand', 'foot'];
+  
+  for (const slot of armorSlots) {
+    const armor = adventurer.equipment?.[slot];
+    if (armor && armor.id !== 0) {
+      totalBeastDamage += calculateBeastDamage(beast, adventurer, armor);
+      armorCount++;
+    }
+  }
+  
+  // Average beast damage across armor pieces
+  const avgBeastDamage = armorCount > 0 
+    ? Math.floor(totalBeastDamage / armorCount)
+    : Math.floor(beast.level * (6 - beast.tier) * 1.5); // No armor damage
+  
+  // Calculate flee chance using actual formula
+  const fleeChance = ability_based_percentage(
+    adventurer.xp || 0,
+    adventurer.stats?.dexterity || 0
+  );
   
   // Estimate combat outcome
-  let outcome = "uncertain";
-  const healthRatio = adventurer.health / beast.health;
-  const damageRatio = combatStats.baseDamage / 30; // Rough estimate
+  const roundsToKill = Math.ceil(beast.health / baseDamage);
+  const damageToTake = roundsToKill * avgBeastDamage;
   
-  if (healthRatio > 2 && damageRatio > 1) {
-    outcome = "likely_victory";
-  } else if (healthRatio < 0.5 || damageRatio < 0.3) {
-    outcome = "likely_defeat";
-  } else if (fleeChance > 75) {
-    outcome = "flee_recommended";
+  let outcome = "";
+  if (roundsToKill <= 3 && damageToTake < adventurer.health * 0.5) {
+    outcome = `Win in ${roundsToKill} rounds, take ~${damageToTake} damage`;
+  } else if (damageToTake >= adventurer.health) {
+    outcome = `Dangerous! May die in ${Math.ceil(adventurer.health / avgBeastDamage)} rounds`;
+  } else {
+    outcome = `Win in ${roundsToKill} rounds, take ~${damageToTake} damage`;
   }
   
   return {
     playerDamage: {
-      base: combatStats.baseDamage,
-      critical: combatStats.criticalDamage,
+      base: baseDamage,
+      critical: criticalDamage,
     },
-    beastDamage: {
-      max: Math.floor(beast.level * 2), // Rough estimate
-    },
-    fleeChance: Math.floor(fleeChance),
-    critChance: combatStats.critChance,
+    beastDamage: avgBeastDamage,
+    fleeChance,
+    critChance: adventurer.stats?.luck || 0,
+    roundsToKill,
+    damageToTake,
     outcome,
   };
 };
@@ -95,14 +131,61 @@ export const combatContext = context<CombatMemory>({
     
     const combatPreview = getCombatPreview(adventurer, beast, memory.bag || []);
     
+    // Calculate max health: 100 base + (vitality * 15)
+    const maxHealth = 100 + ((adventurer.stats?.vitality || 0) * 15);
+    
+    // Format beast info
+    const beastType = beast?.type || "Unknown";
+    const beastAttackType = getAttackType(beast?.id || 0);
+    const beastArmorType = getArmorType(beast?.id || 0);
+    
+    // Format recent combat events (most recent 5, deduplicated, sorted by action_count descending)
+    const uniqueEvents = memory.recentEvents ? 
+      Array.from(new Map(memory.recentEvents.map(e => [e.action_count, e])).values())
+        .sort((a, b) => (b.action_count || 0) - (a.action_count || 0)) : [];
+    const recentCombatEvents = uniqueEvents.slice(0, 10) // Get more initially to ensure we have 5 combat events
+      .filter(event => ['attack', 'beast_attack', 'flee', 'ambush', 'beast', 'defeated_beast', 'fled_beast'].includes(event.type))
+      .slice(0, 5) // Then take the first 5 combat events
+      .map(event => {
+        if (event.type === 'attack' && event.attack) {
+          return `    <event type="attack">Player dealt ${event.attack.damage} damage${event.attack.critical_hit ? ' (CRIT!)' : ''}</event>`;
+        } else if (event.type === 'beast_attack' && event.attack) {
+          return `    <event type="beast_attack">Beast dealt ${event.attack.damage} damage to ${event.attack.location}${event.attack.critical_hit ? ' (CRIT!)' : ''}</event>`;
+        } else if (event.type === 'flee') {
+          return `    <event type="flee">Flee attempt ${event.success ? 'succeeded' : 'failed'}</event>`;
+        } else if (event.type === 'defeated_beast') {
+          return `    <event type="defeated_beast">Victory! (+${event.xp_reward} XP, +${event.gold_reward} gold)</event>`;
+        } else if (event.type === 'fled_beast') {
+          return `    <event type="fled_beast">Escaped! (+${event.xp_reward} XP)</event>`;
+        } else {
+          return `    <event type="${event.type}">${getEventTitle(event)}</event>`;
+        }
+      }).join('\n') || '    <!-- No recent combat events -->';
+    
     return `<phase>combat</phase>
-  <adventurer health="${adventurer.health}" level="${adventurer.level}" gold="${adventurer.gold}" xp="${adventurer.xp}"/>
-  <stats str="${adventurer.stats?.strength || 0}" dex="${adventurer.stats?.dexterity || 0}" vit="${adventurer.stats?.vitality || 0}" int="${adventurer.stats?.intelligence || 0}" wis="${adventurer.stats?.wisdom || 0}" cha="${adventurer.stats?.charisma || 0}"/>
-  <equipment weapon="${formatEquip(adventurer.equipment?.weapon)}" chest="${formatEquip(adventurer.equipment?.chest)}" head="${formatEquip(adventurer.equipment?.head)}" waist="${formatEquip(adventurer.equipment?.waist)}" foot="${formatEquip(adventurer.equipment?.foot)}" hand="${formatEquip(adventurer.equipment?.hand)}" neck="${formatEquip(adventurer.equipment?.neck)}" ring="${formatEquip(adventurer.equipment?.ring)}"/>
-  <beast name="${beast?.name || 'Unknown'}" health="${beast?.health || 0}" level="${beast?.level || 1}" tier="${beast?.tier || 0}"/>
-  <damage player="${combatPreview?.playerDamage.base || 0}" critical="${combatPreview?.playerDamage.critical || 0}" beast="${combatPreview?.beastDamage.max || 0}"/>
-  <flee chance="${combatPreview?.fleeChance || 0}"/>
-  <estimate>${combatPreview?.outcome || 'Unknown'}</estimate>`;
+  <adventurer health="${adventurer.health}" maxHealth="${maxHealth}" level="${adventurer.level}" gold="${adventurer.gold}" xp="${adventurer.xp}"/>
+  <stats str="${adventurer.stats?.strength || 0}" dex="${adventurer.stats?.dexterity || 0}" vit="${adventurer.stats?.vitality || 0}" int="${adventurer.stats?.intelligence || 0}" wis="${adventurer.stats?.wisdom || 0}" cha="${adventurer.stats?.charisma || 0}" luck="${adventurer.stats?.luck || 0}"/>
+  <equipment>
+    <weapon>${formatEquip(adventurer.equipment?.weapon)}</weapon>
+    <chest>${formatEquip(adventurer.equipment?.chest)}</chest>
+    <head>${formatEquip(adventurer.equipment?.head)}</head>
+    <waist>${formatEquip(adventurer.equipment?.waist)}</waist>
+    <foot>${formatEquip(adventurer.equipment?.foot)}</foot>
+    <hand>${formatEquip(adventurer.equipment?.hand)}</hand>
+    <neck>${formatEquip(adventurer.equipment?.neck)}</neck>
+    <ring>${formatEquip(adventurer.equipment?.ring)}</ring>
+  </equipment>
+  <beast name="${beast?.name || 'Unknown'}" health="${beast?.health || 0}" level="${beast?.level || 1}" tier="${beast?.tier || 0}" type="${beastType}" attackType="${beastAttackType}" armorType="${beastArmorType}"/>
+  <combat>
+    <damage player="${combatPreview?.playerDamage.base || 0}" critical="${combatPreview?.playerDamage.critical || 0}" beast="${combatPreview?.beastDamage || 0}"/>
+    <flee chance="${combatPreview?.fleeChance || 0}%"/>
+    <critChance value="${combatPreview?.critChance || 0}%"/>
+    <rounds toKill="${combatPreview?.roundsToKill || 0}"/>
+    <estimate>${combatPreview?.outcome || 'Unknown'}</estimate>
+  </combat>
+  <recent_events>
+${recentCombatEvents}
+  </recent_events>`;
   },
   
   instructions: `You are in combat with a beast in Death Mountain!
@@ -112,12 +195,22 @@ Available actions:
 - flee: Attempt to escape (success based on DEX/Level ratio)
 - equip: Change equipment mid-combat (beast gets free attack)
 
-Combat tips:
-- Check type advantages (Bludgeon > Blade > Magic > Bludgeon)
-- Higher STR = more damage
-- Higher DEX = better flee chance
-- Consider fleeing if health is low or beast is too strong
-- Equipment swaps give the beast a free attack, so plan carefully`,
+Combat Mechanics:
+- Player Damage = WeaponLevel * (6-Tier) + STR bonus + type advantage + special bonuses
+- Beast Damage = BeastLevel * (6-Tier) - ArmorValue + type disadvantage
+- Critical hits: Based on LUCK stat (shown as critChance)
+- Flee success: DEX/Level ratio (100% if DEX >= Level)
+
+Type Advantages (50% damage bonus/penalty):
+- Weapons vs Beast Armor:
+  * Magic > Metal, Blade > Cloth, Bludgeon > Hide (bonus)
+  * Magic < Hide, Blade < Metal, Bludgeon < Cloth (penalty)
+- Beast Attack vs Your Armor:
+  * Magic > Metal, Blade > Cloth, Bludgeon > Hide (more damage to you)
+  * Magic < Hide, Blade < Metal, Bludgeon < Cloth (less damage to you)
+
+The combat estimate shows expected rounds to win and damage you'll take.
+Equipment swaps give the beast a free attack, so plan carefully!`,
 
   onStep: async (ctx) => {
     // Track combat rounds
@@ -198,9 +291,9 @@ Combat tips:
     name: "flee",
     description: "Attempt to flee from combat",
     schema: z.object({
-      untilSuccess: z.boolean().default(false).describe("Keep trying to flee until successful"),
+      untilDeath: z.boolean().default(false).describe("Keep trying to flee until successful or death"),
     }),
-    handler: async ({ untilSuccess }, ctx) => {
+    handler: async ({ untilDeath }, ctx) => {
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
@@ -233,7 +326,7 @@ Combat tips:
       try {
         await gameDirector.executeGameAction({
           type: "flee",
-          untilSuccess,
+          untilDeath,  // Fixed: was untilSuccess
         });
         
         ctx.memory.lastAction = "flee";
@@ -246,8 +339,8 @@ Combat tips:
         
         return {
           success: true,
-          message: untilSuccess 
-            ? "Attempting to flee until successful..." 
+          message: untilDeath 
+            ? "Attempting to flee until successful or death..." 
             : `Attempting to flee (${Math.floor(fleeChance)}% chance)...`,
           fleeChance: Math.floor(fleeChance),
         };

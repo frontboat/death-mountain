@@ -4,6 +4,8 @@ import { gameContext } from "./contexts/gameContext";
 import { explorationContext } from "./contexts/explorationContext";
 import { combatContext } from "./contexts/combatContext";
 import { levelUpContext } from "./contexts/levelUpContext";
+import { gameEpisodeHooks, analyzeGameHistory } from "./episodeHooks";
+import { processGameEvent, getEventTitle, GameEvent } from "@/utils/events";
 import * as z from "zod";
 
 // Unified interface that works with both desktop and mobile GameDirector
@@ -26,6 +28,9 @@ export interface DaydreamsGameIntegration {
   sendMessage: (playerId: string, message: string, sessionId?: string) => Promise<any>;
   getGameStatus: (playerId: string, sessionId?: string) => Promise<any>;
   getContextState: (playerId: string, sessionId?: string) => Promise<any>;
+  getRecentEpisodes: (playerId: string, limit?: number) => Promise<any>;
+  findSimilarSituations: (playerId: string, query: string, limit?: number) => Promise<any>;
+  analyzeStrategies: (playerId: string, situation: string) => Promise<any>;
 }
 
 /**
@@ -36,11 +41,11 @@ export const createGameAgent = async (options?: {
   apiKey?: string;
 }): Promise<DaydreamsGameIntegration> => {
   
-  console.log("🤖 createGameAgent called with options:", {
-    hasModel: !!options?.model,
-    hasApiKey: !!options?.apiKey,
-    envApiKey: !!import.meta.env.VITE_OPENAI_API_KEY,
-  });
+  // Log initialization details if needed for debugging
+  // console.log("[Daydreams] Creating agent with options:", {
+  //   hasModel: !!options?.model,
+  //   hasApiKey: !!options?.apiKey,
+  // });
 
   // Use API key from options or environment
   const apiKey = options?.apiKey || import.meta.env.VITE_OPENAI_API_KEY;
@@ -50,7 +55,7 @@ export const createGameAgent = async (options?: {
   }
   
   // Create the Daydreams agent
-  console.log("🤖 Creating OpenAI client (browser) with API key:", apiKey ? "✅ Present" : "❌ Missing");
+  console.log("[Daydreams] Step 1: Creating OpenAI client");
 
   // Configure OpenAI client explicitly with the provided API key (no env access in browser)
   const openaiClient = createOpenAI({ apiKey });
@@ -70,17 +75,27 @@ export const createGameAgent = async (options?: {
         description: "Text response to user",
       },
     },
+    episodeHooks: gameEpisodeHooks,
+    episodicMemory: {
+      enabled: true,
+      maxEpisodesPerContext: 100, // Keep last 100 episodes per player
+      minEpisodeGap: 1000, // Minimum 1 second between episodes
+      indexing: {
+        enabled: true,
+        contentMode: "summary+logs", // Index both summary and logs for better search
+      },
+    },
   });
 
   // Start the agent with timeout
-  console.log("🤖 Starting agent...");
+  console.log("[Daydreams] Step 2: Starting agent core");
   await Promise.race([
     agent.start(),
     new Promise((_, reject) => 
       setTimeout(() => reject(new Error("Agent initialization timeout")), 30000)
     )
   ]);
-  console.log("🤖 Agent started successfully!");
+  console.log("[Daydreams] Step 3: Agent core started");
 
   const integration: DaydreamsGameIntegration = {
     agent,
@@ -105,6 +120,8 @@ export const createGameAgent = async (options?: {
       // Note: In a real implementation, you might want to create a more sophisticated
       // bridge pattern to avoid direct coupling
       (agent as any)._gameDirector = gameDirector;
+      
+      console.log("[Daydreams] GameDirector connected");
     },
 
     /**
@@ -237,6 +254,99 @@ export const createGameAgent = async (options?: {
         };
       }
     },
+    
+    /**
+     * Get recent episodes for a player's game history
+     */
+    getRecentEpisodes: async (playerId: string, limit: number = 10) => {
+      try {
+        const contextId = `${gameContext.type}:${playerId}`;
+        const episodes = await agent.memory.episodes.getByContext(contextId, limit);
+        
+        return {
+          success: true,
+          episodes: episodes.map((ep: any) => ({
+            id: ep.id,
+            type: ep.type,
+            summary: ep.summary,
+            timestamp: ep.timestamp,
+            duration: ep.duration,
+            metadata: ep.metadata,
+          })),
+          total: episodes.length,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+          episodes: [],
+        };
+      }
+    },
+    
+    /**
+     * Find similar past game situations using vector search
+     */
+    findSimilarSituations: async (playerId: string, query: string, limit: number = 5) => {
+      try {
+        const contextId = `${gameContext.type}:${playerId}`;
+        const similar = await agent.memory.episodes.findSimilar(contextId, query, limit);
+        
+        return {
+          success: true,
+          query,
+          situations: similar.map((ep: any) => ({
+            id: ep.id,
+            type: ep.type,
+            summary: ep.summary,
+            similarity: ep.similarity,
+            metadata: ep.metadata,
+            timestamp: ep.timestamp,
+          })),
+          total: similar.length,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+          situations: [],
+        };
+      }
+    },
+    
+    /**
+     * Analyze past strategies for a given situation
+     */
+    analyzeStrategies: async (playerId: string, situation: string) => {
+      try {
+        const contextId = `${gameContext.type}:${playerId}`;
+        const analysis = await analyzeGameHistory(agent, contextId, situation, 20);
+        
+        // Convert strategy map to array for easier consumption
+        const strategies = Array.from(analysis.commonStrategies.entries())
+          .map(([strategy, count]) => ({ strategy, count }))
+          .sort((a, b) => b.count - a.count);
+        
+        return {
+          success: true,
+          situation,
+          analysis: {
+            episodesAnalyzed: analysis.totalEpisodes,
+            successRate: Math.round(analysis.successRate * 100),
+            commonStrategies: strategies,
+            bestOutcomes: analysis.bestOutcomes.slice(0, 3), // Top 3 best outcomes
+            recommendation: analysis.successRate > 0.6 
+              ? "This situation has been handled successfully before"
+              : "This situation has been challenging - consider a different approach",
+          },
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    },
   };
 
   return integration;
@@ -257,6 +367,122 @@ export const useDaydreamsIntegration = () => {
 };
 
 /**
+ * Process and store game events in the agent's memory
+ */
+export const processGameEvents = async (
+  agent: any,
+  playerId: string,
+  events: any[],
+  sessionId?: string
+) => {
+  try {
+    const contextState = await agent.getContext({
+      context: gameContext,
+      args: { playerId, sessionId },
+    });
+
+    // Check if events are already processed GameEvent objects or raw events
+    const processedEvents = events.map((event: any) => {
+      try {
+        // If event already has a 'type' field and no 'details' field, it's already processed
+        if (event.type && !event.details) {
+          return event as GameEvent; // Already a GameEvent, use as-is
+        }
+        // Otherwise, it's a raw event that needs processing
+        return processGameEvent(event);
+      } catch (error) {
+        console.warn("[Daydreams] Failed to process event:", event, error);
+        return null;
+      }
+    }).filter(Boolean) as GameEvent[];
+
+    // Initialize recentEvents if not present
+    if (!contextState.memory.recentEvents) {
+      contextState.memory.recentEvents = [];
+    }
+
+    // Deduplicate events by action_count before adding
+    const existingActionCounts = new Set(contextState.memory.recentEvents.map(e => e.action_count));
+    const newUniqueEvents = processedEvents.filter(e => !existingActionCounts.has(e.action_count));
+    
+    // Add new events to the BEGINNING (newest first) and keep only 50
+    contextState.memory.recentEvents = [...newUniqueEvents, ...contextState.memory.recentEvents].slice(0, 50);
+
+    // Add events to game history with titles
+    for (const event of processedEvents) {
+      contextState.memory.gameHistory.push({
+        action: event.type,
+        timestamp: Date.now(),
+        success: true,
+        details: {
+          title: getEventTitle(event),
+          event,
+        },
+      });
+    }
+
+    // Update phase-specific contexts based on events
+    const gameId = contextState.memory.currentGameId;
+    if (gameId) {
+      for (const event of processedEvents) {
+        // Update exploration context with discovery/obstacle events
+        if (['discovery', 'obstacle', 'buy_items', 'market_items'].includes(event.type)) {
+          const exploreCtx = await agent.getContext({
+            context: explorationContext,
+            args: { gameId, playerId },
+          });
+          if (!exploreCtx.memory.recentEvents) {
+            exploreCtx.memory.recentEvents = [];
+          }
+          // Avoid duplicates by checking action_count
+          if (!exploreCtx.memory.recentEvents.some(e => e.action_count === event.action_count)) {
+            exploreCtx.memory.recentEvents.unshift(event); // Add to beginning (newest first)
+            exploreCtx.memory.recentEvents = exploreCtx.memory.recentEvents.slice(0, 30); // Keep last 30
+          }
+        }
+
+        // Update combat context with battle events
+        if (['attack', 'beast_attack', 'flee', 'ambush', 'beast', 'defeated_beast', 'fled_beast'].includes(event.type)) {
+          const combatCtx = await agent.getContext({
+            context: combatContext,
+            args: { gameId, playerId },
+          });
+          if (!combatCtx.memory.recentEvents) {
+            combatCtx.memory.recentEvents = [];
+          }
+          // Avoid duplicates by checking action_count
+          if (!combatCtx.memory.recentEvents.some(e => e.action_count === event.action_count)) {
+            combatCtx.memory.recentEvents.unshift(event); // Add to beginning (newest first)
+            combatCtx.memory.recentEvents = combatCtx.memory.recentEvents.slice(0, 30); // Keep last 30
+          }
+        }
+
+        // Update level-up context
+        if (event.type === 'level_up' || event.type === 'stat_upgrade') {
+          const levelCtx = await agent.getContext({
+            context: levelUpContext,
+            args: { gameId, playerId },
+          });
+          if (!levelCtx.memory.recentEvents) {
+            levelCtx.memory.recentEvents = [];
+          }
+          // Avoid duplicates by checking action_count
+          if (!levelCtx.memory.recentEvents.some(e => e.action_count === event.action_count)) {
+            levelCtx.memory.recentEvents.unshift(event); // Add to beginning (newest first)
+            levelCtx.memory.recentEvents = levelCtx.memory.recentEvents.slice(0, 30); // Keep last 30
+          }
+        }
+      }
+    }
+
+    return processedEvents;
+  } catch (error) {
+    console.error("[Daydreams] Failed to process events:", error);
+    return [];
+  }
+};
+
+/**
  * Utility to sync game state from the blockchain to Daydreams context
  */
 export const syncGameState = async (
@@ -271,6 +497,8 @@ export const syncGameState = async (
     beast?: any;
     marketItemIds?: number[];
     battleEvent?: any;
+    exploreLog?: any;
+    events?: any[];
     collectable?: any;
     collectableTokenURI?: string | null;
     collectableCount?: number;
@@ -304,6 +532,11 @@ export const syncGameState = async (
     contextState.memory.collectableCount = gameState.collectableCount ?? contextState.memory.collectableCount;
     contextState.memory.selectedStats = gameState.selectedStats ?? contextState.memory.selectedStats;
     contextState.memory.gameDirector = gameState.gameDirector ?? contextState.memory.gameDirector;
+
+    // Process any new events
+    if (gameState.events && gameState.events.length > 0) {
+      await processGameEvents(agent, playerId, gameState.events, sessionId);
+    }
 
     // Sync to appropriate phase-specific context
     const gameId = contextState.memory.currentGameId;

@@ -127,18 +127,18 @@ Current phase determines available actions. Help the player make strategic decis
     
     if (ctx.memory.currentPhase !== phase) {
       ctx.memory.currentPhase = phase as any;
-      console.log(`Game phase changed to: ${phase}`);
+      // console.log(`[Daydreams] Phase changed: ${phase}`);
     }
   },
   
   onRun: async (ctx) => {
-    console.log(`Game context run completed for player: ${ctx.args.playerId}`);
+    // console.log(`[Daydreams] Context run completed for player: ${ctx.args.playerId}`);
   },
   
   onError: async (error, ctx) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error(
-      `Error in game context for player ${ctx.args.playerId}:`,
+      `[Daydreams] Error for player ${ctx.args.playerId}:`,
       message
     );
     
