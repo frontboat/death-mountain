@@ -1,6 +1,9 @@
 import { createDreams } from "@daydreamsai/core";
 import { createOpenAI } from "@ai-sdk/openai";
-import { gameContext } from "./gameContext";
+import { gameContext } from "./contexts/gameContext";
+import { explorationContext } from "./contexts/explorationContext";
+import { combatContext } from "./contexts/combatContext";
+import { levelUpContext } from "./contexts/levelUpContext";
 import * as z from "zod";
 
 // Unified interface that works with both desktop and mobile GameDirector
@@ -272,6 +275,7 @@ export const syncGameState = async (
     collectableTokenURI?: string | null;
     collectableCount?: number;
     selectedStats?: any;
+    gameDirector?: any;
   },
   sessionId?: string
 ) => {
@@ -281,23 +285,13 @@ export const syncGameState = async (
       args: { playerId, sessionId },
     });
 
-    // Update adventurer stats if available
-    if (gameState.adventurer) {
-      contextState.memory.adventurerStats = {
-        health: gameState.adventurer.health || 0,
-        xp: gameState.adventurer.xp || 0,
-        gold: gameState.adventurer.gold || 0,
-        level: Math.floor((gameState.adventurer.xp || 0) / 1000) + 1, // Example level calculation
-      };
-    }
-
     // Update game ID
-    if (gameState.gameId) {
+    if (gameState.gameId !== undefined) {
       contextState.memory.currentGameId = gameState.gameId;
       contextState.memory.gameStarted = true;
     }
 
-    // Store full snapshot
+    // Store full snapshot in main context
     contextState.memory.metadata = gameState.metadata ?? contextState.memory.metadata;
     contextState.memory.adventurer = gameState.adventurer ?? contextState.memory.adventurer;
     contextState.memory.adventurerState = gameState.adventurerState ?? contextState.memory.adventurerState;
@@ -309,6 +303,48 @@ export const syncGameState = async (
     contextState.memory.collectableTokenURI = gameState.collectableTokenURI ?? contextState.memory.collectableTokenURI;
     contextState.memory.collectableCount = gameState.collectableCount ?? contextState.memory.collectableCount;
     contextState.memory.selectedStats = gameState.selectedStats ?? contextState.memory.selectedStats;
+    contextState.memory.gameDirector = gameState.gameDirector ?? contextState.memory.gameDirector;
+
+    // Sync to appropriate phase-specific context
+    const gameId = contextState.memory.currentGameId;
+    if (contextState.memory.gameStarted && contextState.memory.adventurer && gameId) {
+      // Determine current phase and sync to the right context
+      if (contextState.memory.adventurer?.stat_upgrades_available > 0) {
+        // Level-up context
+        const levelCtx = await agent.getContext({
+          context: levelUpContext,
+          args: { gameId, playerId },
+        });
+        levelCtx.memory.adventurer = contextState.memory.adventurer;
+        levelCtx.memory.selectedStats = contextState.memory.selectedStats;
+        levelCtx.memory.gameDirector = contextState.memory.gameDirector;
+      } else if (contextState.memory.beast && (contextState.memory.adventurer?.beast_health ?? 0) > 0) {
+        // Combat context
+        const combatCtx = await agent.getContext({
+          context: combatContext,
+          args: { gameId, playerId },
+        });
+        combatCtx.memory.adventurer = contextState.memory.adventurer;
+        combatCtx.memory.adventurerState = contextState.memory.adventurerState;
+        combatCtx.memory.beast = contextState.memory.beast;
+        combatCtx.memory.battleEvent = contextState.memory.battleEvent;
+        combatCtx.memory.bag = contextState.memory.bag;
+        combatCtx.memory.gameDirector = contextState.memory.gameDirector;
+      } else {
+        // Exploration context
+        const exploreCtx = await agent.getContext({
+          context: explorationContext,
+          args: { gameId, playerId },
+        });
+        exploreCtx.memory.currentGameId = contextState.memory.currentGameId;
+        exploreCtx.memory.gameStarted = contextState.memory.gameStarted;
+        exploreCtx.memory.adventurer = contextState.memory.adventurer;
+        exploreCtx.memory.adventurerState = contextState.memory.adventurerState;
+        exploreCtx.memory.bag = contextState.memory.bag;
+        exploreCtx.memory.marketItemIds = contextState.memory.marketItemIds;
+        exploreCtx.memory.gameDirector = contextState.memory.gameDirector;
+      }
+    }
 
     // Add sync event to history
     contextState.memory.gameHistory.push({
@@ -318,6 +354,7 @@ export const syncGameState = async (
       details: {
         syncedFields: Object.keys(gameState),
         gameId: gameState.gameId,
+        phase: contextState.memory.currentPhase,
       },
     });
 
@@ -325,6 +362,7 @@ export const syncGameState = async (
       success: true,
       message: "Game state synced successfully",
       syncedFields: Object.keys(gameState),
+      currentPhase: contextState.memory.currentPhase,
     };
   } catch (error) {
     return {
