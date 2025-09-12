@@ -98,7 +98,7 @@ export default function GamePage() {
       return;
     }
 
-    if (!controllerAddress && mode !== "practice") {
+    if (!controllerAddress && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       login();
       return;
     }
