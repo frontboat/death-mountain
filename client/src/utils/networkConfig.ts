@@ -54,7 +54,7 @@ export const NETWORKS = {
     denshokan:
       "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd",
     dungeon:
-      "0x04a346df886993b0ab17f1d5ae2dd203313484bbead83fdc404c55b237c42d43",
+      "0x043f69cc7095fc61a7e5b52549b496c88f3d949ef5b6786697e1e94c1224ea99",
     dungeonTicket:
       "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
     beasts:
@@ -92,7 +92,7 @@ export const NETWORKS = {
       {
         name: "SURVIVOR",
         address:
-          "0x051c4B1fe3BF6774b87AD0B15ef5D1472759076e42944Fff9b9F641Ff13E5BBe",
+          "0x042DD777885AD2C116be96d4D634abC90A26A790ffB5871E037Dd5Ae7d2Ec86B",
         displayDecimals: 0,
       },
     ],
