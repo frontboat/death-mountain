@@ -2,10 +2,11 @@
 export { createGameAgent, syncGameState, useDaydreamsIntegration } from "./gameIntegration";
 export type { DaydreamsGameIntegration } from "./gameIntegration";
 
-// Context and actions
-export { default as gameContext } from "./gameContext";
-export { gameActions } from "./gameActions";
-export * from "./gameActions";
+// Contexts - the new modular architecture
+export { gameContext } from "./contexts/gameContext";
+export { explorationContext } from "./contexts/explorationContext";
+export { combatContext } from "./contexts/combatContext";
+export { levelUpContext } from "./contexts/levelUpContext";
 
 // React hooks and components
 export { useDaydreamsGame, useGameCommands } from "./useDaydreamsGame";
