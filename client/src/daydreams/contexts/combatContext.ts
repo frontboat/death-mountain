@@ -188,29 +188,15 @@ ${recentCombatEvents}
   </recent_events>`;
   },
   
-  instructions: `You are in combat with a beast in Death Mountain!
+  instructions: `You are in combat with a beast in Death Mountain! 
   
-Available actions:
-- attack: Strike the beast (can attack until death for continuous combat)
-- flee: Attempt to escape (success based on DEX/Level ratio)
-- equip: Change equipment mid-combat (beast gets free attack)
+Analyze the combat preview to decide whether to fight or flee. Consider:
+- Your health vs expected damage
+- Flee chance based on DEX
+- Rounds to victory
+- Whether you can survive the fight
 
-Combat Mechanics:
-- Player Damage = WeaponLevel * (6-Tier) + STR bonus + type advantage + special bonuses
-- Beast Damage = BeastLevel * (6-Tier) - ArmorValue + type disadvantage
-- Critical hits: Based on LUCK stat (shown as critChance)
-- Flee success: DEX/Level ratio (100% if DEX >= Level)
-
-Type Advantages (50% damage bonus/penalty):
-- Weapons vs Beast Armor:
-  * Magic > Metal, Blade > Cloth, Bludgeon > Hide (bonus)
-  * Magic < Hide, Blade < Metal, Bludgeon < Cloth (penalty)
-- Beast Attack vs Your Armor:
-  * Magic > Metal, Blade > Cloth, Bludgeon > Hide (more damage to you)
-  * Magic < Hide, Blade < Metal, Bludgeon < Cloth (less damage to you)
-
-The combat estimate shows expected rounds to win and damage you'll take.
-Equipment swaps give the beast a free attack, so plan carefully!`,
+All actions are blockchain transactions that take a moment to confirm.`,
 
   onStep: async (ctx) => {
     // Track combat rounds
@@ -223,7 +209,7 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
   // Attack action
   action({
     name: "attack",
-    description: "Attack the beast in combat",
+    description: "Attack the beast in combat if you believe you can slay it",
     schema: z.object({
       untilDeath: z.boolean().default(false).describe("Continue attacking until beast or adventurer dies"),
     }),
@@ -231,16 +217,14 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
-          error: "Action already in progress",
-          message: `Currently processing: ${ctx.memory.inFlightAction}`,
+          error: "action_in_progress",
         };
       }
       
       if (!ctx.memory.beast) {
         return {
           success: false,
-          error: "No beast to attack",
-          message: "You are not in combat",
+          error: "no_beast",
         };
       }
       
@@ -253,7 +237,7 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
         ctx.memory.actionInFlight = false;
         return {
           success: false,
-          error: "GameDirector not available",
+          error: "game_director_unavailable",
         };
       }
       
@@ -267,16 +251,15 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
         ctx.memory.lastActionTime = Date.now();
         ctx.memory.combatRounds++;
         
+        // Don't return messages that the AI might repeat to user
         return {
           success: true,
-          message: untilDeath 
-            ? "Attacking until one of you falls..." 
-            : "Attacking the beast!",
+          data: { untilDeath },
         };
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : "unknown_error",
         };
       } finally {
         ctx.memory.actionInFlight = false;
@@ -289,7 +272,7 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
   // Flee action
   action({
     name: "flee",
-    description: "Attempt to flee from combat",
+    description: "Attempt to flee from combat if beast is too strong",
     schema: z.object({
       untilDeath: z.boolean().default(false).describe("Keep trying to flee until successful or death"),
     }),
@@ -297,16 +280,14 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
-          error: "Action already in progress",
-          message: `Currently processing: ${ctx.memory.inFlightAction}`,
+          error: "action_in_progress",
         };
       }
       
       if (!ctx.memory.beast) {
         return {
           success: false,
-          error: "No combat to flee from",
-          message: "You are not in combat",
+          error: "no_beast",
         };
       }
       
@@ -319,7 +300,7 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
         ctx.memory.actionInFlight = false;
         return {
           success: false,
-          error: "GameDirector not available",
+          error: "game_director_unavailable",
         };
       }
       
@@ -337,17 +318,18 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
           (ctx.memory.adventurer?.stats?.dexterity || 0) / (ctx.memory.adventurer?.level || 1) * 100
         ));
         
+        // Don't return messages that the AI might repeat to user
         return {
           success: true,
-          message: untilDeath 
-            ? "Attempting to flee until successful or death..." 
-            : `Attempting to flee (${Math.floor(fleeChance)}% chance)...`,
-          fleeChance: Math.floor(fleeChance),
+          data: { 
+            untilDeath,
+            fleeChance: Math.floor(fleeChance),
+          },
         };
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : "unknown_error",
         };
       } finally {
         ctx.memory.actionInFlight = false;
@@ -368,8 +350,7 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
-          error: "Action already in progress",
-          message: `Currently processing: ${ctx.memory.inFlightAction}`,
+          error: "action_in_progress",
         };
       }
       
@@ -382,7 +363,7 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
         ctx.memory.actionInFlight = false;
         return {
           success: false,
-          error: "GameDirector not available",
+          error: "game_director_unavailable",
         };
       }
       
@@ -395,16 +376,18 @@ Equipment swaps give the beast a free attack, so plan carefully!`,
         ctx.memory.lastAction = "equip";
         ctx.memory.lastActionTime = Date.now();
         
+        // Don't return messages that the AI might repeat to user
         return {
           success: true,
-          message: `Equipped ${itemIds.length} items (beast gets free attack!)`,
-          itemIds,
-          warning: "Beast attacks while you change equipment!",
+          data: { 
+            itemIds,
+            beastGetsAttack: true,
+          },
         };
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : "unknown_error",
         };
       } finally {
         ctx.memory.actionInFlight = false;

@@ -140,6 +140,11 @@ export const createGameAgent = async (options?: {
           contextState.memory.gameDirector = (agent as any)._gameDirector;
         }
 
+        // Ensure gameDirector is available for any actions the AI might take
+        if ((agent as any)._gameDirector && !contextState.memory.gameDirector) {
+          contextState.memory.gameDirector = (agent as any)._gameDirector;
+        }
+        
         // Send the message to the agent
         const result = await agent.send({
           context: gameContext,
@@ -550,7 +555,8 @@ export const syncGameState = async (
         });
         levelCtx.memory.adventurer = contextState.memory.adventurer;
         levelCtx.memory.selectedStats = contextState.memory.selectedStats;
-        levelCtx.memory.gameDirector = contextState.memory.gameDirector;
+        // Ensure gameDirector is available
+        levelCtx.memory.gameDirector = contextState.memory.gameDirector || (agent as any)._gameDirector;
       } else if (contextState.memory.beast && (contextState.memory.adventurer?.beast_health ?? 0) > 0) {
         // Combat context
         const combatCtx = await agent.getContext({
@@ -562,7 +568,8 @@ export const syncGameState = async (
         combatCtx.memory.beast = contextState.memory.beast;
         combatCtx.memory.battleEvent = contextState.memory.battleEvent;
         combatCtx.memory.bag = contextState.memory.bag;
-        combatCtx.memory.gameDirector = contextState.memory.gameDirector;
+        // Ensure gameDirector is available
+        combatCtx.memory.gameDirector = contextState.memory.gameDirector || (agent as any)._gameDirector;
       } else {
         // Exploration context
         const exploreCtx = await agent.getContext({
@@ -575,11 +582,25 @@ export const syncGameState = async (
         exploreCtx.memory.adventurerState = contextState.memory.adventurerState;
         exploreCtx.memory.bag = contextState.memory.bag;
         exploreCtx.memory.marketItemIds = contextState.memory.marketItemIds;
-        exploreCtx.memory.gameDirector = contextState.memory.gameDirector;
+        
+        // CRITICAL: Pass gameDirector to exploration context
+        // First try from main context, then from agent's stored reference
+        exploreCtx.memory.gameDirector = contextState.memory.gameDirector || (agent as any)._gameDirector;
+        
+        if (!exploreCtx.memory.gameDirector) {
+          console.warn("[Daydreams] GameDirector not available for exploration context", {
+            hasMainContextGD: !!contextState.memory.gameDirector,
+            hasAgentGD: !!(agent as any)._gameDirector,
+            gameId,
+            playerId
+          });
+        }
       }
     }
-
-    // Add sync event to history
+    
+    // Don't log sync events to history - they're too noisy
+    // Only log actual game actions and events
+    /*
     contextState.memory.gameHistory.push({
       action: "sync_game_state",
       timestamp: Date.now(),
@@ -590,6 +611,7 @@ export const syncGameState = async (
         phase: contextState.memory.currentPhase,
       },
     });
+    */
 
     return {
       success: true,

@@ -174,6 +174,7 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
           collectableTokenURI,
           collectableCount,
           selectedStats,
+          gameDirector, // Pass the gameDirector for action execution
         },
         sessionId
       );
@@ -203,7 +204,7 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
     collectableCount,
     selectedStats,
     autoSync,
-    gameDirector,
+    gameDirector, // Already included
   ]);
 
   // Send a message to the AI
@@ -325,6 +326,9 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
   }, [syncState, adventurer, bag, beast, gameId]);
 
   // Periodic background sync (independent of state changes)
+  // DISABLED: Reactive syncing on state changes is sufficient
+  // Uncomment if you need periodic syncing for some reason
+  /*
   useEffect(() => {
     if (!state.isInitialized || !autoSync) return;
     const interval = setInterval(() => {
@@ -333,6 +337,7 @@ export const useDaydreamsGame = (options: UseDaydreamsGameOptions) => {
     }, Math.max(1000, pollIntervalMs));
     return () => clearInterval(interval);
   }, [state.isInitialized, autoSync, pollIntervalMs, syncState]);
+  */
 
   // Episode-related methods
   const getRecentGames = useCallback(async (limit: number = 10) => {

@@ -153,32 +153,47 @@ ${recentEvents}
   },
   
   instructions: `You are in the exploration phase of Death Mountain. 
-  
-Available actions:
-- explore: Search the dungeon for items, gold, or beasts
-- buy-items: Purchase items and potions
-  * Potions: Instant heal 10 HP on purchase, price = level - (charisma * 2), minimum 1g
-  * Cannot buy potions that would exceed max health
-- equip: Equip items from your bag
-- drop: Drop items to make bag space
+EASY MONEY BIG MONEY STRAT
 
-Equipment types matter for combat:
-- Weapons: Blade, Bludgeon, or Magic (rock-paper-scissors advantages)
-  * Bludgeon > Blade > Magic > Bludgeon
-- Armor: Cloth, Hide, or Metal (defensive advantages)
-  * Metal > Hide > Cloth > Metal
+DEX, VIT build.
 
-Strategy tips:
-- Keep your health high before exploring
-- Buy potions when available (instant heal on purchase)
-- Consider item types when purchasing - type advantages can turn battles
-- Higher tier (T1 is highest) items are generally better, but type matchups matter too`,
+maintain dex >= 75% flee chance, and potions at 1gold, otherwise stack VIT. 
+(these are loose benchmarks)
+if good rng for early economy, can snag bronze ring before lvl15, if you have 5 armor pieces and a t1 weapon.
+
+level 15 conditional mid-game decision point:
+continue leveling the low-tier equipped gear to G20, or;
+swap low-tier gear, as soon as they hit G15, for a T1
+jewelry for crit (prio armor first if choice)
+
+Late game lvl 25+ 
+Keep gold at 1 cost
+Keep dex above 80%
+Otherwise stack vit
+Begin working other armor types into inventory and leveling those pieces up when safe
+
+Notes: 
+buying potions between every explore is fine. Especially with high economy, but this is only viable with potion cost = 1gold.
+
+Tips:
+t1 weapon is THE highest priority. and then the t5 armors at early levels.
+rotate armor/weapons to lvl them on obstacles
+
+try to wear a variety of armor types (this means that instead of a 33% chance to insta die to ambush/obstacle. i haven't run the maths on this, so its probably wrong, but it feels like that should improve your chance of survival (though maybe your equipped necklace changes this, idk).
+
+equip armor that is "off" from your weapon. This makes you "semi-strong" into all 3 beast types, instead of VERY strong into one. (imagine you run into a magic beast with a metal armour, but stabby weapon - there is a chance you insta kill turn-1 and don't need to swap out, and for the other 2, at least you don't take so much damage).
+
+adventurer equips magic weapon, adventurer should equip metal armor
+adventurer equips blade  weapon, adventurer should equip cloth  armor
+adventurer equips blunt weapon, adventurer should equip   hide   armor 
+
+STRATEGY, BUY POTIONS AT THE MARKET BEFORE EXPLORING, IF YOU CAN. TRY TO KEEP POTION COST AT 1 GOLD. TRY TO KEEP VIT AND DEX HIGH.`,
   
 }).setActions([
   // Explore action
   action({
     name: "explore",
-    description: "Explore the dungeon to find treasures, obstacles, or beasts",
+    description: "Explore the dungeon to find random treasures, obstacles, or beasts",
     schema: z.object({
       untilBeast: z.boolean().default(false).describe("Continue exploring until finding a beast"),
     }),
@@ -186,8 +201,7 @@ Strategy tips:
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
-          error: "Action already in progress",
-          message: `Currently processing: ${ctx.memory.inFlightAction}`,
+          error: "action_in_progress",
         };
       }
       
@@ -198,13 +212,20 @@ Strategy tips:
       const gameDirector = ctx.memory.gameDirector;
       if (!gameDirector) {
         ctx.memory.actionInFlight = false;
+        console.error("[Daydreams] GameDirector not available in explore action", {
+          hasGameDirector: !!ctx.memory.gameDirector,
+          memoryKeys: Object.keys(ctx.memory),
+          gameStarted: ctx.memory.gameStarted,
+          adventurer: !!ctx.memory.adventurer
+        });
         return {
           success: false,
-          error: "GameDirector not available",
+          error: "game_director_unavailable",
         };
       }
       
       try {
+        console.log("[Daydreams] Executing explore action", { untilBeast });
         await gameDirector.executeGameAction({
           type: "explore",
           untilBeast,
@@ -213,14 +234,18 @@ Strategy tips:
         ctx.memory.lastAction = "explore";
         ctx.memory.lastActionTime = Date.now();
         
+        console.log("[Daydreams] Explore action executed successfully");
+        // Don't return messages that the AI might repeat to user
         return {
           success: true,
-          message: `Exploring the dungeon${untilBeast ? " until finding a beast" : ""}...`,
+          data: { untilBeast },
         };
       } catch (error) {
+        console.error("[Daydreams] Explore action failed:", error);
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : "unknown_error",
+          details: error instanceof Error ? error.stack : String(error),
         };
       } finally {
         ctx.memory.actionInFlight = false;
@@ -233,7 +258,7 @@ Strategy tips:
   // Buy items action
   action({
     name: "buy-items",
-    description: "Purchase items and potions from the market",
+    description: "Purchase items and potions from the market. Potions are consumed at purchase time and cannot be stored.",
     schema: z.object({
       purchases: z.array(z.object({
         item_id: z.number().describe("Item ID to purchase"),
@@ -245,8 +270,7 @@ Strategy tips:
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
-          error: "Action already in progress",
-          message: `Currently processing: ${ctx.memory.inFlightAction}`,
+          error: "action_in_progress",
         };
       }
       
@@ -261,12 +285,13 @@ Strategy tips:
           const maxPotions = Math.ceil((maxHealth - currentHealth) / 10);
           return {
             success: false,
-            error: "Too many potions",
-            message: `You can only buy ${maxPotions} potions (would restore ${maxPotions * 10} HP to reach max ${maxHealth} HP)`,
-            currentHealth,
-            maxHealth,
-            requestedPotions: potions,
-            maxPotions,
+            error: "too_many_potions",
+            data: {
+              currentHealth,
+              maxHealth,
+              requestedPotions: potions,
+              maxPotions,
+            },
           };
         }
       }
@@ -280,7 +305,7 @@ Strategy tips:
         ctx.memory.actionInFlight = false;
         return {
           success: false,
-          error: "GameDirector not available",
+          error: "game_director_unavailable",
         };
       }
       
@@ -294,16 +319,18 @@ Strategy tips:
         ctx.memory.lastAction = "buy_items";
         ctx.memory.lastActionTime = Date.now();
         
+        // Don't return messages that the AI might repeat to user
         return {
           success: true,
-          message: `Purchased ${purchases.length} items and ${potions} potions`,
-          purchases,
-          potions,
+          data: {
+            purchases,
+            potions,
+          },
         };
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : "unknown_error",
         };
       } finally {
         ctx.memory.actionInFlight = false;
@@ -324,8 +351,7 @@ Strategy tips:
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
-          error: "Action already in progress",
-          message: `Currently processing: ${ctx.memory.inFlightAction}`,
+          error: "action_in_progress",
         };
       }
       
@@ -338,7 +364,7 @@ Strategy tips:
         ctx.memory.actionInFlight = false;
         return {
           success: false,
-          error: "GameDirector not available",
+          error: "game_director_unavailable",
         };
       }
       
@@ -351,15 +377,15 @@ Strategy tips:
         ctx.memory.lastAction = "equip";
         ctx.memory.lastActionTime = Date.now();
         
+        // Don't return messages that the AI might repeat to user
         return {
           success: true,
-          message: `Equipped ${itemIds.length} items`,
-          itemIds,
+          data: { itemIds },
         };
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : "unknown_error",
         };
       } finally {
         ctx.memory.actionInFlight = false;
@@ -380,8 +406,7 @@ Strategy tips:
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
-          error: "Action already in progress",
-          message: `Currently processing: ${ctx.memory.inFlightAction}`,
+          error: "action_in_progress",
         };
       }
       
@@ -394,7 +419,7 @@ Strategy tips:
         ctx.memory.actionInFlight = false;
         return {
           success: false,
-          error: "GameDirector not available",
+          error: "game_director_unavailable",
         };
       }
       
@@ -407,15 +432,15 @@ Strategy tips:
         ctx.memory.lastAction = "drop";
         ctx.memory.lastActionTime = Date.now();
         
+        // Don't return messages that the AI might repeat to user
         return {
           success: true,
-          message: `Dropped ${itemIds.length} items`,
-          itemIds,
+          data: { itemIds },
         };
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : "unknown_error",
         };
       } finally {
         ctx.memory.actionInFlight = false;

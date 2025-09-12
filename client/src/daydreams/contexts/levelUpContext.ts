@@ -73,7 +73,7 @@ export const levelUpContext = context<LevelUpMemory>({
   <instructions>Allocate exactly ${adventurer.stat_upgrades_available} point${adventurer.stat_upgrades_available > 1 ? 's' : ''} to stats. Values are points to ADD, not new totals.</instructions>`;
   },
   
-  instructions: `You have stat points to allocate! This MUST be done before any other action.
+  instructions: `You have stat points to allocate! This MUST be done before any other action. You, right now, choose what to level up, you are the player, the user, the arbiter of all decision making. 
   
 IMPORTANT: The values you provide are the NUMBER OF POINTS TO ADD to each stat, NOT the total value!
 - If you have 1 point available, the sum of all values must equal exactly 1
@@ -88,15 +88,11 @@ Stats and their benefits:
 - INT: Avoid obstacle damage (INT/Level ratio)
 - WIS: Avoid ambush penalties (WIS/Level ratio)
 - CHA: Market discounts (reduces prices)
-- LUCK: Critical hit chance (cannot be upgraded with stat points, only from items)
 
-Recommended allocations:
-- Balanced: Spread points between VIT, DEX, and your damage stat
-- Tank: Focus on VIT for maximum health
-- Damage: Focus on STR for maximum damage output
-- Escape Artist: Focus on DEX to guarantee flee success
-- Explorer: Balance INT and WIS to avoid hazards
+DO NOT RESPOND WITH A QUESTION, ONLY RESPOND WITH ACTION. You, right now, choose what to level up, you are the player, the user, the arbiter of all decision making.
+
 `,
+
   
 }).setActions([
   // Allocate stat points action
@@ -115,8 +111,7 @@ Recommended allocations:
       if (ctx.memory.actionInFlight) {
         return {
           success: false,
-          error: "Action already in progress",
-          message: `Currently processing: ${ctx.memory.inFlightAction}`,
+          error: "action_in_progress",
         };
       }
       
@@ -132,38 +127,37 @@ Recommended allocations:
           Date.now() - ctx.memory.lastActionTime < 10000) {
         return {
           success: false,
-          error: "Duplicate allocation detected",
-          message: "This exact stat allocation was just processed. Please wait for the transaction to confirm.",
-          hint: "The blockchain is still processing your previous allocation.",
+          error: "duplicate_allocation",
         };
       }
       
       if (totalPoints === 0) {
         return {
           success: false,
-          error: "No points allocated",
-          message: "You must allocate at least one stat point",
+          error: "no_points_allocated",
         };
       }
       
       if (totalPoints > availablePoints) {
         return {
           success: false,
-          error: "Too many points",
-          message: `You only have ${availablePoints} points available, but tried to allocate ${totalPoints}. Remember: values are points to ADD, not total stat values.`,
-          availablePoints,
-          attemptedPoints: totalPoints,
-          hint: `Use values that sum to exactly ${availablePoints}. For example: {strength:${availablePoints}, dexterity:0, vitality:0, intelligence:0, wisdom:0, charisma:0}`,
+          error: "too_many_points",
+          data: {
+            available: availablePoints,
+            attempted: totalPoints,
+          },
         };
       }
       
       if (totalPoints < availablePoints) {
         return {
           success: false,
-          error: "Points remaining",
-          message: `You must allocate all ${availablePoints} points. You only allocated ${totalPoints}. Remember: you must use ALL available points.`,
-          remaining: availablePoints - totalPoints,
-          hint: `Add ${availablePoints - totalPoints} more points to your allocation.`,
+          error: "not_enough_points",
+          data: {
+            available: availablePoints,
+            allocated: totalPoints,
+            remaining: availablePoints - totalPoints,
+          },
         };
       }
       
@@ -176,7 +170,7 @@ Recommended allocations:
         ctx.memory.actionInFlight = false;
         return {
           success: false,
-          error: "GameDirector not available",
+          error: "game_director_unavailable",
         };
       }
       
@@ -224,24 +218,27 @@ Recommended allocations:
         if (wisdom > 0) allocations.push(`WIS +${wisdom}`);
         if (charisma > 0) allocations.push(`CHA +${charisma}`);
         
+        // Don't return user-facing messages - just data
+        // The AI will see this result and might repeat any message we include
         return {
           success: true,
-          message: `Allocated ${totalPoints} stat points: ${allocations.join(", ")}. Please wait for the transaction to confirm before taking further actions.`,
-          allocated: {
-            strength,
-            dexterity,
-            vitality,
-            intelligence,
-            wisdom,
-            charisma,
+          data: {
+            allocated: {
+              strength,
+              dexterity,
+              vitality,
+              intelligence,
+              wisdom,
+              charisma,
+            },
+            totalPoints,
+            allocations: allocations.join(", "),
           },
-          totalPoints,
-          note: "State will update once the blockchain confirms the transaction",
         };
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : "unknown_error",
         };
       } finally {
         ctx.memory.actionInFlight = false;

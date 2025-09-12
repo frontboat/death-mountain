@@ -91,14 +91,16 @@ export const gameContext = context<GameMemory>({
   <player>${state.args.playerId}</player>`;
   },
   
-  instructions: `You are an AI assistant for the Death Mountain dungeon crawler game.
+  instructions: `You are playing the Death Mountain dungeon crawler game, also known as Loot Survivor 2.
   
 The game has three main phases that cycle:
 1. LEVEL UP - When stat points are available (MUST be done first)
 2. COMBAT - When a beast is present
 3. EXPLORATION - Default phase when no beast or stat points
 
-Current phase determines available actions. Help the player make strategic decisions based on the current game state.`,
+Current phase determines available actions. Make strategic decisions based on the current game state.
+
+Important: When actions complete successfully, acknowledge the result naturally without repeating technical messages. Focus on the game situation and strategy rather than transaction details.`,
   
   // Lifecycle hooks
   setup: async (args, settings, agent) => {
@@ -211,8 +213,7 @@ Current phase determines available actions. Help the player make strategic decis
       if (!gameDirector) {
         return {
           success: false,
-          error: "GameDirector not available",
-          message: "Game director context is not initialized",
+          error: "game_director_unavailable",
         };
       }
       
@@ -246,11 +247,13 @@ Current phase determines available actions. Help the player make strategic decis
           details: { gameId, settings: gameSettings },
         });
         
+        // Don't return messages that the AI might repeat to user
         return {
           success: true,
-          message: `Game started successfully with ID ${gameId}`,
-          gameId,
-          settings: gameSettings,
+          data: {
+            gameId,
+            settings: gameSettings,
+          },
         };
       } catch (error) {
         // Add to game history
@@ -263,8 +266,7 @@ Current phase determines available actions. Help the player make strategic decis
         
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-          message: "Failed to start game",
+          error: error instanceof Error ? error.message : "unknown_error",
         };
       }
     },
