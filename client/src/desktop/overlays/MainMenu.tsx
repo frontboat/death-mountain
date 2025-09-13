@@ -103,7 +103,8 @@ export default function MainMenu() {
       );
     } else {
       setCurrentNetworkConfig(
-        getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
+        // getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
+        getNetworkConfig(ChainId.SN_SEPOLIA) as NetworkConfig
       );
     }
   };
