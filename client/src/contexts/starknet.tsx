@@ -42,7 +42,8 @@ const cartridgeController =
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
   const getInitialNetwork = (): NetworkConfig => {
     if (typeof window !== "undefined") {
-      const savedNetwork = localStorage.getItem("lastSelectedNetwork");
+      const savedNetwork = import.meta.env.VITE_PUBLIC_CHAIN;
+      // const savedNetwork = localStorage.getItem("lastSelectedNetwork");
       if (savedNetwork) {
         try {
           const chainId = savedNetwork as ChainId;
