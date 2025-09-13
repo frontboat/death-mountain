@@ -29,17 +29,9 @@ export default function RewardsOverlay({ gameId, adventurerLevel, onClose }: Rew
   const now = Math.floor(Date.now() / 1000);
   let levelMultiplier;
 
-  // if (now < OPENING_TIME + 1209600) {
-  //   levelMultiplier = 1;
-  // } else if (now < OPENING_TIME + 3456000) {
-  //   levelMultiplier = 4;
-  // } else {
-  //   levelMultiplier = 2;
-  // }
-
-  if (now < OPENING_TIME + 21600) {
+  if (now < OPENING_TIME + 1209600) {
     levelMultiplier = 1;
-  } else if (now < OPENING_TIME + 43200) {
+  } else if (now < OPENING_TIME + 3456000) {
     levelMultiplier = 4;
   } else {
     levelMultiplier = 2;

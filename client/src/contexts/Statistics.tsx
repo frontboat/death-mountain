@@ -26,8 +26,8 @@ const StatisticsContext = createContext<StatisticsContext>(
 );
 
 export const OPENING_TIME = 1759898800;
-export const totalSurvivorTokens = 2000000;
-export const totalCollectableBeasts = 93225;
+export const totalSurvivorTokens = 2258100;
+export const totalCollectableBeasts = 93150;
 export const JACKPOT_AMOUNT = 33333;
 
 const DungeonTicket = NETWORKS.SN_MAIN.dungeonTicket;
