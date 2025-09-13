@@ -42,39 +42,39 @@ export default function CountdownMobile({ onComplete }: CountdownMobileProps) {
   if (!timeRemaining) return null;
 
   return (
-    <Box sx={styles.container}>
-      <Typography sx={styles.title}>DUNGEON OPENS SOON</Typography>
-      {/* <Typography sx={styles.title}>DUNGEON OPENS IN</Typography>
-      <Box sx={styles.timeContainer}>
-        <Box sx={styles.timeBlock}>
-          <Typography sx={styles.timeNumber}>
-            {String(timeRemaining.days).padStart(2, "0")}
-          </Typography>
-          <Typography sx={styles.timeLabel}>DAYS</Typography>
-        </Box>
-        <Typography sx={styles.separator}>:</Typography>
-        <Box sx={styles.timeBlock}>
-          <Typography sx={styles.timeNumber}>
-            {String(timeRemaining.hours).padStart(2, "0")}
-          </Typography>
-          <Typography sx={styles.timeLabel}>HRS</Typography>
-        </Box>
-        <Typography sx={styles.separator}>:</Typography>
-        <Box sx={styles.timeBlock}>
-          <Typography sx={styles.timeNumber}>
-            {String(timeRemaining.minutes).padStart(2, "0")}
-          </Typography>
-          <Typography sx={styles.timeLabel}>MIN</Typography>
-        </Box>
-        <Typography sx={styles.separator}>:</Typography>
-        <Box sx={styles.timeBlock}>
-          <Typography sx={styles.timeNumber}>
-            {String(timeRemaining.seconds).padStart(2, "0")}
-          </Typography>
-          <Typography sx={styles.timeLabel}>SEC</Typography>
-        </Box>
-      </Box> */}
-    </Box>
+    <></>
+    // <Box sx={styles.container}>
+    //   <Typography sx={styles.title}>DUNGEON OPENS IN</Typography>
+    //   <Box sx={styles.timeContainer}>
+    //     <Box sx={styles.timeBlock}>
+    //       <Typography sx={styles.timeNumber}>
+    //         {String(timeRemaining.days).padStart(2, "0")}
+    //       </Typography>
+    //       <Typography sx={styles.timeLabel}>DAYS</Typography>
+    //     </Box>
+    //     <Typography sx={styles.separator}>:</Typography>
+    //     <Box sx={styles.timeBlock}>
+    //       <Typography sx={styles.timeNumber}>
+    //         {String(timeRemaining.hours).padStart(2, "0")}
+    //       </Typography>
+    //       <Typography sx={styles.timeLabel}>HRS</Typography>
+    //     </Box>
+    //     <Typography sx={styles.separator}>:</Typography>
+    //     <Box sx={styles.timeBlock}>
+    //       <Typography sx={styles.timeNumber}>
+    //         {String(timeRemaining.minutes).padStart(2, "0")}
+    //       </Typography>
+    //       <Typography sx={styles.timeLabel}>MIN</Typography>
+    //     </Box>
+    //     <Typography sx={styles.separator}>:</Typography>
+    //     <Box sx={styles.timeBlock}>
+    //       <Typography sx={styles.timeNumber}>
+    //         {String(timeRemaining.seconds).padStart(2, "0")}
+    //       </Typography>
+    //       <Typography sx={styles.timeLabel}>SEC</Typography>
+    //     </Box>
+    //   </Box>
+    // </Box>
   );
 }
 

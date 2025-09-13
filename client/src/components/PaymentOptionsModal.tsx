@@ -171,10 +171,10 @@ const TokenSelectionContent = memo(
             {tokenQuote.loading
               ? "Loading quote..."
               : tokenQuote.error
-                ? `Error: ${tokenQuote.error}`
-                : tokenQuote.amount
-                  ? `Cost: ${tokenQuote.amount} ${selectedToken}`
-                  : "Loading..."}
+              ? `Error: ${tokenQuote.error}`
+              : tokenQuote.amount
+              ? `Cost: ${tokenQuote.amount} ${selectedToken}`
+              : "Loading..."}
           </Typography>
         </Box>
 
@@ -208,9 +208,9 @@ export default function PaymentOptionsModal({
     () =>
       new Contract({
         abi: ROUTER_ABI,
-        address: NETWORKS[
-          import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS
-        ].ekuboRouter,
+        address:
+          NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
+            .ekuboRouter,
         providerOrAccount: provider,
       }),
     [provider]
@@ -234,7 +234,9 @@ export default function PaymentOptionsModal({
       }))
       .filter(
         (token: any) =>
-          Number(token.balance) > 0 && token.address !== DUNGEON_TICKET_ADDRESS && token.name !== "SURVIVOR"
+          Number(token.balance) > 0 &&
+          token.address !== DUNGEON_TICKET_ADDRESS &&
+          token.name !== "SURVIVOR"
       );
   }, [paymentTokens, tokenBalances]);
 
@@ -510,10 +512,62 @@ export default function PaymentOptionsModal({
                       </Box>
                     </MotionWrapper>
                   ) : (
+                    // <MotionWrapper viewKey="dungeon">
+                    //   <Typography sx={styles.paymentTitle} textAlign="center" my={1}>
+                    //     Coming Soon
+                    //   </Typography>
+                    // </MotionWrapper>
                     <MotionWrapper viewKey="dungeon">
-                      <Typography sx={styles.paymentTitle} textAlign="center" my={1}>
-                        Coming Soon
-                      </Typography>
+                      <Box sx={styles.paymentCard}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            mb: 0,
+                            mt: 2,
+                          }}
+                        >
+                          <Typography sx={styles.paymentTitle}>
+                            Use Dungeon Ticket
+                          </Typography>
+                        </Box>
+
+                        <Box sx={styles.goldenTokenContainer}>
+                          <img
+                            src="/images/dungeon_ticket.png"
+                            alt="Dungeon Ticket"
+                            style={{
+                              width: "130px",
+                              height: "130px",
+                              objectFit: "contain",
+                              display: "block",
+                            }}
+                            onError={(e) => {
+                              console.error(
+                                "Failed to load dungeon ticket image"
+                              );
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </Box>
+
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            mb: 1,
+                          }}
+                        >
+                          <Typography sx={styles.ticketCount}>
+                            You have {dungeonTicketCount} ticket
+                            {dungeonTicketCount > 1 ? "s" : ""}
+                          </Typography>
+                        </Box>
+
+                        <ActionButton onClick={useDungeonTicket}>
+                          Enter Dungeon
+                        </ActionButton>
+                      </Box>
                     </MotionWrapper>
                   )}
 

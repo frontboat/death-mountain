@@ -37,7 +37,8 @@ export default function LandingPage() {
   useEffect(() => {
     const checkDungeonOpen = () => {
       const now = Math.floor(Date.now() / 1000);
-      setIsDungeonOpen(now >= OPENING_TIME);
+      // setIsDungeonOpen(now >= OPENING_TIME);
+      setIsDungeonOpen(true);
     };
 
     checkDungeonOpen();
@@ -243,7 +244,7 @@ export default function LandingPage() {
                 </Typography>
               </Button>
 
-              {currentNetworkConfig.name === "Beast Mode" && (
+              {/* {currentNetworkConfig.name === "Beast Mode" && (
                 <Button
                   fullWidth
                   variant="contained"
@@ -257,7 +258,7 @@ export default function LandingPage() {
                     Dungeon Rewards
                   </Typography>
                 </Button>
-              )}
+              )} */}
 
               {/* {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />} */}
             </>
@@ -298,7 +299,7 @@ export default function LandingPage() {
             <Leaderboard onBack={() => setShowLeaderboard(false)} />
           )}
 
-          {showDungeonRewards && (
+          {/* {showDungeonRewards && (
             <>
               <Box
                 sx={{
@@ -331,7 +332,7 @@ export default function LandingPage() {
                 <DungeonRewards />
               </Box>
             </>
-          )}
+          )} */}
         </Box>
       </Box>
 
