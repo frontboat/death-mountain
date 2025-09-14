@@ -77,7 +77,7 @@ pub impl RendererImpl of Renderer {
         generate_details(adventurer_verbose)
     }
 
-    fn get_name()-> ByteArray {
+    fn get_name() -> ByteArray {
         "Adventurer"
     }
 
