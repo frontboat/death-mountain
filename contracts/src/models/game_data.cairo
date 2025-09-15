@@ -57,6 +57,7 @@ pub struct AdventurerKilled {
     #[key]
     pub kill_index: u64,
     pub adventurer_id: u64,
+    pub timestamp: u64,
 }
 
 #[derive(Introspect, Copy, Drop, Serde)]
