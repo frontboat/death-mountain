@@ -37,8 +37,7 @@ export default function LandingPage() {
   useEffect(() => {
     const checkDungeonOpen = () => {
       const now = Math.floor(Date.now() / 1000);
-      // setIsDungeonOpen(now >= OPENING_TIME);
-      setIsDungeonOpen(true);
+      setIsDungeonOpen(now >= OPENING_TIME);
     };
 
     checkDungeonOpen();
@@ -79,8 +78,7 @@ export default function LandingPage() {
       );
     } else {
       setCurrentNetworkConfig(
-        // getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
-        getNetworkConfig(ChainId.SN_SEPOLIA) as NetworkConfig
+        getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
       );
     }
   };
@@ -300,7 +298,7 @@ export default function LandingPage() {
             <Leaderboard onBack={() => setShowLeaderboard(false)} />
           )}
 
-          {/* {showDungeonRewards && (
+          {showDungeonRewards && (
             <>
               <Box
                 sx={{
@@ -333,7 +331,7 @@ export default function LandingPage() {
                 <DungeonRewards />
               </Box>
             </>
-          )} */}
+          )}
         </Box>
       </Box>
 

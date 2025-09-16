@@ -25,7 +25,7 @@ export default function RewardsScreen({ gameId, adventurerLevel, onClose }: Rewa
 
   if (now < OPENING_TIME + 1209600) {
     levelMultiplier = 1;
-  } else if (now < OPENING_TIME + 3456000) {
+  } else if (now < OPENING_TIME + 1209600 + 1209600) {
     levelMultiplier = 4;
   } else {
     levelMultiplier = 2;

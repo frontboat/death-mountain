@@ -88,6 +88,11 @@ export default function GamePage() {
       return;
     }
 
+    if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT && game_id === 0) {
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+      return;
+    }
+
     if (isPending) return;
 
     if (mode === "entering") {

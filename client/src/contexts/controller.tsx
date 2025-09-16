@@ -2,7 +2,9 @@ import { useStarknetApi } from "@/api/starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
+import { useUIStore } from "@/stores/uiStore";
 import { Payment } from "@/types/game";
+import { useAnalytics } from "@/utils/analytics";
 import { ChainId, NETWORKS } from "@/utils/networkConfig";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import {
@@ -16,9 +18,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
-import { useAnalytics } from "@/utils/analytics";
-import { useUIStore } from "@/stores/uiStore";
-import { useMediaQuery } from "@mui/material";
 
 export interface ControllerContext {
   account: any;
@@ -45,7 +44,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const navigate = useNavigate();
   const { setShowOverlay } = useGameStore();
   const { account, address, isConnecting } = useAccount();
-  const { buyGame, mintSepoliaLords } = useSystemCalls();
+  const { buyGame } = useSystemCalls();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig } = useDynamicConnector();
@@ -60,7 +59,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const [goldenPassIds, setGoldenPassIds] = useState<number[]>([]);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const { identifyAddress } = useAnalytics();
-  const isMobile = useMediaQuery('(max-width:600px)');
 
   const demoRpcProvider = useMemo(
     () => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl }),
@@ -153,17 +151,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         .paymentTokens
     );
     setTokenBalances(balances);
-    if (
-      parseInt(balances.TICKET) < 10 &&
-      import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA"
-    ) {
-      await mintSepoliaLords(account);
-      balances = await getTokenBalances(
-        NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
-          .paymentTokens
-      );
-      setTokenBalances(balances);
-    }
 
     let goldenTokenAddress =
       NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]

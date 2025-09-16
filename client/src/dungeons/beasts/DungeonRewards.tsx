@@ -201,17 +201,8 @@ export default function DungeonRewards() {
               mt={0.5}
               letterSpacing={0.2}
             >
-              Each beast holds {JACKPOT_AMOUNT.toLocaleString()} $STRK!
+              Each beast holds a bounty valued at ~${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()}!
             </Typography>
-            {strkPrice !== null && Number(strkPrice) > 0 && (
-              <Typography
-                mt={0.5}
-                sx={{ fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.6)" }}
-              >
-                total value: ~$
-                {(Number(strkPrice) * JACKPOT_AMOUNT * 3).toLocaleString()}
-              </Typography>
-            )}
           </Box>
         </Box>
       </Box>

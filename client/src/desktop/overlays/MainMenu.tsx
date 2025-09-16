@@ -61,8 +61,7 @@ export default function MainMenu() {
   useEffect(() => {
     const checkDungeonOpen = () => {
       const now = Math.floor(Date.now() / 1000);
-      // setIsDungeonOpen(now >= OPENING_TIME);
-      setIsDungeonOpen(true);
+      setIsDungeonOpen(now >= OPENING_TIME);
     };
 
     checkDungeonOpen();
@@ -103,8 +102,7 @@ export default function MainMenu() {
       );
     } else {
       setCurrentNetworkConfig(
-        // getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
-        getNetworkConfig(ChainId.SN_SEPOLIA) as NetworkConfig
+        getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
       );
     }
   };
@@ -377,9 +375,9 @@ export default function MainMenu() {
         />
       )}
 
-      {/* <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
+      <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
         <DungeonRewards />
-      </Box> */}
+      </Box>
     </>
   );
 }
