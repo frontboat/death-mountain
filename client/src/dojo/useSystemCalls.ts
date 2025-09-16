@@ -362,7 +362,7 @@ export const useSystemCalls = () => {
       return true;
     }
 
-    await delay(500);
+    await delay(1000);
     return waitForClaimBeast(retries + 1);
   };
 
