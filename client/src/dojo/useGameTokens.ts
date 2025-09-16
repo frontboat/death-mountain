@@ -118,7 +118,7 @@ export const useGameTokens = () => {
   const countBeasts = async () => {
     let beast_address = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].beasts;
     let url = `${SQL_ENDPOINT}/sql?query=
-      SELECT COUNT(*) as count FROM token_balances
+      SELECT COUNT(*) as count FROM tokens
       WHERE contract_address = "${beast_address.replace(/^0x0+/, "0x")}"`
 
     try {

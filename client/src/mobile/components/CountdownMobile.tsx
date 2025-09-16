@@ -43,8 +43,7 @@ export default function CountdownMobile({ onComplete }: CountdownMobileProps) {
 
   return (
     <Box sx={styles.container}>
-      <Typography sx={styles.title}>DUNGEON OPENS SOON</Typography>
-      {/* <Typography sx={styles.title}>DUNGEON OPENS IN</Typography>
+      <Typography sx={styles.title}>DUNGEON OPENS IN</Typography>
       <Box sx={styles.timeContainer}>
         <Box sx={styles.timeBlock}>
           <Typography sx={styles.timeNumber}>
@@ -73,7 +72,7 @@ export default function CountdownMobile({ onComplete }: CountdownMobileProps) {
           </Typography>
           <Typography sx={styles.timeLabel}>SEC</Typography>
         </Box>
-      </Box> */}
+      </Box>
     </Box>
   );
 }

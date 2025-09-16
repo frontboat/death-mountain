@@ -25,9 +25,9 @@ const StatisticsContext = createContext<StatisticsContext>(
   {} as StatisticsContext
 );
 
-export const OPENING_TIME = 1758060000;
+export const OPENING_TIME = 1758040200;
 export const totalSurvivorTokens = 2258100;
-export const totalCollectableBeasts = 93150;
+export const totalCollectableBeasts = 93225;
 export const JACKPOT_AMOUNT = 33333;
 
 const DungeonTicket = NETWORKS.SN_MAIN.dungeonTicket;
@@ -53,7 +53,7 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
 
   const fetchCollectedBeasts = async () => {
     const result = await countBeasts();
-    setCollectedBeasts(result - 75 || 0);
+    setCollectedBeasts(result - 1);
   };
 
   const fetchPriceHistory = async () => {
