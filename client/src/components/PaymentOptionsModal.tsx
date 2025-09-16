@@ -512,62 +512,10 @@ export default function PaymentOptionsModal({
                       </Box>
                     </MotionWrapper>
                   ) : (
-                    // <MotionWrapper viewKey="dungeon">
-                    //   <Typography sx={styles.paymentTitle} textAlign="center" my={1}>
-                    //     Coming Soon
-                    //   </Typography>
-                    // </MotionWrapper>
                     <MotionWrapper viewKey="dungeon">
-                      <Box sx={styles.paymentCard}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            mb: 0,
-                            mt: 2,
-                          }}
-                        >
-                          <Typography sx={styles.paymentTitle}>
-                            Use Dungeon Ticket
-                          </Typography>
-                        </Box>
-
-                        <Box sx={styles.goldenTokenContainer}>
-                          <img
-                            src="/images/dungeon_ticket.png"
-                            alt="Dungeon Ticket"
-                            style={{
-                              width: "130px",
-                              height: "130px",
-                              objectFit: "contain",
-                              display: "block",
-                            }}
-                            onError={(e) => {
-                              console.error(
-                                "Failed to load dungeon ticket image"
-                              );
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                        </Box>
-
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            mb: 1,
-                          }}
-                        >
-                          <Typography sx={styles.ticketCount}>
-                            You have {dungeonTicketCount} ticket
-                            {dungeonTicketCount > 1 ? "s" : ""}
-                          </Typography>
-                        </Box>
-
-                        <ActionButton onClick={useDungeonTicket}>
-                          Enter Dungeon
-                        </ActionButton>
-                      </Box>
+                      <Typography sx={styles.paymentTitle} textAlign="center" my={1}>
+                        Coming Soon
+                      </Typography>
                     </MotionWrapper>
                   )}
 
