@@ -49,8 +49,8 @@ export default function DeathScreen() {
     finalBattleEvent?.type === "obstacle"
       ? `I got a score of ${adventurer?.xp
       } in the Loot Survivor 2 practice dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
-      } ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`
-      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 practice dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`;
+      } ended my journey. \n\n@provablegames @lootsurvivor`
+      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 practice dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
