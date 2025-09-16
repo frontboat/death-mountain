@@ -37,9 +37,9 @@ export default function DeathOverlay() {
   const shareMessage =
     finalBattleEvent?.type === "obstacle"
       ? `I got a score of ${adventurer?.xp
-      } in the Loot Survivor 2 practice dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } in the Loot Survivor 2 dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
       } ended my journey. \n\n@provablegames @lootsurvivor`
-      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 practice dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
+      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
