@@ -402,7 +402,9 @@ export const useSystemCalls = () => {
       );
 
       const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
-      const tokenId = parseInt(receipt.events[2].data[2], 16);
+      console.log("CLAIMING BEAST", receipt.events);
+      const tokenId = parseInt(receipt.events[receipt.events.length - 2].data[2], 16);
+      console.log("TOKEN ID", tokenId);
 
       const tokenURI = await fetchTokenURI(tokenId);
 
