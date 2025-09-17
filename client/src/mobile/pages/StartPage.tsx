@@ -87,7 +87,7 @@ export default function LandingPage() {
     !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
 
   const { games } = useGameTokens({
-    owner: account?.address,
+    owner: account?.address || '0x0',
     limit: 101,
     sortBy: "minted_at",
     sortOrder: "desc",

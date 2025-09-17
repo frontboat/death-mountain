@@ -358,7 +358,7 @@ export const useSystemCalls = () => {
   const waitForClaimBeast = async (retries: number = 0): Promise<boolean> => {
     let adventurerState = await getAdventurerState(gameId!);
 
-    if (adventurerState?.beast_health === 0 || retries > 9) {
+    if (adventurerState?.beast_health === 0 || retries > 19) {
       return true;
     }
 

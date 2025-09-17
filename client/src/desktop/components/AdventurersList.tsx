@@ -73,26 +73,26 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
       Math.floor(((timestamp - Date.now()) % (1000 * 60 * 60)) / (1000 * 60))
     );
 
+    if (hours === 0) {
+      return (
+        <>
+          <Typography color="primary" sx={{ fontSize: "13px" }}>
+            {minutes}
+          </Typography>
+          <Typography color="primary" sx={{ fontSize: "13px", ml: "2px" }}>
+            m
+          </Typography>
+        </>
+      );
+    }
+
     return (
       <>
-        {hours > 0 && (
-          <>
-            <Typography color="primary" sx={{ fontSize: "13px" }}>
-              {hours}
-            </Typography>
-            <Typography color="primary" sx={{ fontSize: "13px", ml: "2px" }}>
-              h
-            </Typography>
-          </>
-        )}
-        <Typography
-          color="primary"
-          sx={{ fontSize: "13px", ml: hours > 0 ? "4px" : "0px" }}
-        >
-          {minutes}
+        <Typography color="primary" sx={{ fontSize: "13px" }}>
+          {hours}
         </Typography>
         <Typography color="primary" sx={{ fontSize: "13px", ml: "2px" }}>
-          m
+          h
         </Typography>
       </>
     );
@@ -161,8 +161,8 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
                       sx={{
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
-                        width: "100%",
                         overflow: "hidden",
+                        width: "120px",
                       }}
                     >
                       {game.player_name}
@@ -197,7 +197,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
                     </Typography>
                   </Box>
                 ) : (
-                  <Typography fontSize="13px" color="secondary" flex={1}>
+                  <Typography fontSize="13px" color="secondary" flex={1} sx={{ minWidth: "55px" }}>
                     New
                   </Typography>
                 )}
@@ -274,12 +274,14 @@ const styles = {
   },
   listItem: {
     height: "52px",
+    width: "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 3,
+    gap: 1,
     px: "5px !important",
     pl: "8px !important",
+    boxSizing: "border-box",
     flexShrink: 0,
     background: "rgba(24, 40, 24, 0.3)",
     border: "1px solid rgba(8, 62, 34, 0.5)",
