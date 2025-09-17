@@ -13,7 +13,7 @@ import {
   getVideoId,
   processGameEvent,
 } from "@/utils/events";
-import { getNewItemsEquipped } from "@/utils/game";
+import { getNewItemsEquipped, incrementBeastsCollected } from "@/utils/game";
 import { delay } from "@/utils/utils";
 import {
   createContext,
@@ -105,7 +105,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setShowInventory,
     setShowOverlay,
     setCollectable,
-    incrementBeastsCollected,
     setMetadata,
   } = useGameStore();
   const { setIsOpen } = useMarketStore();
@@ -168,7 +167,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (beastDefeated && collectable && currentNetworkConfig.beasts) {
-      incrementBeastsCollected();
+      incrementBeastsCollected(gameId!);
       claimBeast(gameId!, collectable);
     }
   }, [beastDefeated]);

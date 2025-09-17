@@ -18,12 +18,13 @@ export default function DeathOverlay() {
   const { currentNetworkConfig } = useDynamicConnector();
   const { spectating } = useGameDirector();
   const { remainingSurvivorTokens } = useStatistics();
-  const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
+  const { gameId, exploreLog, battleEvent, beast, quest, adventurer } = useGameStore();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
   const [showRewards, setShowRewards] = useState(currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT);
 
   const finalBattleEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
+  let collectableCount = parseInt(localStorage.getItem(`beast_collected_${gameId}`) || "0");
 
   let battleMessage = '';
   if (finalBattleEvent?.type === 'obstacle') {

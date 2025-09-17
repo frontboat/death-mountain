@@ -2,16 +2,16 @@ import { BEAST_NAMES } from "@/constants/beast";
 import { OBSTACLE_NAMES } from "@/constants/obstacle";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameStore } from "@/stores/gameStore";
+import { useAnalytics } from "@/utils/analytics";
 import { screenVariants } from "@/utils/animations";
 import { ChainId } from "@/utils/networkConfig";
+import { getContractByName } from "@dojoengine/core";
 import { Box, Button, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { useAnalytics } from "@/utils/analytics";
-import { useEffect } from "react";
 import { useGameTokenRanking } from "metagame-sdk/sql";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
-import { getContractByName } from "@dojoengine/core";
 
 export default function DeathScreen() {
   const { currentNetworkConfig } = useDynamicConnector();
@@ -21,11 +21,12 @@ export default function DeathScreen() {
     battleEvent,
     beast,
     quest,
-    collectableCount,
     adventurer,
   } = useGameStore();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
+
+  let collectableCount = parseInt(localStorage.getItem(`beast_collected_${gameId}`) || "0");
 
   const finalBattleEvent =
     battleEvent || exploreLog.find((event) => event.type === "obstacle");
