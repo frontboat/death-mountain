@@ -16,7 +16,7 @@ import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
 import ItemTooltip from '../components/ItemTooltip';
-import { JACKPOT_AMOUNT } from '@/contexts/Statistics';
+import { JACKPOT_AMOUNT, useStatistics } from '@/contexts/Statistics';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 
 const attackMessage = "Attacking";
@@ -28,7 +28,7 @@ export default function BeastScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, adventurerState, beast, battleEvent, bag,
     equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
-
+  const { strkPrice } = useStatistics();
   const [untilDeath, setUntilDeath] = useState(false);
   const [attackInProgress, setAttackInProgress] = useState(false);
   const [fleeInProgress, setFleeInProgress] = useState(false);
@@ -221,7 +221,7 @@ export default function BeastScreen() {
                   </Typography>
                   {isJackpot && (
                     <Typography sx={styles.traitBox}>
-                      {`${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!`}
+                      {strkPrice ? `+${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
                     </Typography>
                   )}
                   {collectableTraits && (

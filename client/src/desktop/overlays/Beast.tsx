@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import ArmorTooltip from '../components/ArmorTooltip';
 import WeaponTooltip from '../components/WeaponTooltip';
-import { JACKPOT_AMOUNT } from '@/contexts/Statistics';
+import { JACKPOT_AMOUNT, useStatistics } from '@/contexts/Statistics';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 
 const pulseGold = keyframes`
@@ -26,6 +26,7 @@ const pulseGold = keyframes`
 export default function Beast() {
   const { currentNetworkConfig } = useDynamicConnector();
   const { adventurer, beast, battleEvent, setShowInventory } = useGameStore();
+  const { strkPrice } = useStatistics();
   const [beastHealth, setBeastHealth] = useState(adventurer!.beast_health);
 
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
@@ -107,7 +108,7 @@ export default function Beast() {
             {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
           </Typography>
           {isJackpot && <Typography sx={styles.collectableText} mt={0.2}>
-            {`+ ${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!`}
+            {strkPrice ? `+${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
           </Typography>}
         </Box>
       )}

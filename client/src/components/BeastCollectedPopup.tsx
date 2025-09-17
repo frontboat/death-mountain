@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { extractImageFromTokenURI } from '@/utils/utils';
 import { useController } from '@/contexts/controller';
 import { Beast } from '@/types/game';
-import { JACKPOT_AMOUNT } from '@/contexts/Statistics';
+import { JACKPOT_AMOUNT, useStatistics } from '@/contexts/Statistics';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 
 export interface BeastCollectedPopupProps {
@@ -16,6 +16,7 @@ export interface BeastCollectedPopupProps {
 export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastCollectedPopupProps) {
   const imageSrc = extractImageFromTokenURI(tokenURI);
   const { openProfile } = useController();
+  const { strkPrice } = useStatistics();
 
   const isJackpot = JACKPOT_BEASTS.includes(beast?.name!);
 
@@ -57,7 +58,7 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
             </>}
             {isJackpot && <>
               <Typography sx={styles.jackpotText}>
-                +${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!
+                {strkPrice ? `+${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
               </Typography>
             </>}
           </Box>
