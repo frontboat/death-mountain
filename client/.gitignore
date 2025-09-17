@@ -11,6 +11,7 @@ tsconfig.tsbuildinfo
 
 # production
 /dist
+/scripts
 
 # misc
 .DS_Store

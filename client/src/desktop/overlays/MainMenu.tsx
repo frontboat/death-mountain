@@ -306,6 +306,23 @@ export default function MainMenu() {
               } */}
 
               <Box sx={styles.bottom}>
+                <Box sx={styles.launchCampaign}>
+                  <Typography sx={styles.campaignHeadline}>
+                    Launch Campaign
+                  </Typography>
+                  <Typography sx={styles.campaignDescription}>
+                    588k free games available
+                  </Typography>
+                  <Typography
+                    component="a"
+                    href="https://claims.lootsurvivor.io/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={styles.eligibilityLink}
+                  >
+                    Check if you're eligible
+                  </Typography>
+                </Box>
                 <WalletConnect />
 
                 <Box sx={styles.bottomRow}>
@@ -494,5 +511,44 @@ const styles = {
     fontSize: "0.8rem",
     opacity: 0.8,
     textAlign: "center",
+  },
+  launchCampaign: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+    mb: 2,
+    p: 1.5,
+    bgcolor: "rgba(8, 62, 34, 0.3)",
+    border: "1px solid rgba(208, 201, 141, 0.2)",
+    borderRadius: "8px",
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  campaignHeadline: {
+    fontSize: "1rem",
+    fontWeight: 600,
+    color: "#d0c98d",
+    letterSpacing: 0.5,
+    mb: 0.5,
+  },
+  campaignDescription: {
+    fontSize: "0.75rem",
+    color: "rgba(208, 201, 141, 0.8)",
+    letterSpacing: 0.3,
+    mb: 1,
+    lineHeight: 1.3,
+  },
+  eligibilityLink: {
+    fontSize: "0.8rem",
+    color: "#b6ffb6",
+    textDecoration: "underline !important",
+    fontWeight: 500,
+    letterSpacing: 0.3,
+    cursor: "pointer",
+    "&:hover": {
+      textDecoration: "underline !important",
+      color: "#d0ffd0",
+    },
   },
 };

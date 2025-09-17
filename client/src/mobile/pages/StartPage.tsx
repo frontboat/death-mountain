@@ -243,6 +243,24 @@ export default function LandingPage() {
                 </Typography>
               </Button>
 
+              <Box sx={styles.launchCampaign}>
+                <Typography sx={styles.campaignHeadline}>
+                  Launch Campaign
+                </Typography>
+                <Typography sx={styles.campaignDescription}>
+                  588k free games available
+                </Typography>
+                <Typography
+                  component="a"
+                  href="https://claims.lootsurvivor.io/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={styles.eligibilityLink}
+                >
+                  Check if you're eligible
+                </Typography>
+              </Box>
+
               {/* {currentNetworkConfig.name === "Beast Mode" && (
                 <Button
                   fullWidth
@@ -408,5 +426,45 @@ const styles = {
     width: "calc(100% - 20px)",
     position: "absolute",
     bottom: 5,
+  },
+  launchCampaign: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+    mt: 2,
+    mb: 1,
+    p: 1.5,
+    bgcolor: "rgba(128, 255, 0, 0.1)",
+    border: "1px solid rgba(237, 207, 51, 0.3)",
+    borderRadius: "8px",
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  campaignHeadline: {
+    fontSize: "1.1rem",
+    fontWeight: 600,
+    color: "#EDCF33",
+    letterSpacing: 0.5,
+    mb: 0.5,
+  },
+  campaignDescription: {
+    fontSize: "0.85rem",
+    color: "rgba(237, 207, 51, 0.8)",
+    letterSpacing: 0.3,
+    mb: 1,
+    lineHeight: 1.3,
+  },
+  eligibilityLink: {
+    fontSize: "0.9rem",
+    color: "#80FF00",
+    textDecoration: "underline !important",
+    fontWeight: 500,
+    letterSpacing: 0.3,
+    cursor: "pointer",
+    "&:hover": {
+      textDecoration: "underline !important",
+      color: "#A0FF20",
+    },
   },
 };
