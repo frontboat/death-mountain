@@ -1,15 +1,30 @@
 import React from 'react';
-import { Fab } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import { styled } from '@mui/material/styles';
 
-const StyledFab = styled(Fab)(({ theme }) => ({
-  position: 'fixed',
+const Container = styled(Box)(({ theme }) => ({
+  position: 'absolute',
   bottom: 20,
-  right: 20,
-  backgroundColor: 'rgba(76, 175, 80, 0.8)',
+  left: 196,
+  zIndex: 100,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: theme.spacing(0.5),
+}));
+
+const FloatingButton = styled(IconButton)(({ theme }) => ({
+  width: 64,
+  height: 64,
+  borderRadius: 16,
+  border: '2px solid #083e22',
+  backgroundColor: 'rgba(21, 53, 33, 0.9)',
+  boxShadow: '0 8px 16px rgba(0,0,0,0.45)',
+  color: '#d0c98d',
+  backdropFilter: 'blur(6px)',
   '&:hover': {
-    backgroundColor: 'rgba(76, 175, 80, 1)',
+    backgroundColor: 'rgba(31, 83, 49, 0.95)',
   },
 }));
 
@@ -19,8 +34,15 @@ interface ChatToggleProps {
 
 export const ChatToggle: React.FC<ChatToggleProps> = ({ onClick }) => {
   return (
-    <StyledFab color="primary" aria-label="chat" onClick={onClick}>
-      <ChatIcon />
-    </StyledFab>
+    <Container>
+      <Tooltip title="Ask wat do?" placement="top">
+        <FloatingButton onClick={onClick} size="large">
+          <ChatIcon />
+        </FloatingButton>
+      </Tooltip>
+      <Typography sx={{ fontFamily: 'Cinzel, Georgia, serif', color: '#d0c98d', fontSize: '0.7rem', letterSpacing: 1.2, textTransform: 'uppercase' }}>
+        wat do?
+      </Typography>
+    </Container>
   );
 };
