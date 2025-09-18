@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 - `src/` houses the React + TypeScript client; key folders include `components/` (shared UI), `desktop/` and `mobile/` feature sets, `contexts/`, `stores/`, `utils/`, and `generated/` contract outputs (do not hand-edit).
-- `api/server.js` provides the Express bridge for AI chat; related prompt templates live at the repo root (e.g. `beast_prompts.txt`).
+- `api/chatHandler.js` centralizes the chat logic; `api/server.js` powers the local Express bridge while `api/chat.js` is the Vercel function entry point. Related prompt templates live at the repo root (e.g. `beast_prompts.txt`).
 - `src/desktop/contexts/GameDirector.tsx` orchestrates Starknet reads/writes and feeds Zustand; `src/stores/gameStore.ts` and `src/stores/marketStore.ts` store canonical adventurer/bag/market state.
 - Static assets and HTML live in `public/` and `index.html`; global styling uses `src/index.css`.
 - Top-level configuration files (`vite.config.ts`, `tsconfig.json`, `eslint.config.js`, manifests) govern build targets and chain integration.
@@ -81,13 +81,14 @@
 - `src/desktop/components/ChatBox.tsx:170` shows how combat stats get appended (damage projections, flee odds, etc.) and serialized before the network call; failures surface as an in-channel error message.
 
 ### API Integration
-- `api/server.js:1` exposes the `/api/chat` endpoint via Express, hydrates a massive system prompt that embeds the rich game-state summary sent from the client, and streams the OpenAI response back as plain text using streamText.
-- The request/response loop is synchronous HTTP: the client waits for the server's streamed text, appends it as an assistant message, and the toggle simply hides/shows the chat while leaving the in-memory history intact.
+- `api/chatHandler.js:1` builds the chat payload, composes the system prompt, and returns an `ai.streamText` iterator consumed by both runtime targets.
+- `api/server.js` boots the local Express proxy for `pnpm dev:api`, streaming responses to the client, and `api/chat.js` exports the Vercel Function handler used in production deployments.
+- The request/response loop remains synchronous HTTP: the client waits for the streamed text, appends it as an assistant message, and the toggle simply hides/shows the chat while leaving the in-memory history intact.
 
 ## Testing Guidelines
 - Automated tests are not yet defined; when adding them, prefer Vitest + React Testing Library alongside components (`Component.test.tsx`).
 - Always run `pnpm lint` and `pnpm build` before opening a PR; document manual QA that covers desktop/mobile flows, audio behavior, and AI chat responses.
-- Capture and attach console logs for API changes, especially prompt updates inside `api/server.js`.
+- Capture and attach console logs for API changes, especially prompt updates inside `api/chatHandler.js`.
 
 ## Commit & Pull Request Guidelines
 - Follow house style from `git log`: short, present-tense summaries without capitalization (`fix sound`, `update metagame-sdk`); add a scope prefix only when it clarifies impact.
