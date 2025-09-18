@@ -1,4 +1,5 @@
 import { getContractByName } from "@dojoengine/core";
+import manifest_mainnet from "../../manifest_mainnet.json";
 import manifest_sepolia from "../../manifest_sepolia.json";
 import manifest_slot from "../../manifest_slot.json";
 
@@ -37,6 +38,67 @@ export enum ChainId {
 }
 
 export const NETWORKS = {
+  SN_MAIN: {
+    chainId: ChainId.SN_MAIN,
+    name: "Beast Mode",
+    status: "online",
+    namespace: "ls_0_0_9",
+    slot: "pg-mainnet-4",
+    rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_9",
+    torii: "https://api.cartridge.gg/x/pg-mainnet-4/torii",
+    tokens: {
+      erc20: [
+        "0x042dd777885ad2c116be96d4d634abc90a26a790ffb5871e037dd5ae7d2ec86b",
+      ],
+    },
+    manifest: manifest_mainnet,
+    vrf: true,
+    denshokan:
+      "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd",
+    dungeon:
+      "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42",
+    dungeonTicket:
+      "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
+    beasts:
+      "0x046da8955829adf2bda310099a0063451923f02e648cf25a1203aac6335cf0e4",
+    goldenToken:
+      "0x027838dea749f41c6f8a44fcfa791788e6101080c1b3cd646a361f653ad10e2d",
+    ekuboRouter:
+      "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
+    paymentTokens: [
+      {
+        name: "ETH",
+        address:
+          "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        displayDecimals: 4,
+      },
+      {
+        name: "STRK",
+        address:
+          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        displayDecimals: 2,
+      },
+      {
+        name: "USDC",
+        address:
+          "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
+        displayDecimals: 2,
+        decimals: 6,
+      },
+      {
+        name: "TICKET",
+        address:
+          "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
+        displayDecimals: 0,
+      },
+      {
+        name: "SURVIVOR",
+        address:
+          "0x042DD777885AD2C116be96d4D634abC90A26A790ffB5871E037Dd5Ae7d2Ec86B",
+        displayDecimals: 0,
+      },
+    ],
+  },
   SN_SEPOLIA: {
     chainId: ChainId.SN_SEPOLIA,
     name: "Beast Mode",
@@ -137,6 +199,11 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   // Base policies that are common across networks
   const policies = [
     {
+      target:
+        "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+      method: "approve",
+    },
+    {
       target: game_token_systems,
       method: "mint_game",
     },
@@ -178,21 +245,20 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     },
     {
       target: network.dungeon,
+      method: "buy_game",
+    },
+    {
+      target: network.dungeon,
       method: "claim_beast",
     },
     {
-      target:
-        "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-      method: "mint",
+      target: network.dungeon,
+      method: "claim_reward_token",
     },
     {
-      target: "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-      method: "approve",
+      target: network.dungeon,
+      method: "claim_jackpot",
     },
-    {
-      target: "0x02b481049177d5947b7ac5b40ae231c14af517c8cdc5506fb2529f064fc47edd",
-      method: "buy_game",
-    }
   ];
 
   return {

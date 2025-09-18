@@ -11,7 +11,7 @@ import {
   GameEvent,
   processGameEvent,
 } from "@/utils/events";
-import { getNewItemsEquipped } from "@/utils/game";
+import { getNewItemsEquipped, incrementBeastsCollected } from "@/utils/game";
 import { delay } from "@/utils/utils";
 import {
   createContext,
@@ -111,7 +111,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     metadata,
     gameSettings,
     setGameSettings,
-    incrementBeastsCollected,
     setCollectable,
     setMetadata,
   } = useGameStore();
@@ -173,7 +172,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (beastDefeated && collectable && currentNetworkConfig.beasts) {
-      incrementBeastsCollected();
+      incrementBeastsCollected(gameId!);
       claimBeast(gameId!, collectable);
     }
   }, [beastDefeated]);

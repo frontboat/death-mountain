@@ -518,5 +518,22 @@ export const ItemUtils = {
     });
 
     return stats;
+  },
+
+  getJewelryEffect: (id: number): string => {
+    switch (id) {
+      // Necklaces
+      case 1: return "Pendant increases hide armor defense (3% per level)";
+      case 2: return "Necklace increases metal armor defense (3% per level)";
+      case 3: return "Amulet increases cloth armor defense (3% per level)";
+
+      // Rings
+      case 4: return "Crit chance gained from Silver Ring is doubled when equipped";
+      case 6: return "Platinum Ring increases name match bonus damage (3% per level)";
+      case 7: return "Titanium Ring increases critical hit bonus damage (3% per level)";
+      case 8: return "Gold Ring increases gold earned from defeating beasts (3% extra per level)";
+
+      default: return "No special effect";
+    }
   }
 };

@@ -2,16 +2,16 @@ import { BEAST_NAMES } from "@/constants/beast";
 import { OBSTACLE_NAMES } from "@/constants/obstacle";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameStore } from "@/stores/gameStore";
+import { useAnalytics } from "@/utils/analytics";
 import { screenVariants } from "@/utils/animations";
 import { ChainId } from "@/utils/networkConfig";
+import { getContractByName } from "@dojoengine/core";
 import { Box, Button, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { useAnalytics } from "@/utils/analytics";
-import { useEffect } from "react";
 import { useGameTokenRanking } from "metagame-sdk/sql";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
-import { getContractByName } from "@dojoengine/core";
 
 export default function DeathScreen() {
   const { currentNetworkConfig } = useDynamicConnector();
@@ -21,11 +21,12 @@ export default function DeathScreen() {
     battleEvent,
     beast,
     quest,
-    collectableCount,
     adventurer,
   } = useGameStore();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
+
+  let collectableCount = parseInt(localStorage.getItem(`beast_collected_${gameId}`) || "0");
 
   const finalBattleEvent =
     battleEvent || exploreLog.find((event) => event.type === "obstacle");
@@ -48,9 +49,9 @@ export default function DeathScreen() {
   const shareMessage =
     finalBattleEvent?.type === "obstacle"
       ? `I got a score of ${adventurer?.xp
-      } in the Loot Survivor 2 practice dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
-      } ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`
-      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 practice dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`;
+      } in the Loot Survivor 2 dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } ended my journey. \n\n@provablegames @lootsurvivor`
+      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {

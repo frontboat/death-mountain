@@ -3,11 +3,12 @@ import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { calculateLevel } from '@/utils/game';
-import { ItemUtils, slotIcons, typeIcons } from '@/utils/loot';
+import { ItemUtils, slotIcons, typeIcons, Tier } from '@/utils/loot';
 import { MarketItem, generateMarketItems, potionPrice } from '@/utils/market';
 import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
 import { Box, Button, IconButton, Modal, Paper, Slider, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useCallback, useMemo, useState } from 'react';
+import JewelryTooltip from '@/components/JewelryTooltip';
 
 const renderSlotToggleButton = (slot: keyof typeof slotIcons) => (
   <ToggleButton key={slot} value={slot} aria-label={slot}>
@@ -41,6 +42,23 @@ const renderTypeToggleButton = (type: keyof typeof typeIcons) => (
   </ToggleButton>
 );
 
+const renderTierToggleButton = (tier: Tier) => (
+  <ToggleButton key={tier} value={tier} aria-label={`Tier ${tier}`}>
+    <Box
+      sx={{
+        color: ItemUtils.getTierColor(tier),
+        fontWeight: 'bold',
+        fontSize: '1rem',
+        lineHeight: '1.5rem',
+        width: '24px',
+        height: '24px',
+      }}
+    >
+      T{tier}
+    </Box>
+  </ToggleButton>
+);
+
 export default function MarketScreen() {
   const { adventurer, bag, marketItemIds } = useGameStore();
   const { executeGameAction } = useGameDirector();
@@ -48,8 +66,10 @@ export default function MarketScreen() {
     cart,
     slotFilter,
     typeFilter,
+    tierFilter,
     setSlotFilter,
     setTypeFilter,
+    setTierFilter,
     addToCart,
     removeFromCart,
     setPotions,
@@ -149,6 +169,10 @@ export default function MarketScreen() {
     setTypeFilter(newType);
   };
 
+  const handleTierFilter = (_: React.MouseEvent<HTMLElement>, newTier: Tier | null) => {
+    setTierFilter(newTier);
+  };
+
   const potionCost = potionPrice(calculateLevel(adventurer?.xp || 0), adventurer?.stats?.charisma || 0);
   const totalCost = cart.items.reduce((sum, item) => sum + item.price, 0) + (cart.potions * potionCost);
   const remainingGold = (adventurer?.gold || 0) - totalCost;
@@ -161,6 +185,7 @@ export default function MarketScreen() {
   const filteredItems = marketItems.filter(item => {
     if (slotFilter && item.slot !== slotFilter) return false;
     if (typeFilter && item.type !== typeFilter) return false;
+    if (tierFilter && item.tier !== tierFilter) return false;
     return true;
   });
 
@@ -394,6 +419,18 @@ export default function MarketScreen() {
               >
                 {Object.keys(typeIcons).filter(type => ['Cloth', 'Hide', 'Metal'].includes(type)).map((type) => renderTypeToggleButton(type as keyof typeof typeIcons))}
               </ToggleButtonGroup>
+
+              <ToggleButtonGroup
+                value={tierFilter}
+                exclusive
+                onChange={handleTierFilter}
+                aria-label="item tier"
+                sx={[styles.filterButtons, { fontSize: '1rem' }]}
+              >
+                {Object.values(Tier)
+                  .filter(tier => typeof tier === 'number' && tier > 0)
+                  .map((tier) => renderTierToggleButton(tier as Tier))}
+              </ToggleButtonGroup>
             </Box>
           </Box>
         )}
@@ -436,7 +473,10 @@ export default function MarketScreen() {
 
                 <Box sx={styles.itemInfo}>
                   <Box sx={styles.itemHeader}>
-                    <Typography sx={styles.itemName}>{item.name}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Typography sx={styles.itemName}>{item.name}</Typography>
+                      <JewelryTooltip itemId={item.id} />
+                    </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {item.type in typeIcons && (
                         <Box
@@ -888,7 +928,8 @@ const styles = {
   },
   filterGroup: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
+    gap: '8px',
   },
   filterLabel: {
     color: 'rgba(255, 255, 255, 0.7)',
@@ -902,7 +943,7 @@ const styles = {
     '& .MuiToggleButton-root': {
       color: 'rgba(255, 255, 255, 0.7)',
       borderColor: 'rgba(128, 255, 0, 0.2)',
-      padding: '8px',
+      padding: '5px',
       minWidth: '32px',
       '&.Mui-selected': {
         color: '#111111',

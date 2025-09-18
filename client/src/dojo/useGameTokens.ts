@@ -77,7 +77,7 @@ export const useGameTokens = () => {
         let adventurer = adventurerData?.details?.adventurer || {};
         let tokenId = game.token_id;
         let expires_at = (game.lifecycle.end || 0) * 1000;
-        let available_at = (game.lifecycle.start || 0) * 1000;
+        let available_at = (game.lifecycle.start || 1) * 1000;
 
         return {
           ...adventurer,
@@ -118,18 +118,23 @@ export const useGameTokens = () => {
   const countBeasts = async () => {
     let beast_address = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].beasts;
     let url = `${SQL_ENDPOINT}/sql?query=
-      SELECT COUNT(*) as count FROM token_balances
+      SELECT COUNT(*) as count FROM tokens
       WHERE contract_address = "${beast_address.replace(/^0x0+/, "0x")}"`
 
-    const sql = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
+    try {
+      const sql = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
 
-    let data = await sql.json()
-    return data[0].count
+      let data = await sql.json()
+      return data[0].count
+    } catch (error) {
+      console.error("Error counting beasts:", error);
+      return 0;
+    }
   }
 
   return {

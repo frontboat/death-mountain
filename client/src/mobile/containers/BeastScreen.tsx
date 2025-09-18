@@ -16,6 +16,8 @@ import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
 import ItemTooltip from '../components/ItemTooltip';
+import { JACKPOT_AMOUNT, useStatistics } from '@/contexts/Statistics';
+import { JACKPOT_BEASTS } from '@/constants/beast';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -26,7 +28,7 @@ export default function BeastScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, adventurerState, beast, battleEvent, bag,
     equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
-
+  const { strkPrice } = useStatistics();
   const [untilDeath, setUntilDeath] = useState(false);
   const [attackInProgress, setAttackInProgress] = useState(false);
   const [fleeInProgress, setFleeInProgress] = useState(false);
@@ -152,6 +154,7 @@ export default function BeastScreen() {
   const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
   const collectable = beast ? beast!.isCollectable : false;
   const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
+  const isJackpot = currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
 
   const hasNewItemsEquipped = useMemo(() => {
     if (!adventurer?.equipment || !adventurerState?.equipment) return false;
@@ -216,6 +219,11 @@ export default function BeastScreen() {
                   <Typography sx={styles.collectableText}>
                     {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
                   </Typography>
+                  {isJackpot && (
+                    <Typography sx={styles.traitBox}>
+                      {strkPrice ? `+${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
+                    </Typography>
+                  )}
                   {collectableTraits && (
                     <Box sx={styles.traitIndicators}>
                       {collectableTraits.shiny && (

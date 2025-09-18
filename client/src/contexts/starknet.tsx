@@ -1,47 +1,53 @@
-import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
+import {
+  ChainId,
+  getNetworkConfig,
+  NetworkConfig,
+} from "@/utils/networkConfig";
 import { stringToFelt } from "@/utils/utils";
 import ControllerConnector from "@cartridge/connector/controller";
-import { sepolia } from "@starknet-react/chains";
+import { mainnet } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
-import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 interface DynamicConnectorContext {
   setCurrentNetworkConfig: (network: NetworkConfig) => void;
   currentNetworkConfig: NetworkConfig;
 }
 
-const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(null);
+const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(
+  null
+);
 
 const controllerConfig = getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN);
-const cartridgeController = typeof window !== "undefined" ? new ControllerConnector({
-  policies: controllerConfig.policies,
-  namespace: controllerConfig.namespace,
-  slot: controllerConfig.slot,
-  preset: controllerConfig.preset,
-  chains: controllerConfig.chains,
-  defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
-  tokens: controllerConfig.tokens,
-}) : null;
+const cartridgeController =
+  typeof window !== "undefined"
+    ? new ControllerConnector({
+        policies: controllerConfig.policies,
+        namespace: controllerConfig.namespace,
+        slot: controllerConfig.slot,
+        preset: controllerConfig.preset,
+        chains: controllerConfig.chains,
+        defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
+        tokens: controllerConfig.tokens,
+      })
+    : null;
 
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
   const getInitialNetwork = (): NetworkConfig => {
-    if (typeof window !== "undefined") {
-      const savedNetwork = localStorage.getItem("lastSelectedNetwork");
-      if (savedNetwork) {
-        try {
-          const chainId = savedNetwork as ChainId;
-          if (Object.values(ChainId).includes(chainId)) {
-            return getNetworkConfig(chainId);
-          }
-        } catch (error) {
-          console.warn("Invalid saved network, using default:", error);
-        }
-      }
-    }
-    return getNetworkConfig(import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN as ChainId);
+    return getNetworkConfig(
+      import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN as ChainId
+    );
   };
 
-  const [currentNetworkConfig, setCurrentNetworkConfig] = useState<NetworkConfig>(getInitialNetwork);
+  const [currentNetworkConfig, setCurrentNetworkConfig] =
+    useState<NetworkConfig>(getInitialNetwork);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -54,12 +60,14 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
   }, []);
 
   return (
-    <DynamicConnectorContext.Provider value={{
-      setCurrentNetworkConfig,
-      currentNetworkConfig,
-    }}>
+    <DynamicConnectorContext.Provider
+      value={{
+        setCurrentNetworkConfig,
+        currentNetworkConfig,
+      }}
+    >
       <StarknetConfig
-        chains={[sepolia]}
+        chains={[mainnet]}
         provider={jsonRpcProvider({ rpc })}
         connectors={[cartridgeController as any]}
         explorer={voyager}
@@ -74,7 +82,9 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
 export function useDynamicConnector() {
   const context = useContext(DynamicConnectorContext);
   if (!context) {
-    throw new Error('useDynamicConnector must be used within a DynamicConnectorProvider');
+    throw new Error(
+      "useDynamicConnector must be used within a DynamicConnectorProvider"
+    );
   }
   return context;
 }

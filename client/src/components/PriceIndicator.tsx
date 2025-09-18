@@ -69,11 +69,11 @@ export default function PriceIndicator() {
                     </Typography>
 
                     <Typography sx={styles.feeHighlightText}>
-                      - 50% to survivor token holders
+                      - 80% to survivor token holders
                     </Typography>
 
                     <Typography sx={styles.feeHighlightText}>
-                      - 50% to veLords
+                      - 20% to veLords
                     </Typography>
                   </Box>
                 </Box>
@@ -174,11 +174,11 @@ export default function PriceIndicator() {
                   </Typography>
 
                   <Typography sx={styles.feeHighlightText}>
-                    - 50% to survivor token holders
+                    - 80% to survivor token holders
                   </Typography>
 
                   <Typography sx={styles.feeHighlightText}>
-                    - 50% to veLords
+                    - 20% to veLords
                   </Typography>
                 </Box>
               </Box>
@@ -218,6 +218,7 @@ export default function PriceIndicator() {
         width: '100%',
         height: 8,
         borderRadius: 4,
+        my: 1,
         background: 'linear-gradient(90deg, #4caf50 0%, #ff9800 50%, #f44336 100%)',
         position: 'relative',
       }}>
@@ -235,16 +236,6 @@ export default function PriceIndicator() {
           boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
           zIndex: 2,
         }} />
-      </Box>
-
-      {/* Price range labels */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
-        <Typography sx={{ fontSize: '0.65rem', color: '#b0b0b0' }}>
-          ${minPrice.toFixed(2)}
-        </Typography>
-        <Typography sx={{ fontSize: '0.65rem', color: '#b0b0b0' }}>
-          ${maxPrice.toFixed(2)}
-        </Typography>
       </Box>
     </Box>
   );

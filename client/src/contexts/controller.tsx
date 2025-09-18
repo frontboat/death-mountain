@@ -2,7 +2,9 @@ import { useStarknetApi } from "@/api/starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
+import { useUIStore } from "@/stores/uiStore";
 import { Payment } from "@/types/game";
+import { useAnalytics } from "@/utils/analytics";
 import { ChainId, NETWORKS } from "@/utils/networkConfig";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import {
@@ -16,8 +18,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
-import { useAnalytics } from "@/utils/analytics";
-import { useUIStore } from "@/stores/uiStore";
 
 export interface ControllerContext {
   account: any;
@@ -30,6 +30,8 @@ export interface ControllerContext {
   login: () => void;
   logout: () => void;
   enterDungeon: (payment: Payment, txs: any[]) => void;
+  showTermsOfService: boolean;
+  acceptTermsOfService: () => void;
 }
 
 // Create a context
@@ -42,7 +44,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const navigate = useNavigate();
   const { setShowOverlay } = useGameStore();
   const { account, address, isConnecting } = useAccount();
-  const { buyGame, mintSepoliaLords } = useSystemCalls();
+  const { buyGame } = useSystemCalls();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig } = useDynamicConnector();
@@ -55,6 +57,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const [creatingBurner, setCreatingBurner] = useState(false);
   const [tokenBalances, setTokenBalances] = useState({});
   const [goldenPassIds, setGoldenPassIds] = useState<number[]>([]);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const { identifyAddress } = useAnalytics();
 
   const demoRpcProvider = useMemo(
@@ -66,6 +69,15 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (account) {
       fetchTokenBalances();
       identifyAddress({ address: account.address });
+      
+      // Check if terms have been accepted
+      const termsAccepted = typeof window !== 'undefined' 
+        ? localStorage.getItem('termsOfServiceAccepted') 
+        : null;
+      
+      if (!termsAccepted) {
+        setShowTermsOfService(true);
+      }
     }
   }, [account]);
 
@@ -139,17 +151,6 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         .paymentTokens
     );
     setTokenBalances(balances);
-    if (
-      parseInt(balances.TICKET) < 10 &&
-      import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA"
-    ) {
-      await mintSepoliaLords(account);
-      balances = await getTokenBalances(
-        NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
-          .paymentTokens
-      );
-      setTokenBalances(balances);
-    }
 
     let goldenTokenAddress =
       NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
@@ -160,6 +161,10 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       setGoldenPassIds(cooldowns);
     }
   }
+
+  const acceptTermsOfService = () => {
+    setShowTermsOfService(false);
+  };
 
   return (
     <ControllerContext.Provider
@@ -176,6 +181,8 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         isPending: isConnecting || isPending || creatingBurner,
         tokenBalances,
         goldenPassIds,
+        showTermsOfService,
+        acceptTermsOfService,
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
         login: () =>

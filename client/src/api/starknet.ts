@@ -69,6 +69,34 @@ export const useStarknetApi = () => {
     }
   }
 
+  const getRewardTokensClaimed = async (): Promise<number | null> => {
+    try {
+      const response = await fetch(currentNetworkConfig.rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: 0,
+          jsonrpc: "2.0",
+          method: "starknet_call",
+          params: [
+            {
+              contract_address: currentNetworkConfig.dungeon,
+              entry_point_selector: "0x00f35723a44bb7019f945d4e33d732e4c70779272d603c301add5c3edc68ff06",
+              calldata: []
+            },
+            "latest"
+          ]
+        }),
+      });
+
+      const data = await response.json();
+      return parseInt(data.result[0], 16);
+    } catch (error) {
+      console.error('Error in getRewardTokensClaimed:', error);
+      return null;
+    }
+  }
+
   const getAdventurerState = async (adventurerId: number) => {
     try {
       const response = await fetch(currentNetworkConfig.rpcUrl, {
@@ -441,5 +469,15 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getGameState, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady, getSettingsDetails, getTokenMetadata, getAdventurerState };
+  return {
+    getGameState,
+    getBeastTokenURI,
+    createBurnerAccount,
+    getTokenBalances,
+    goldenPassReady,
+    getSettingsDetails,
+    getTokenMetadata,
+    getAdventurerState,
+    getRewardTokensClaimed,
+  };
 };

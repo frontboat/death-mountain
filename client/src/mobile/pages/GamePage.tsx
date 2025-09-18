@@ -1,7 +1,9 @@
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { useStatistics } from "@/contexts/Statistics";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
+import { calculateLevel } from "@/utils/game";
 import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
 import { Box } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
@@ -17,6 +19,7 @@ import ExploreScreen from "../containers/ExploreScreen";
 import LoadingContainer from "../containers/LoadingScreen";
 import MarketScreen from "../containers/MarketScreen";
 import QuestCompletedScreen from "../containers/QuestCompletedScreen";
+import RewardsScreen from "../containers/RewardsScreen";
 import SettingsScreen from "../containers/SettingsScreen";
 import StatSelectionScreen from "../containers/StatSelectionScreen";
 import { useGameDirector } from "../contexts/GameDirector";
@@ -26,6 +29,7 @@ export default function GamePage() {
   const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
   const { spectating } = useGameDirector();
+  const { remainingSurvivorTokens } = useStatistics();
   const {
     account,
     playerName,
@@ -49,6 +53,7 @@ export default function GamePage() {
   >("GAME");
 
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [showRewards, setShowRewards] = useState(currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get("id"));
@@ -72,11 +77,6 @@ export default function GamePage() {
   }, [account]);
 
   useEffect(() => {
-    if (mode === "real" && currentNetworkConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
-      setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
-      return;
-    }
-
     if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
@@ -88,6 +88,11 @@ export default function GamePage() {
       return;
     }
 
+    if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT && game_id === 0) {
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+      return;
+    }
+
     if (isPending) return;
 
     if (mode === "entering") {
@@ -95,7 +100,7 @@ export default function GamePage() {
       return;
     }
 
-    if (!controllerAddress && mode === "real") {
+    if (!controllerAddress && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       login();
       return;
     }
@@ -122,16 +127,26 @@ export default function GamePage() {
     };
   }, []);
 
+  const handleRewardsClose = () => {
+    setShowRewards(false);
+  };
+
   const isLoading = !gameId || !adventurer;
   const isDead = adventurer && adventurer.health === 0;
   const isBeastDefeated = showBeastRewards && adventurer?.beast_health === 0;
-  const isQuestCompleted =
-    quest && adventurer && adventurer.xp >= quest.targetScore;
+  const isQuestCompleted = quest && adventurer && adventurer.xp >= quest.targetScore;
+
 
   return (
     <Box className="container" sx={styles.container}>
       {isLoading ? (
         <LoadingContainer loadingProgress={loadingProgress} />
+      ) : isDead && !spectating && showRewards && remainingSurvivorTokens !== null && remainingSurvivorTokens > 0 && adventurer?.xp! >= 9 ? (
+        <RewardsScreen
+          gameId={gameId!}
+          adventurerLevel={calculateLevel(adventurer?.xp!)}
+          onClose={handleRewardsClose}
+        />
       ) : isDead ? (
         <DeathScreen />
       ) : isQuestCompleted ? (

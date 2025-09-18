@@ -42,6 +42,11 @@ export const getNewItemsEquipped = (newEquipment: Equipment, oldEquipment: Equip
   return newItems;
 };
 
+export const incrementBeastsCollected = (gameId: number) => {
+  let currentCount = parseInt(localStorage.getItem(`beast_collected_${gameId}`) || "0");
+  localStorage.setItem(`beast_collected_${gameId}`, (currentCount + 1).toString());
+};
+
 // Calculate critical hit bonus based on luck and ring
 const critical_hit_bonus = (base_damage: number, ring: Item | null): number => {
   let total = 0;

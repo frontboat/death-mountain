@@ -208,9 +208,9 @@ export default function PaymentOptionsModal({
     () =>
       new Contract({
         abi: ROUTER_ABI,
-        address: NETWORKS[
-          import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS
-        ].ekuboRouter,
+        address:
+          NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
+            .ekuboRouter,
         providerOrAccount: provider,
       }),
     [provider]
@@ -234,7 +234,9 @@ export default function PaymentOptionsModal({
       }))
       .filter(
         (token: any) =>
-          Number(token.balance) > 0 && token.address !== DUNGEON_TICKET_ADDRESS
+          Number(token.balance) > 0 &&
+          token.address !== DUNGEON_TICKET_ADDRESS &&
+          token.name !== "SURVIVOR"
       );
   }, [paymentTokens, tokenBalances]);
 
@@ -410,21 +412,22 @@ export default function PaymentOptionsModal({
 
   // Initialize the view based on user's situation
   useEffect(() => {
-    if (currentView === null) {
-      if (goldenPassIds.length > 0) {
-        setCurrentView("golden");
-      } else if (dungeonTicketCount >= 1) {
-        setCurrentView("dungeon");
-      } else if (
-        userTokens &&
-        userTokens.length > 0 &&
-        userTokens.some((t: any) => parseFloat(t.balance) > 0)
-      ) {
-        setCurrentView("token");
-      } else {
-        setCurrentView("token");
-      }
-    }
+    setCurrentView("golden");
+    // if (currentView === null) {
+    //   if (goldenPassIds.length > 0) {
+    //     setCurrentView("golden");
+    //   } else if (dungeonTicketCount >= 1) {
+    //     setCurrentView("dungeon");
+    //   } else if (
+    //     userTokens &&
+    //     userTokens.length > 0 &&
+    //     userTokens.some((t: any) => parseFloat(t.balance) > 0)
+    //   ) {
+    //     setCurrentView("token");
+    //   } else {
+    //     setCurrentView("credit");
+    //   }
+    // }
   }, [currentView]);
 
   // Fetch initial quote when component loads or selected token changes
@@ -476,7 +479,7 @@ export default function PaymentOptionsModal({
               >
                 <AnimatePresence mode="wait">
                   {/* Golden Token Option */}
-                  {currentView === "golden" && (
+                  {goldenPassIds.length > 0 && currentView === "golden" ? (
                     <MotionWrapper viewKey="golden">
                       <Box sx={styles.paymentCard}>
                         <Box
@@ -507,6 +510,12 @@ export default function PaymentOptionsModal({
                           Enter Dungeon
                         </ActionButton>
                       </Box>
+                    </MotionWrapper>
+                  ) : (
+                    <MotionWrapper viewKey="dungeon">
+                      <Typography sx={styles.paymentTitle} textAlign="center" my={1}>
+                        Coming Soon
+                      </Typography>
                     </MotionWrapper>
                   )}
 
@@ -654,7 +663,7 @@ export default function PaymentOptionsModal({
               </Box>
 
               {/* Footer links */}
-              <Box sx={styles.footer}>
+              {/* <Box sx={styles.footer}>
                 <Box
                   sx={{
                     display: "flex",
@@ -663,7 +672,6 @@ export default function PaymentOptionsModal({
                     flexWrap: "wrap",
                   }}
                 >
-                  {/* Golden token view - show next available option */}
                   {currentView === "golden" &&
                     (dungeonTicketCount >= 1 ? (
                       <Link
@@ -673,7 +681,7 @@ export default function PaymentOptionsModal({
                       >
                         Use dungeon ticket instead
                       </Link>
-                    ) : userTokens.length > 0 ? (
+                    ) : true ? (
                       <Link
                         component="button"
                         onClick={() => setCurrentView("token")}
@@ -687,13 +695,11 @@ export default function PaymentOptionsModal({
                         onClick={() => setCurrentView("credit")}
                         sx={styles.footerLink}
                       >
-                        Pay with credit card or other wallet
                       </Link>
                     ))}
 
-                  {/* Dungeon ticket view - show next available option */}
                   {currentView === "dungeon" &&
-                    (userTokens.length > 0 ? (
+                    (true ? (
                       <Link
                         component="button"
                         onClick={() => setCurrentView("token")}
@@ -707,22 +713,18 @@ export default function PaymentOptionsModal({
                         onClick={() => setCurrentView("credit")}
                         sx={styles.footerLink}
                       >
-                        Pay with credit card or other wallet
                       </Link>
                     ))}
 
-                  {/* Token view - always show credit card option */}
                   {currentView === "token" && (
                     <Link
                       component="button"
                       onClick={() => setCurrentView("credit")}
                       sx={styles.footerLink}
                     >
-                      Pay with credit card or other wallet
                     </Link>
                   )}
 
-                  {/* Credit card view - show previous available option */}
                   {currentView === "credit" &&
                     (userTokens.length > 0 ? (
                       <Link
@@ -750,7 +752,7 @@ export default function PaymentOptionsModal({
                       </Link>
                     ) : null)}
                 </Box>
-              </Box>
+              </Box> */}
             </Box>
           </motion.div>
         </Box>

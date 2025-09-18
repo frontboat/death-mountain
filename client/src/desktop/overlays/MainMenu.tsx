@@ -1,12 +1,21 @@
+import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { OPENING_TIME } from "@/contexts/Statistics";
 import discordIcon from "@/desktop/assets/images/discord.png";
 import AdventurersList from "@/desktop/components/AdventurersList";
-import BeastsCollected from "@/components/BeastsCollected";
-import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import Settings from "@/desktop/components/Settings";
+import DungeonRewards from "@/dungeons/beasts/DungeonRewards";
+import {
+  ChainId,
+  getNetworkConfig,
+  NetworkConfig,
+} from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import TokenIcon from "@mui/icons-material/Token";
@@ -18,27 +27,28 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useAccount } from "@starknet-react/core";
 import { AnimatePresence } from "framer-motion";
+import { useGameTokens } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Network from "../components/Network";
+import { addAddressPadding } from "starknet";
 import PriceIndicator from "../../components/PriceIndicator";
+import Leaderboard from "../components/Leaderboard";
 import WalletConnect from "../components/WalletConnect";
 import StatisticsModal from "./StatisticsModal";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
-import Leaderboard from "../components/Leaderboard";
-import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 
 export default function MainMenu() {
   const navigate = useNavigate();
   const { account } = useAccount();
   const { login } = useController();
-  const { currentNetworkConfig } = useDynamicConnector();
+  const { currentNetworkConfig, setCurrentNetworkConfig } =
+    useDynamicConnector();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [left, setLeft] = useState(getMenuLeftOffset());
+  const [isDungeonOpen, setIsDungeonOpen] = useState(false);
 
   useEffect(() => {
     function handleResize() {
@@ -46,6 +56,18 @@ export default function MainMenu() {
     }
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const checkDungeonOpen = () => {
+      const now = Math.floor(Date.now() / 1000);
+      setIsDungeonOpen(now >= OPENING_TIME);
+    };
+
+    checkDungeonOpen();
+    const interval = setInterval(checkDungeonOpen, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleStartGame = () => {
@@ -73,6 +95,34 @@ export default function MainMenu() {
     setShowAdventurers(true);
   };
 
+  const switchMode = () => {
+    if (currentNetworkConfig.name === "Beast Mode") {
+      setCurrentNetworkConfig(
+        getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig
+      );
+    } else {
+      setCurrentNetworkConfig(
+        getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
+      );
+    }
+  };
+
+  let disableGameButtons =
+    !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
+
+  const { games } = useGameTokens({
+    owner: account?.address || '0x0',
+    limit: 101,
+    sortBy: "minted_at",
+    sortOrder: "desc",
+    mintedByAddress: currentNetworkConfig.dungeon
+      ? addAddressPadding(currentNetworkConfig.dungeon)
+      : "0",
+  });
+  const gameCount = games.filter(
+    (game: any) => !game.game_over && game.score === 0
+  ).length;
+
   return (
     <>
       <Box sx={{ ...styles.container, left: `${left + 32}px` }}>
@@ -94,13 +144,12 @@ export default function MainMenu() {
                 </Typography>
               </Box>
 
-              {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />}
-
               <Button
                 variant="outlined"
                 fullWidth
                 size="large"
                 onClick={handleStartGame}
+                disabled={disableGameButtons}
                 sx={{
                   px: 1,
                   display: "flex",
@@ -116,10 +165,14 @@ export default function MainMenu() {
                       fontSize: "0.85rem",
                       fontWeight: 500,
                       letterSpacing: 0.5,
-                      color: "#d0c98d",
+                      color: disableGameButtons
+                        ? "rgba(208, 201, 141, 0.3)"
+                        : "#d0c98d",
                     }}
                   >
-                    New Game
+                    {currentNetworkConfig.name === "Beast Mode"
+                      ? "Buy Game"
+                      : "Start Game"}
                   </Typography>
                 </Box>
               </Button>
@@ -129,18 +182,66 @@ export default function MainMenu() {
                 fullWidth
                 size="large"
                 onClick={handleShowAdventurers}
+                disabled={disableGameButtons}
                 sx={{ pl: 1, height: "36px" }}
               >
                 <ShieldOutlinedIcon sx={{ fontSize: 20, mr: 1 }} />
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "0.85rem",
+                      fontWeight: 500,
+                      letterSpacing: 0.5,
+                      color: disableGameButtons
+                        ? "rgba(208, 201, 141, 0.3)"
+                        : "#d0c98d",
+                    }}
+                  >
+                    My Games
+                  </Typography>
+                  {gameCount > 0 && (
+                    <Typography color="secondary" fontWeight={500}>
+                      {gameCount} NEW
+                    </Typography>
+                  )}
+                </Box>
+              </Button>
+
+              <Button
+                variant="outlined"
+                fullWidth
+                size="large"
+                onClick={switchMode}
+                sx={{ pl: 1, height: "36px" }}
+              >
+                {currentNetworkConfig.name === "Beast Mode" ? (
+                  <img
+                    src="/images/practice.png"
+                    alt="practice"
+                    style={{ width: 20, height: 20 }}
+                  />
+                ) : (
+                  <AttachMoneyIcon sx={{ fontSize: 20 }} />
+                )}
                 <Typography
                   sx={{
+                    ml: 1,
                     fontSize: "0.85rem",
                     fontWeight: 500,
                     letterSpacing: 0.5,
                     color: "#d0c98d",
                   }}
                 >
-                  My Adventurers
+                  {currentNetworkConfig.name === "Beast Mode"
+                    ? "Practice for Free"
+                    : "Play for Real"}
                 </Typography>
               </Button>
 
@@ -200,12 +301,28 @@ export default function MainMenu() {
                 </Typography>
               </Button> */}
 
-              <Box sx={styles.bottom}>
-                {currentNetworkConfig.name === "Beast Mode" && (
-                  <BeastsCollected />
-                )}
+              {/* {currentNetworkConfig.name === "Beast Mode" &&
+                <PriceIndicator />
+              } */}
 
-                <Network />
+              <Box sx={styles.bottom}>
+                <Box sx={styles.launchCampaign}>
+                  <Typography sx={styles.campaignHeadline}>
+                    Launch Campaign
+                  </Typography>
+                  <Typography sx={styles.campaignDescription}>
+                    588k free games available
+                  </Typography>
+                  <Typography
+                    component="a"
+                    href="https://claims.lootsurvivor.io/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={styles.eligibilityLink}
+                  >
+                    Check if you're eligible
+                  </Typography>
+                </Box>
                 <WalletConnect />
 
                 <Box sx={styles.bottomRow}>
@@ -274,6 +391,10 @@ export default function MainMenu() {
           onClose={() => setShowPaymentOptions(false)}
         />
       )}
+
+      <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
+        <DungeonRewards />
+      </Box>
     </>
   );
 }
@@ -295,6 +416,21 @@ const styles = {
     py: 1,
     zIndex: 10,
     gap: 1,
+  },
+  rewardsContainer: {
+    position: "absolute",
+    top: 32,
+    width: 300,
+    bgcolor: "rgba(24, 40, 24, 0.6)",
+    border: "1px solid rgba(208, 201, 141, 0.3)",
+    borderRadius: "10px",
+    backdropFilter: "blur(10px)",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+    display: "flex",
+    flexDirection: "column",
+    boxSizing: "border-box",
+    p: 2.5,
+    zIndex: 10,
   },
   headerBox: {
     display: "flex",
@@ -375,5 +511,44 @@ const styles = {
     fontSize: "0.8rem",
     opacity: 0.8,
     textAlign: "center",
+  },
+  launchCampaign: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+    mb: 2,
+    p: 1.5,
+    bgcolor: "rgba(8, 62, 34, 0.3)",
+    border: "1px solid rgba(208, 201, 141, 0.2)",
+    borderRadius: "8px",
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  campaignHeadline: {
+    fontSize: "1rem",
+    fontWeight: 600,
+    color: "#d0c98d",
+    letterSpacing: 0.5,
+    mb: 0.5,
+  },
+  campaignDescription: {
+    fontSize: "0.75rem",
+    color: "rgba(208, 201, 141, 0.8)",
+    letterSpacing: 0.3,
+    mb: 1,
+    lineHeight: 1.3,
+  },
+  eligibilityLink: {
+    fontSize: "0.8rem",
+    color: "#b6ffb6",
+    textDecoration: "underline !important",
+    fontWeight: 500,
+    letterSpacing: 0.3,
+    cursor: "pointer",
+    "&:hover": {
+      textDecoration: "underline !important",
+      color: "#d0ffd0",
+    },
   },
 };

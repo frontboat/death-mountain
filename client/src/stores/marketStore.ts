@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { MarketItem } from '@/utils/market';
+import { Tier } from '@/utils/loot';
 
 interface MarketState {
   isOpen: boolean;
@@ -9,12 +10,14 @@ interface MarketState {
   };
   slotFilter: string | null;
   typeFilter: string | null;
+  tierFilter: Tier | null;
   inProgress: boolean;
   showFilters: boolean;
 
   setIsOpen: (isOpen: boolean) => void;
   setSlotFilter: (filter: string | null) => void;
   setTypeFilter: (filter: string | null) => void;
+  setTierFilter: (filter: Tier | null) => void;
   addToCart: (item: MarketItem) => void;
   removeFromCart: (item: MarketItem) => void;
   setPotions: (count: number) => void;
@@ -31,12 +34,14 @@ export const useMarketStore = create<MarketState>((set) => ({
   },
   slotFilter: null,
   typeFilter: null,
+  tierFilter: null,
   inProgress: false,
   showFilters: false,
 
   setIsOpen: (isOpen) => set({ isOpen }),
   setSlotFilter: (filter) => set({ slotFilter: filter }),
   setTypeFilter: (filter) => set({ typeFilter: filter }),
+  setTierFilter: (filter) => set({ tierFilter: filter }),
   addToCart: (item) => set((state) => ({
     cart: {
       ...state.cart,
@@ -62,6 +67,7 @@ export const useMarketStore = create<MarketState>((set) => ({
     },
     slotFilter: null,
     typeFilter: null,
+    tierFilter: null,
   }),
   setInProgress: (inProgress) => set({ inProgress }),
   setShowFilters: (show) => set({ showFilters: show }),

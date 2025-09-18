@@ -12,6 +12,8 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@cartridge/connector": "^0.10.1",
+    "@cartridge/controller": "^0.10.1",
     "@ai-sdk/openai": "^2.0.27",
     "@ai-sdk/react": "^2.0.38",
     "@cartridge/connector": "^0.10.0-alpha.1",

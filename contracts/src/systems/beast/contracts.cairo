@@ -130,6 +130,7 @@ mod beast_systems {
                         entity_hash,
                         kill_index: entity_stats.adventurers_killed,
                         adventurer_id,
+                        timestamp: starknet::get_block_timestamp(),
                     },
                 );
         }

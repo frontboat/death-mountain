@@ -1,22 +1,30 @@
 import { OBSTACLE_NAMES } from '@/constants/obstacle';
 import { useDynamicConnector } from '@/contexts/starknet';
+import { useStatistics } from '@/contexts/Statistics';
+import { useGameDirector } from '@/desktop/contexts/GameDirector';
+import RewardsOverlay from '@/dungeons/beasts/RewardsOverlay';
 import { useGameStore } from '@/stores/gameStore';
+import { useAnalytics } from '@/utils/analytics';
+import { calculateLevel } from '@/utils/game';
 import { ChainId } from '@/utils/networkConfig';
 import { getContractByName } from '@dojoengine/core';
 import { Box, Button, Typography } from '@mui/material';
+import { useGameTokenRanking } from 'metagame-sdk/sql';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addAddressPadding } from 'starknet';
-import { useGameTokenRanking } from 'metagame-sdk/sql';
-import { useEffect } from 'react';
-import { useAnalytics } from '@/utils/analytics';
 
 export default function DeathOverlay() {
   const { currentNetworkConfig } = useDynamicConnector();
-  const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
+  const { spectating } = useGameDirector();
+  const { remainingSurvivorTokens } = useStatistics();
+  const { gameId, exploreLog, battleEvent, beast, quest, adventurer } = useGameStore();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
+  const [showRewards, setShowRewards] = useState(currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT);
 
   const finalBattleEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
+  let collectableCount = parseInt(localStorage.getItem(`beast_collected_${gameId}`) || "0");
 
   let battleMessage = '';
   if (finalBattleEvent?.type === 'obstacle') {
@@ -30,9 +38,9 @@ export default function DeathOverlay() {
   const shareMessage =
     finalBattleEvent?.type === "obstacle"
       ? `I got a score of ${adventurer?.xp
-      } in the Loot Survivor 2 practice dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
-      } ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`
-      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 practice dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\nProvable Games will be launching Loot Survivor 2 on September 10, right in the middle of Starktember.\n\n@provablegames @lootsurvivor`;
+      } in the Loot Survivor 2 dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } ended my journey. \n\n@provablegames @lootsurvivor`
+      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
@@ -62,6 +70,20 @@ export default function DeathOverlay() {
     mintedByAddress: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon),
     settings_id: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined
   });
+
+  const handleRewardsClose = () => {
+    setShowRewards(false);
+  };
+
+  if (
+    !spectating &&
+    showRewards &&
+    remainingSurvivorTokens !== null &&
+    remainingSurvivorTokens > 0 &&
+    adventurer?.xp! >= 9
+  ) {
+    return <RewardsOverlay gameId={gameId!} adventurerLevel={calculateLevel(adventurer?.xp!)} onClose={handleRewardsClose} />;
+  }
 
   return (
     <Box sx={styles.container}>
@@ -99,7 +121,7 @@ export default function DeathOverlay() {
           </Typography>
         </Box>
 
-        <Box sx={styles.buttonContainer}>
+        <Box sx={styles.secondaryButtonContainer}>
           <Button
             variant="outlined"
             component="a"
@@ -237,8 +259,33 @@ const styles = {
     gap: '16px',
     justifyContent: 'center',
   },
+  secondaryButtonContainer: {
+    display: 'flex',
+    gap: '16px',
+    justifyContent: 'center',
+  },
+  claimButton: {
+    background: 'linear-gradient(135deg, #ffe082 0%, #ffb300 100%)',
+    color: '#1a1a1a',
+    minWidth: '300px',
+    height: '56px',
+    justifyContent: 'center',
+    borderRadius: '8px',
+    fontSize: '1.1rem',
+    fontWeight: 'bold',
+    boxShadow: '0 0 20px rgba(255, 224, 130, 0.3)',
+    '&:hover': {
+      background: 'linear-gradient(135deg, #ffb300 0%, #ff8800 100%)',
+      boxShadow: '0 0 30px rgba(255, 224, 130, 0.6)',
+    },
+    animation: 'pulse 2s ease-in-out infinite',
+    '@keyframes pulse': {
+      '0%, 100%': { transform: 'scale(1)' },
+      '50%': { transform: 'scale(1.05)' },
+    },
+  },
   shareButton: {
-    minWidth: '250px',
+    minWidth: '150px',
     height: '48px',
     justifyContent: 'center',
     borderRadius: '8px',
@@ -246,7 +293,7 @@ const styles = {
   restartButton: {
     border: '2px solid rgba(255, 255, 255, 0.15)',
     background: 'rgba(24, 40, 24, 1)',
-    minWidth: '250px',
+    minWidth: '150px',
     height: '48px',
     justifyContent: 'center',
     borderRadius: '8px',
