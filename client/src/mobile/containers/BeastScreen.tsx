@@ -59,11 +59,10 @@ export default function BeastScreen() {
     onComplete: () => {
       setHealth(prev => Math.max(0, prev - battleEvent?.attack?.damage!));
       beastStrike.stop();
-
+      setEquipInProgress(false);
       if (!untilDeath) {
         setAttackInProgress(false);
         setFleeInProgress(false);
-        setEquipInProgress(false);
       }
     }
   });

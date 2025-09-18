@@ -41,10 +41,10 @@ export default function CombatOverlay() {
 
       else if (battleEvent.type === "beast_attack") {
         setCombatLog(`${beast!.baseName} attacked your ${battleEvent.attack?.location} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
+        setEquipInProgress(false);
         if (!untilDeath) {
           setAttackInProgress(false);
           setFleeInProgress(false);
-          setEquipInProgress(false);
         }
       }
 

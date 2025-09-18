@@ -235,7 +235,7 @@ const styles = {
     border: '2px solid #083e22',
     borderRadius: '10px',
     boxShadow: '0 8px 32px 8px #000b',
-    zIndex: 1001,
+    zIndex: 1002,
     display: 'flex',
     flexDirection: 'column',
     padding: 1.5,

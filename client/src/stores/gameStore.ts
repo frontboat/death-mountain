@@ -25,6 +25,7 @@ interface GameState {
   showSettings: boolean;
   collectable: Beast | null;
   collectableTokenURI: string | null;
+  claimInProgress: boolean;
   selectedStats: Stats;
 
   setGameId: (gameId: number) => void;
@@ -50,6 +51,7 @@ interface GameState {
   setShowSettings: (show: boolean) => void;
   setCollectable: (data: Beast | null) => void;
   setCollectableTokenURI: (tokenURI: string | null) => void;
+  setClaimInProgress: (data: boolean) => void;
   setSelectedStats: (data: Stats) => void;
 }
 
@@ -73,8 +75,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   showSettings: false,
   collectable: null,
   collectableTokenURI: null,
+  claimInProgress: false,
   selectedStats: { strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 },
-
   setGameId: (gameId: number) => {
     set({ gameId });
   },
@@ -100,6 +102,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       collectable: null,
       collectableTokenURI: null,
       selectedStats: { strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 },
+      claimInProgress: false,
     });
   },
 
@@ -201,6 +204,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   setShowOverlay: (show: boolean) => set({ showOverlay: show }),
   setShowSettings: (show: boolean) => set({ showSettings: show }),
   setCollectable: (data: Beast | null) => set({ collectable: data, collectableTokenURI: null }),
-  setCollectableTokenURI: (tokenURI: string | null) => set({ collectableTokenURI: tokenURI }),
+  setCollectableTokenURI: (tokenURI: string | null) => set({ collectableTokenURI: tokenURI, claimInProgress: false }),
   setSelectedStats: (data: Stats) => set({ selectedStats: data }),
+  setClaimInProgress: (data: boolean) => set({ claimInProgress: data }),
 }));

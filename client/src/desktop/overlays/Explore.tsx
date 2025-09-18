@@ -13,12 +13,15 @@ import MarketOverlay from './Market';
 import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
 import { useUIStore } from '@/stores/uiStore';
+import { useSnackbar } from 'notistack';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue, spectating } = useGameDirector();
-  const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI, setCollectable, selectedStats, setSelectedStats } = useGameStore();
+  const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI,
+    setCollectable, selectedStats, setSelectedStats, claimInProgress } = useGameStore();
   const { cart, inProgress, setInProgress } = useMarketStore();
   const { skipAllAnimations } = useUIStore();
+  const { enqueueSnackbar } = useSnackbar()
 
   const [isExploring, setIsExploring] = useState(false);
   const [isSelectingStats, setIsSelectingStats] = useState(false);
@@ -208,6 +211,13 @@ export default function ExploreOverlay() {
         )}
       </Box>}
 
+      {claimInProgress && (
+        <Box sx={styles.toastContainer}>
+          <Typography sx={styles.toastText}>Collecting Beast</Typography>
+          <div className='dotLoader yellow' />
+        </Box>
+      )}
+
       {collectable && collectableTokenURI && (
         <BeastCollectedPopup
           onClose={() => setCollectable(null)}
@@ -332,5 +342,27 @@ const styles = {
         boxShadow: '0 0 0 rgba(215, 197, 41, 0)',
       },
     },
+  },
+  toastContainer: {
+    display: 'flex',
+    alignItems: 'baseline',
+    position: 'absolute',
+    top: 98,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    padding: '8px 20px',
+    borderRadius: '8px',
+    background: 'rgba(24, 40, 24, 0.9)',
+    border: '1px solid #d0c98d80',
+    backdropFilter: 'blur(8px)',
+    zIndex: 1000,
+  },
+  toastText: {
+    fontFamily: 'Cinzel, Georgia, serif',
+    fontWeight: 600,
+    fontSize: '0.85rem',
+    color: '#d0c98d',
+    letterSpacing: '0.5px',
+    margin: 0,
   },
 };

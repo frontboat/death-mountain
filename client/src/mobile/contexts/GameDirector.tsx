@@ -113,6 +113,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setGameSettings,
     setCollectable,
     setMetadata,
+    setClaimInProgress,
   } = useGameStore();
 
   const [spectating, setSpectating] = useState(false);
@@ -173,6 +174,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (beastDefeated && collectable && currentNetworkConfig.beasts) {
       incrementBeastsCollected(gameId!);
+      setClaimInProgress(true);
       claimBeast(gameId!, collectable);
     }
   }, [beastDefeated]);
