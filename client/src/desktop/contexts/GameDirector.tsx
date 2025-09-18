@@ -106,6 +106,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setShowOverlay,
     setCollectable,
     setMetadata,
+    setClaimInProgress,
   } = useGameStore();
   const { setIsOpen } = useMarketStore();
   const { skipAllAnimations, skipIntroOutro } = useUIStore();
@@ -168,6 +169,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (beastDefeated && collectable && currentNetworkConfig.beasts) {
       incrementBeastsCollected(gameId!);
+      setClaimInProgress(true);
       claimBeast(gameId!, collectable);
     }
   }, [beastDefeated]);
