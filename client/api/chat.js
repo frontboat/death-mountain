@@ -1,6 +1,4 @@
-import { handleChat } from './chatHandler.js';
-
-const encoder = new TextEncoder();
+import { collectTextFromStream, handleChat } from './chatHandler.js';
 
 export const config = {
   runtime: 'nodejs',
@@ -32,25 +30,9 @@ export default async function handler(request) {
 
   try {
     const { textStream } = await handleChat(messages, gameContext);
-    const iterator = textStream[Symbol.asyncIterator]();
+    const body = await collectTextFromStream(textStream);
 
-    const stream = new ReadableStream({
-      async pull(controller) {
-        const { value, done } = await iterator.next();
-        if (done) {
-          controller.close();
-          return;
-        }
-        controller.enqueue(encoder.encode(value));
-      },
-      async cancel() {
-        if (typeof iterator.return === 'function') {
-          await iterator.return();
-        }
-      },
-    });
-
-    return new Response(stream, {
+    return new Response(body, {
       status: 200,
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
