@@ -428,7 +428,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ onClose }) => {
       battleEvent: serializeBigInt(currentState.battleEvent),
       quest: serializeBigInt(currentState.quest),
       collectable: serializeBigInt(currentState.collectable),
-      collectableCount: currentState.collectableCount,
       selectedStats: currentState.selectedStats,
       marketDetails,
       potionCost,
