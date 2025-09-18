@@ -1,7 +1,7 @@
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
 import { calculateAttackDamage, calculateBeastDamage, calculateLevel, calculateNextLevelXP, calculateProgress } from '@/utils/game';
-import { ItemUtils } from '@/utils/loot';
+import { ItemType, ItemUtils } from '@/utils/loot';
 import { Box, LinearProgress, Typography } from '@mui/material';
 
 interface ItemTooltipProps {
@@ -162,6 +162,17 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
           </Box>
         </>
       )}
+
+      {(type === ItemType.Necklace || type === ItemType.Ring) && (
+        <>
+          <Box sx={styles.divider} />
+          <Box sx={styles.jewelryContainer}>
+            <Typography sx={styles.jewelryEffect}>
+              {ItemUtils.getJewelryEffect(item.id)}
+            </Typography>
+          </Box>
+        </>
+      )}
     </Box>
   );
 }
@@ -309,5 +320,25 @@ const styles = {
     color: '#808080',
     fontSize: '0.8rem',
     opacity: 0.8,
+  },
+  jewelryContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    padding: '6px',
+    borderRadius: '4px',
+    border: '1px solid',
+    backgroundColor: 'rgba(215, 197, 41, 0.1)',
+    borderColor: 'rgba(215, 197, 41, 0.2)',
+  },
+  jewelryLabel: {
+    color: '#d7c529',
+    fontSize: '0.9rem',
+    fontWeight: 'bold',
+  },
+  jewelryEffect: {
+    color: '#d0c98d',
+    fontSize: '0.8rem',
+    lineHeight: '1.4',
   },
 }; 
