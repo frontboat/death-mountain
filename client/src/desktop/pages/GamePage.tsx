@@ -1,5 +1,7 @@
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { ChatBox } from "@/desktop/components/ChatBox";
+import { ChatToggle } from "@/desktop/components/ChatToggle";
 import VideoPlayer from "@/desktop/components/VideoPlayer";
 import { useGameDirector } from "@/desktop/contexts/GameDirector";
 import CombatOverlay from "@/desktop/overlays/Combat";
@@ -59,6 +61,7 @@ export default function GamePage() {
   const { skipIntroOutro } = useUIStore();
   const { setVideoQueue, actionFailed, spectating } = useGameDirector();
   const [padding, setPadding] = useState(getMenuLeftOffset());
+  const [showChat, setShowChat] = useState(false);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get("id"));
@@ -184,6 +187,11 @@ export default function GamePage() {
             </AnimatePresence>
           )}
         </Box>
+      )}
+      {showChat ? (
+        <ChatBox onClose={() => setShowChat(false)} />
+      ) : (
+        <ChatToggle onClick={() => setShowChat(true)} />
       )}
     </Box>
   );

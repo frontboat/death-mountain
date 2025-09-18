@@ -51,7 +51,7 @@
 - `GameDirector.restoreGameState` (`src/desktop/contexts/GameDirector.tsx:192–219`) writes those plain objects into the game store, and later on every adventurer or bag event the director calls `setAdventurer`/`setBag` (`src/stores/gameStore.ts:112–199`) to refresh IDs and XP. No friendly names or types are stored—Zustand keeps the on-chain shape so XP updates continue to flow in untouched.
 - Whenever the UI needs richer metadata, it derives it on the fly from the item ID. `ItemUtils` (`src/utils/loot.ts:240–360`) maps IDs to formatted names, slot, type, tier, and image paths, and `calculateLevel` (`src/utils/game.ts:7`) turns XP into levels.
 - Components call these helpers at render time: e.g., the inventory overlay decorates each equipped item with `ItemUtils.getMetadata`, `ItemUtils.getItemTier`, and `calculateLevel(item.xp)` (`src/desktop/overlays/Inventory.tsx:91–158`); market generation builds `MarketItem` descriptors by running the same helpers (`src/utils/market.ts:10–33`).
-- The chat box even enriches items before sending the prompt (`src/components/ChatBox.tsx:101–186`).
+- The chat box even enriches items before sending the prompt (`src/desktop/components/ChatBox.tsx:101–186`).
 - Store mutations rely on the same utilities to stay consistent. When `equipItem` runs (`src/stores/gameStore.ts:141–176`) it finds the right slot via `ItemUtils.getItemSlot`, swaps the raw `{id, xp}` objects between equipment and bag, and recalculates stat bonuses with `ItemUtils.addItemBoosts` / `removeItemBoosts` (which read the item's current level and specials). Because all derived attributes are computed from the stored id and xp, any chain update that changes XP or swaps items automatically propagates through the next event without extra bookkeeping.
 
 ## Market Pricing & Potions
@@ -76,9 +76,9 @@
 ## Chat System Architecture
 
 ### Components
-- `src/components/ChatToggle.tsx:1` is just the floating FAB: it renders a styled Fab that sits bottom-right and calls the provided onClick, which `App.tsx` uses to swap between the toggle and the chat box.
-- `src/components/ChatBox.tsx:1` manages the full chat workflow: it pulls the entire game state from `useGameStore`, enriches equipment and bag entries with derived metadata, computes combat projections, scrubs BigInts, and POSTs messages + gameContext to `/api/chat`; it also auto-seeds the convo with "what do i do? respond in 1 sentence." on first mount and keeps the scroll pinned to the bottom.
-- `src/components/ChatBox.tsx:170` shows how combat stats get appended (damage projections, flee odds, etc.) and serialized before the network call; failures surface as an in-channel error message.
+- `src/desktop/components/ChatToggle.tsx:1` is just the floating FAB: it renders a styled Fab that sits bottom-right and calls the provided onClick, which `GamePage.tsx` uses to swap between the toggle and the chat box.
+- `src/desktop/components/ChatBox.tsx:1` manages the full chat workflow: it pulls the entire game state from `useGameStore`, enriches equipment and bag entries with derived metadata, computes combat projections, scrubs BigInts, and POSTs messages + gameContext to `/api/chat`; it also auto-seeds the convo with "what do i do? respond in 1 sentence." on first mount and keeps the scroll pinned to the bottom.
+- `src/desktop/components/ChatBox.tsx:170` shows how combat stats get appended (damage projections, flee odds, etc.) and serialized before the network call; failures surface as an in-channel error message.
 
 ### API Integration
 - `api/server.js:1` exposes the `/api/chat` endpoint via Express, hydrates a massive system prompt that embeds the rich game-state summary sent from the client, and streams the OpenAI response back as plain text using streamText.
