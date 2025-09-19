@@ -4,6 +4,7 @@ import { ellipseAddress } from '@/utils/utils';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MusicOffIcon from '@mui/icons-material/MusicOff';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, Button, Slider, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +15,17 @@ export default function SettingsScreen() {
 
   const handleExitGame = () => {
     navigate('/survivor');
+  };
+
+  const handleCopyGameLink = async () => {
+    try {
+      const currentUrl = window.location.href;
+      const watchUrl = currentUrl.replace('/play', '/watch');
+      await navigator.clipboard.writeText(watchUrl);
+      // You could add a toast notification here if you have one
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
   };
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {
@@ -98,6 +110,18 @@ export default function SettingsScreen() {
         <Box sx={styles.settingItem}>
           <Button
             variant="contained"
+            onClick={handleCopyGameLink}
+            startIcon={<ContentCopyIcon />}
+            sx={styles.copyButton}
+            fullWidth
+          >
+            Copy Game Link
+          </Button>
+        </Box>
+
+        <Box sx={styles.settingItem}>
+          <Button
+            variant="contained"
             onClick={handleExitGame}
             sx={styles.exitButton}
             fullWidth
@@ -163,6 +187,15 @@ const styles = {
     },
     '& .MuiSlider-rail': {
       backgroundColor: 'rgba(128, 255, 0, 0.2)',
+    },
+  },
+  copyButton: {
+    width: '100%',
+    backgroundColor: 'rgba(128, 255, 0, 0.15)',
+    color: '#80FF00',
+    border: '1px solid rgba(128, 255, 0, 0.2)',
+    '&:hover': {
+      backgroundColor: 'rgba(128, 255, 0, 0.25)',
     },
   },
   exitButton: {

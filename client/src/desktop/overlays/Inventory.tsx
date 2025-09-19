@@ -1,9 +1,10 @@
+import { BEAST_MIN_DAMAGE } from '@/constants/beast';
 import AdventurerStats from '@/desktop/components/AdventurerStats';
 import ItemTooltip from '@/desktop/components/ItemTooltip';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
-import { calculateCombatStats, calculateLevel } from '@/utils/game';
+import { calculateAttackDamage, calculateBeastDamage, calculateCombatStats, calculateLevel } from '@/utils/game';
 import { ItemUtils, Tier } from '@/utils/loot';
 import { keyframes } from '@emotion/react';
 import { DeleteOutline, Star } from '@mui/icons-material';
@@ -56,6 +57,27 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
           const isNameMatchPower = isNameMatch && isWeaponSlot;
           const hasSpecials = level >= 15;
           const hasGoldSpecials = level >= 20;
+
+          // Calculate damage values
+          let damage = 0;
+          let damageTaken = 0;
+          if (beast) {
+            const beastPower = beast.level * (6 - beast.tier);
+            if (isArmorSlot && beast.health > 4) {
+              // For armor slots, show damage taken (always negative)
+              if (item && item.id !== 0) {
+                damageTaken = calculateBeastDamage(beast, adventurer!, item);
+              } else {
+                // For empty armor slots, show beast power * 1.5
+                damageTaken = Math.max(BEAST_MIN_DAMAGE, Math.floor(beastPower * 1.5));
+              }
+            } else if (isWeaponSlot) {
+              // For weapon slots, show damage dealt (always positive)
+              if (item && item.id !== 0) {
+                damage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
+              }
+            }
+          }
 
           return (
             <Tooltip
@@ -146,10 +168,38 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
                         <Star sx={[styles.starIcon, hasGoldSpecials ? styles.goldStarIcon : styles.silverStarIcon]} />
                       </Box>
                     )}
+                    {/* Damage Indicator Overlay */}
+                    {(damage > 0 || damageTaken > 0) && (
+                      <Box sx={[
+                        styles.damageIndicator,
+                        isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                      ]}>
+                        <Typography sx={[
+                          styles.damageIndicatorText,
+                          isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                        ]}>
+                          {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 ) : (
                   <Box sx={styles.emptySlot} title={slot.label}>
                     <img src={slot.icon} alt={slot.label} style={{ width: 26, height: 26, opacity: 0.5 }} />
+                    {/* Damage Indicator Overlay for Empty Slots */}
+                    {(damage > 0 || damageTaken > 0) && (
+                      <Box sx={[
+                        styles.damageIndicator,
+                        isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                      ]}>
+                        <Typography sx={[
+                          styles.damageIndicatorText,
+                          isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                        ]}>
+                          {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 )}
               </Box>
@@ -192,13 +242,24 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
           const tierColor = ItemUtils.getTierColor(tier);
           const level = calculateLevel(item.xp);
           const isNameMatch = beast ? ItemUtils.isNameMatch(item.id, level, adventurer!.item_specials_seed, beast) : false;
-          const isArmorSlot = ['head', 'chest', 'legs', 'hands', 'waist'].includes(ItemUtils.getItemSlot(item.id).toLowerCase());
+          const isArmorSlot = ['head', 'chest', 'foot', 'hand', 'waist'].includes(ItemUtils.getItemSlot(item.id).toLowerCase());
           const isWeaponSlot = ItemUtils.getItemSlot(item.id).toLowerCase() === 'weapon';
           const isNameMatchDanger = isNameMatch && isArmorSlot;
           const isNameMatchPower = isNameMatch && isWeaponSlot;
           const isDefenseItem = bestItemIds.includes(item.id);
           const hasSpecials = level >= 15;
           const hasGoldSpecials = level >= 20;
+
+          // Calculate damage values for bag items
+          let damage = 0;
+          let damageTaken = 0;
+          if (beast) {
+            if (isArmorSlot) {
+              damageTaken = calculateBeastDamage(beast, adventurer!, item);
+            } else if (isWeaponSlot) {
+              damage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
+            }
+          }
 
           if (isNew && isWeaponSlot && [Tier.T1, Tier.T2, Tier.T3].includes(tier) && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5) {
             onItemClick(item);
@@ -263,6 +324,20 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
                   {hasSpecials && (
                     <Box sx={[styles.starOverlay, hasGoldSpecials ? styles.goldStarOverlay : styles.silverStarOverlay]}>
                       <Star sx={[styles.starIcon, hasGoldSpecials ? styles.goldStarIcon : styles.silverStarIcon]} />
+                    </Box>
+                  )}
+                  {/* Damage Indicator Overlay for Bag Items */}
+                  {(damage > 0 || damageTaken > 0) && (
+                    <Box sx={[
+                      styles.damageIndicator,
+                      isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                    ]}>
+                      <Typography sx={[
+                        styles.damageIndicatorText,
+                        isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                      ]}>
+                        {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                      </Typography>
                     </Box>
                   )}
                 </Box>
@@ -803,5 +878,45 @@ const styles = {
   emptySlotTooltipDamageText: {
     color: '#ff4444',
     fontSize: '0.85rem',
+  },
+  damageIndicator: {
+    position: 'absolute',
+    top: '1px',
+    right: '1px',
+    minWidth: '18px',
+    height: '12px',
+    borderRadius: '3px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 3,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2)',
+    backdropFilter: 'blur(2px)',
+  },
+  damageIndicatorRed: {
+    background: 'linear-gradient(135deg, rgba(255, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 68, 68, 0.3)',
+  },
+  damageIndicatorGreen: {
+    background: 'linear-gradient(135deg, rgba(68, 255, 68, 0.95) 0%, rgba(38, 220, 38, 0.95) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(68, 255, 68, 0.3)',
+  },
+  damageIndicatorText: {
+    fontSize: '0.65rem',
+    fontWeight: 'bold',
+    fontFamily: 'VT323, monospace',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.9)',
+    lineHeight: 1,
+    letterSpacing: '0.5px',
+  },
+  damageIndicatorTextRed: {
+    color: '#FFFFFF',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 255, 255, 0.3)',
+  },
+  damageIndicatorTextGreen: {
+    color: '#FFFFFF',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 255, 255, 0.3)',
   },
 };

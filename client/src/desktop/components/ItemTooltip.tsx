@@ -19,6 +19,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
   const xpToNextLevel = calculateNextLevelXP(level, true);
   const specials = ItemUtils.getSpecials(item.id, level, itemSpecialsSeed);
   const specialName = specials.suffix ? `"${specials.prefix} ${specials.suffix}"` : null;
+  const isJewelry = type === ItemType.Necklace || type === ItemType.Ring;
 
   // Calculate what specials would be unlocked at level 15 if itemSpecialsSeed is not 0
   const futureSpecials = itemSpecialsSeed !== 0 && level < 15 ? ItemUtils.getSpecials(item.id, 15, itemSpecialsSeed) : null;
@@ -141,16 +142,16 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
         </>
       )}
 
-      {isNameMatch && (
+      {!isJewelry && isNameMatch && (
         <>
           <Box sx={styles.divider} />
           <Box sx={{
             ...styles.nameMatchContainer,
-            border: ItemUtils.isWeapon(item.id) 
-              ? '1px solid rgba(0, 255, 0, 0.6)' 
+            border: ItemUtils.isWeapon(item.id)
+              ? '1px solid rgba(0, 255, 0, 0.6)'
               : '1px solid rgba(255, 0, 0, 0.6)',
-            backgroundColor: ItemUtils.isWeapon(item.id) 
-              ? 'rgba(0, 255, 0, 0.1)' 
+            backgroundColor: ItemUtils.isWeapon(item.id)
+              ? 'rgba(0, 255, 0, 0.1)'
               : 'rgba(255, 0, 0, 0.1)',
           }}>
             <Typography sx={{
@@ -163,7 +164,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
         </>
       )}
 
-      {(type === ItemType.Necklace || type === ItemType.Ring) && (
+      {isJewelry && (
         <>
           <Box sx={styles.divider} />
           <Box sx={styles.jewelryContainer}>
