@@ -19,6 +19,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
   const xpToNextLevel = calculateNextLevelXP(level, true);
   const specials = ItemUtils.getSpecials(item.id, level, itemSpecialsSeed);
   const specialName = specials.suffix ? `"${specials.prefix} ${specials.suffix}"` : null;
+  const isJewelry = type === ItemType.Necklace || type === ItemType.Ring;
 
   // Calculate what specials would be unlocked at level 15 if itemSpecialsSeed is not 0
   const futureSpecials = itemSpecialsSeed !== 0 && level < 15 ? ItemUtils.getSpecials(item.id, 15, itemSpecialsSeed) : null;
@@ -141,7 +142,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
         </>
       )}
 
-      {isNameMatch && (
+      {!isJewelry && isNameMatch && (
         <>
           <Box sx={styles.divider} />
           <Box sx={{
@@ -163,7 +164,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
         </>
       )}
 
-      {(type === ItemType.Necklace || type === ItemType.Ring) &&
+      {isJewelry &&
         <>
           <Box sx={styles.divider} />
           <Box sx={styles.jewelryContainer}>

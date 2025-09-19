@@ -5,7 +5,7 @@ import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
 import { screenVariants } from '@/utils/animations';
 import { getBeastImageById, getCollectableTraits } from '@/utils/beast';
-import { ability_based_percentage, calculateAttackDamage, calculateCombatStats, calculateLevel, getNewItemsEquipped } from '@/utils/game';
+import { ability_based_percentage, calculateAttackDamage, calculateBeastDamage, calculateCombatStats, calculateLevel, getNewItemsEquipped } from '@/utils/game';
 import { ItemUtils, slotIcons } from '@/utils/loot';
 import { Box, Button, Checkbox, LinearProgress, Menu, Tooltip, Typography, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
@@ -17,7 +17,7 @@ import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
 import ItemTooltip from '../components/ItemTooltip';
 import { JACKPOT_AMOUNT, useStatistics } from '@/contexts/Statistics';
-import { JACKPOT_BEASTS } from '@/constants/beast';
+import { BEAST_MIN_DAMAGE, JACKPOT_BEASTS } from '@/constants/beast';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -377,10 +377,30 @@ export default function BeastScreen() {
               const equippedItem = adventurer?.equipment[slot.toLowerCase() as keyof typeof adventurer.equipment];
               const level = calculateLevel(equippedItem!.xp);
               const isNameMatch = ItemUtils.isNameMatch(equippedItem!.id, level, adventurer!.item_specials_seed, beast!);
-              const isArmorSlot = ['Head', 'Chest', 'Legs', 'Hands', 'Waist'].includes(slot);
+              const isArmorSlot = ['Head', 'Chest', 'Foot', 'Hand', 'Waist'].includes(slot);
               const isWeaponSlot = slot === 'Weapon';
               const isNameMatchDanger = isNameMatch && isArmorSlot;
               const isNameMatchPower = isNameMatch && isWeaponSlot;
+
+              let damageTaken = 0;
+              let damage = 0;
+
+              if (beast) {
+                if (isArmorSlot && beast.health > 4) {
+                  // For armor slots, show damage taken (always negative)
+                  if (equippedItem && equippedItem.id !== 0) {
+                    damageTaken = calculateBeastDamage(beast, adventurer!, equippedItem);
+                  } else {
+                    // For empty armor slots, show beast power * 1.5
+                    damageTaken = Math.max(BEAST_MIN_DAMAGE, Math.floor(beastPower * 1.5));
+                  }
+                } else if (isWeaponSlot) {
+                  // For weapon slots, show damage dealt (always positive)
+                  if (equippedItem && equippedItem.id !== 0) {
+                    damage = calculateAttackDamage(equippedItem, adventurer!, beast).baseDamage;
+                  }
+                }
+              }
 
               const offsetY = getOffsetY(isWeaponSlot, (isNameMatchDanger || isNameMatchPower), level, adventurer!.item_specials_seed);
 
@@ -414,51 +434,81 @@ export default function BeastScreen() {
                     },
                   }}
                 >
-                  <Box
-                    onClick={(e) => {
-                      setSelectedSlot(slot);
-                      setMenuAnchor(e.currentTarget);
-                    }}
-                    sx={{
-                      ...styles.equippedItemSlot,
-                      ...(isNameMatchDanger && styles.nameMatchDangerSlot),
-                      ...(isNameMatchPower && styles.nameMatchPowerSlot)
-                    }}
-                  >
-                    {equippedItem && equippedItem.id !== 0 ? (
-                      <Box sx={styles.equippedItemImageContainer}>
-                        <Box
-                          sx={[
-                            styles.itemGlow,
-                            { backgroundColor: ItemUtils.getTierColor(ItemUtils.getItemTier(equippedItem.id)) }
-                          ]}
-                        />
-                        <Box
-                          component="img"
-                          src={ItemUtils.getItemImage(equippedItem.id)}
-                          alt={ItemUtils.getItemName(equippedItem.id)}
-                          sx={styles.equippedItemImage}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      <Box sx={styles.equippedItemSlotIcon}>
-                        <Box
-                          component="img"
-                          src={icon}
-                          alt={slot}
-                          sx={{
-                            width: 24,
-                            height: 24,
-                            filter: 'invert(1) sepia(1) saturate(3000%) hue-rotate(50deg) brightness(1.1)',
-                            opacity: 0.3,
-                          }}
-                        />
-                      </Box>
-                    )}
-                  </Box>
+                  <>
+                    <Box
+                      onClick={(e) => {
+                        setSelectedSlot(slot);
+                        setMenuAnchor(e.currentTarget);
+                      }}
+                      sx={{
+                        ...styles.equippedItemSlot,
+                        ...(isNameMatchDanger && styles.nameMatchDangerSlot),
+                        ...(isNameMatchPower && styles.nameMatchPowerSlot)
+                      }}
+                    >
+                      {equippedItem && equippedItem.id !== 0 ? (
+                        <Box sx={styles.equippedItemImageContainer}>
+                          <Box
+                            sx={[
+                              styles.itemGlow,
+                              { backgroundColor: ItemUtils.getTierColor(ItemUtils.getItemTier(equippedItem.id)) }
+                            ]}
+                          />
+                          <Box
+                            component="img"
+                            src={ItemUtils.getItemImage(equippedItem.id)}
+                            alt={ItemUtils.getItemName(equippedItem.id)}
+                            sx={styles.equippedItemImage}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          {/* Damage Indicator Overlay */}
+                          {(damage > 0 || damageTaken > 0) && (
+                            <Box sx={[
+                              styles.damageIndicator,
+                              isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                            ]}>
+                              <Typography sx={[
+                                styles.damageIndicatorText,
+                                isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                              ]}>
+                                {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      ) : (
+                        <Box sx={styles.equippedItemSlotIcon}>
+                          <Box
+                            component="img"
+                            src={icon}
+                            alt={slot}
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              filter: 'invert(1) sepia(1) saturate(3000%) hue-rotate(50deg) brightness(1.1)',
+                              opacity: 0.3,
+                            }}
+                          />
+                          {/* Damage Indicator Overlay for Empty Slots */}
+                          {(damage > 0 || damageTaken > 0) && (
+                            <Box sx={[
+                              styles.damageIndicator,
+                              isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                            ]}>
+                              <Typography sx={[
+                                styles.damageIndicatorText,
+                                isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                              ]}>
+                                {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  </>
                 </Tooltip>
               );
             })}
@@ -500,7 +550,7 @@ export default function BeastScreen() {
                 .map((item, index) => {
                   const level = calculateLevel(item.xp);
                   const isNameMatch = ItemUtils.isNameMatch(item.id, level, adventurer!.item_specials_seed, beast!);
-                  const isArmorSlot = ['Head', 'Chest', 'Legs', 'Hands', 'Waist'].includes(ItemUtils.getItemSlot(item.id));
+                  const isArmorSlot = ['Head', 'Chest', 'Foot', 'Hand', 'Waist'].includes(ItemUtils.getItemSlot(item.id));
                   const isWeaponSlot = ItemUtils.getItemSlot(item.id) === 'Weapon';
                   const isDefenseItem = bestItemIds.includes(item.id);
                   const isNameMatchDanger = isNameMatch && isArmorSlot;
@@ -566,6 +616,33 @@ export default function BeastScreen() {
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}
                           />
+                          {/* Damage Indicator Overlay for Swap Menu */}
+                          {(() => {
+                            let swapDamage = 0;
+                            let swapDamageTaken = 0;
+                            
+                            if (beast) {
+                              if (isArmorSlot) {
+                                swapDamageTaken = calculateBeastDamage(beast, adventurer!, item);
+                              } else if (isWeaponSlot) {
+                                swapDamage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
+                              }
+                            }
+                            
+                            return (swapDamage > 0 || swapDamageTaken > 0) && (
+                              <Box sx={[
+                                styles.damageIndicator,
+                                isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                              ]}>
+                                <Typography sx={[
+                                  styles.damageIndicatorText,
+                                  isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                                ]}>
+                                  {isArmorSlot ? `-${swapDamageTaken}` : `+${swapDamage}`}
+                                </Typography>
+                              </Box>
+                            );
+                          })()}
                         </Box>
                       </Box>
                     </Tooltip>
@@ -1306,5 +1383,45 @@ const styles = {
     objectFit: 'contain',
     position: 'relative',
     zIndex: 2,
+  },
+  damageIndicator: {
+    position: 'absolute',
+    top: '1px',
+    right: '1px',
+    minWidth: '18px',
+    height: '12px',
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 3,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2)',
+    backdropFilter: 'blur(2px)',
+  },
+  damageIndicatorRed: {
+    background: 'linear-gradient(135deg, rgba(255, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 68, 68, 0.3)',
+  },
+  damageIndicatorGreen: {
+    background: 'linear-gradient(135deg, rgba(68, 255, 68, 0.95) 0%, rgba(38, 220, 38, 0.95) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(68, 255, 68, 0.3)',
+  },
+  damageIndicatorText: {
+    fontSize: '0.65rem',
+    fontWeight: 'bold',
+    fontFamily: 'VT323, monospace',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.9)',
+    lineHeight: 1,
+    letterSpacing: '0.5px',
+  },
+  damageIndicatorTextRed: {
+    color: '#FFFFFF',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 255, 255, 0.3)',
+  },
+  damageIndicatorTextGreen: {
+    color: '#FFFFFF',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 255, 255, 0.3)',
   },
 };
