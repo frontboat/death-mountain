@@ -1394,7 +1394,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 3,
+    zIndex: 15,
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2)',
     backdropFilter: 'blur(2px)',
   },
