@@ -3,7 +3,7 @@ import { MAX_STAT_VALUE } from "@/constants/game";
 import type { ItemPurchase, Stats } from "@/types/game";
 import type { GameEvent } from "@/utils/events";
 import { ItemUtils } from "@/utils/loot";
-import { z } from "zod";
+import * as z from "zod";
 import type {
   ActionOutcome,
   LootSurvivorAgentMemory,
