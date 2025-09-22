@@ -8,6 +8,7 @@ import { MarketItem, generateMarketItems, potionPrice } from '@/utils/market';
 import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
 import { Box, Button, IconButton, Modal, Slider, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSnackbar } from 'notistack';
 import JewelryTooltip from '@/components/JewelryTooltip';
 
 const renderSlotToggleButton = (slot: keyof typeof slotIcons) => (
@@ -60,7 +61,7 @@ const renderTierToggleButton = (tier: Tier) => (
 );
 
 export default function MarketOverlay() {
-  const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket } = useGameStore();
+  const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket, autoPlayEnabled, agentRunning } = useGameStore();
   const { executeGameAction, actionFailed } = useGameDirector();
   const {
     isOpen,
@@ -83,6 +84,8 @@ export default function MarketOverlay() {
   } = useMarketStore();
 
   const [showCart, setShowCart] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+  const autoPlayActive = autoPlayEnabled || agentRunning;
 
   const handleOpen = () => {
     setIsOpen(!isOpen);
@@ -163,14 +166,29 @@ export default function MarketOverlay() {
   }, [marketItemIds, adventurer?.gold]);
 
   const handleBuyItem = (item: MarketItem) => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to manage the market manually.', { variant: 'info' });
+      return;
+    }
+
     addToCart(item);
   };
 
   const handleBuyPotion = (value: number) => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to manage the market manually.', { variant: 'info' });
+      return;
+    }
+
     setPotions(value);
   };
 
   const handleCheckout = () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to manage the market manually.', { variant: 'info' });
+      return;
+    }
+
     setInProgress(true);
 
     let itemPurchases = cart.items.map(item => ({
@@ -186,10 +204,20 @@ export default function MarketOverlay() {
   };
 
   const handleRemoveItem = (itemToRemove: MarketItem) => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to manage the market manually.', { variant: 'info' });
+      return;
+    }
+
     removeFromCart(itemToRemove);
   };
 
   const handleRemovePotion = () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to manage the market manually.', { variant: 'info' });
+      return;
+    }
+
     setPotions(0);
   };
 
@@ -248,7 +276,7 @@ export default function MarketOverlay() {
               <Button
                 variant="outlined"
                 onClick={handleCheckout}
-                disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0}
+                disabled={autoPlayActive || inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0}
                 sx={{ height: '34px', width: '170px', justifyContent: 'center' }}
               >
                 {inProgress
@@ -296,6 +324,7 @@ export default function MarketOverlay() {
                       <Typography sx={styles.cartItemPrice}>{potionCost * cart.potions} Gold</Typography>
                       <Button
                         onClick={handleRemovePotion}
+                        disabled={autoPlayActive}
                         sx={styles.removeButton}
                       >
                         x
@@ -307,6 +336,7 @@ export default function MarketOverlay() {
                       <Typography sx={styles.cartItemName}>{item.name}</Typography>
                       <Typography sx={styles.cartItemPrice}>{item.price} Gold</Typography>
                       <Button
+                        disabled={autoPlayActive}
                         onClick={() => handleRemoveItem(item)}
                         sx={styles.removeButton}
                       >
@@ -511,7 +541,7 @@ export default function MarketOverlay() {
                             <Button
                               variant="outlined"
                               onClick={() => inCart ? handleRemoveItem(item) : handleBuyItem(item)}
-                              disabled={!inCart && (remainingGold < item.price || isItemOwned(item.id) || inventoryFull)}
+                              disabled={autoPlayActive || (!inCart && (remainingGold < item.price || isItemOwned(item.id) || inventoryFull))}
                               sx={{
                                 height: '32px',
                                 ...(inCart && {

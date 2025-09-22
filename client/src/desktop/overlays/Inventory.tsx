@@ -10,6 +10,7 @@ import { keyframes } from '@emotion/react';
 import { DeleteOutline, Star } from '@mui/icons-material';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
+import { useSnackbar } from 'notistack';
 
 type EquipmentSlot = 'weapon' | 'chest' | 'head' | 'waist' | 'foot' | 'hand' | 'neck' | 'ring';
 
@@ -366,12 +367,14 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
 
 export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProps) {
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { adventurer, bag, showInventory, setShowInventory } = useGameStore();
+  const { adventurer, bag, showInventory, setShowInventory, autoPlayEnabled, agentRunning } = useGameStore();
   const { equipItem, newInventoryItems, setNewInventoryItems } = useGameStore();
   const [isDropMode, setIsDropMode] = useState(false);
   const [itemsToDrop, setItemsToDrop] = useState<number[]>([]);
   const [dropInProgress, setDropInProgress] = useState(false);
   const [newItems, setNewItems] = useState<number[]>([]);
+  const { enqueueSnackbar } = useSnackbar();
+  const autoPlayActive = autoPlayEnabled || agentRunning;
 
   // Update newItems when newInventoryItems changes and clear newInventoryItems
   useEffect(() => {
@@ -408,6 +411,11 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
   }, [isDropMode, equipItem, disabledEquip]);
 
   const handleConfirmDrop = () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to drop items manually.', { variant: 'info' });
+      return;
+    }
+
     setDropInProgress(true);
     executeGameAction({
       type: 'drop',
@@ -456,7 +464,13 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
               isDropMode={isDropMode}
               itemsToDrop={itemsToDrop}
               onItemClick={handleItemClick}
-              onDropModeToggle={() => setIsDropMode(true)}
+              onDropModeToggle={() => {
+                if (autoPlayActive) {
+                  enqueueSnackbar('Disable auto play to drop items manually.', { variant: 'info' });
+                  return;
+                }
+                setIsDropMode(true);
+              }}
               newItems={newItems}
               onItemHover={handleItemHover}
             />

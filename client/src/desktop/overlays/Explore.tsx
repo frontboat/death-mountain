@@ -5,7 +5,7 @@ import { streamIds } from '@/utils/cloudflare';
 import { getEventTitle } from '@/utils/events';
 import { ItemUtils } from '@/utils/loot';
 import { Box, Button, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BeastCollectedPopup from '../../components/BeastCollectedPopup';
 import Adventurer from './Adventurer';
 import InventoryOverlay from './Inventory';
@@ -18,13 +18,15 @@ import { useSnackbar } from 'notistack';
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue, spectating } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI,
-    setCollectable, selectedStats, setSelectedStats, claimInProgress } = useGameStore();
+    setCollectable, selectedStats, setSelectedStats, claimInProgress,
+    autoPlayEnabled, setAutoPlayEnabled, agentRunning } = useGameStore();
   const { cart, inProgress, setInProgress } = useMarketStore();
   const { skipAllAnimations } = useUIStore();
   const { enqueueSnackbar } = useSnackbar()
 
   const [isExploring, setIsExploring] = useState(false);
   const [isSelectingStats, setIsSelectingStats] = useState(false);
+  const autoPlayActive = autoPlayEnabled || agentRunning;
 
   useEffect(() => {
     setIsExploring(false);
@@ -34,6 +36,11 @@ export default function ExploreOverlay() {
   }, [adventurer!.action_count, actionFailed]);
 
   const handleExplore = async () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to manually explore.', { variant: 'info' });
+      return;
+    }
+
     if (!skipAllAnimations) {
       setShowOverlay(false);
       setVideoQueue([streamIds.explore]);
@@ -45,6 +52,11 @@ export default function ExploreOverlay() {
   };
 
   const handleSelectStats = async () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to allocate stats manually.', { variant: 'info' });
+      return;
+    }
+
     setIsSelectingStats(true);
     executeGameAction({
       type: 'select_stat_upgrades',
@@ -53,6 +65,11 @@ export default function ExploreOverlay() {
   };
 
   const handleCheckout = () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to make market purchases manually.', { variant: 'info' });
+      return;
+    }
+
     setInProgress(true);
 
     let itemPurchases = cart.items.map(item => ({
@@ -66,6 +83,38 @@ export default function ExploreOverlay() {
       itemPurchases,
     });
   };
+
+  const handleToggleAutoPlay = () => {
+    if (autoPlayEnabled) {
+      setAutoPlayEnabled(false);
+      return;
+    }
+
+    if (spectating) {
+      enqueueSnackbar('Auto play is unavailable while spectating.', { variant: 'info' });
+      return;
+    }
+
+    if (!adventurer) {
+      enqueueSnackbar('Wait for the adventurer to load before enabling auto play.', { variant: 'info' });
+      return;
+    }
+
+    if (adventurer.health <= 0) {
+      enqueueSnackbar('Auto play requires a living adventurer.', { variant: 'warning' });
+      return;
+    }
+
+    setAutoPlayEnabled(true);
+  };
+
+  const autoPlayButtonLabel = useMemo(() => {
+    if (agentRunning) {
+      return 'Auto Playing…';
+    }
+
+    return autoPlayEnabled ? 'Stop Auto Play' : 'Auto Play';
+  }, [agentRunning, autoPlayEnabled]);
 
   const event = exploreLog[0];
 
@@ -159,7 +208,7 @@ export default function ExploreOverlay() {
         </Box>
       </Box>
 
-      <InventoryOverlay disabledEquip={isExploring || isSelectingStats || inProgress} />
+      <InventoryOverlay disabledEquip={autoPlayActive || isExploring || isSelectingStats || inProgress} />
       <TipsOverlay />
       <SettingsOverlay />
 
@@ -175,7 +224,7 @@ export default function ExploreOverlay() {
               ...styles.exploreButton,
               ...(Object.values(selectedStats).reduce((a, b) => a + b, 0) === adventurer?.stat_upgrades_available && styles.selectStatsButtonHighlighted)
             }}
-            disabled={isSelectingStats || Object.values(selectedStats).reduce((a, b) => a + b, 0) !== adventurer?.stat_upgrades_available}
+            disabled={autoPlayActive || isSelectingStats || Object.values(selectedStats).reduce((a, b) => a + b, 0) !== adventurer?.stat_upgrades_available}
           >
             {isSelectingStats
               ? <Box display={'flex'} alignItems={'baseline'}>
@@ -190,7 +239,7 @@ export default function ExploreOverlay() {
             variant="contained"
             onClick={cart.items.length > 0 || cart.potions > 0 ? handleCheckout : handleExplore}
             sx={styles.exploreButton}
-            disabled={inProgress || isExploring}
+            disabled={autoPlayActive || inProgress || isExploring}
           >
             {inProgress ? (
               <Box display={'flex'} alignItems={'baseline'}>
@@ -209,6 +258,18 @@ export default function ExploreOverlay() {
             )}
           </Button>
         )}
+
+        <Button
+          variant={autoPlayEnabled ? 'contained' : 'outlined'}
+          onClick={handleToggleAutoPlay}
+          sx={styles.autoPlayButton}
+          disabled={spectating || (agentRunning && !autoPlayEnabled)}
+        >
+          <Typography sx={styles.buttonText}>
+            {autoPlayButtonLabel}
+          </Typography>
+          {agentRunning && <div className='dotLoader yellow' style={{ marginLeft: 8, opacity: 0.55 }} />}
+        </Button>
       </Box>}
 
       {claimInProgress && (
@@ -281,6 +342,23 @@ const styles = {
       '& .MuiTypography-root': {
         opacity: 0.5,
       },
+    },
+  },
+  autoPlayButton: {
+    border: '2px solid rgba(110, 140, 255, 0.35)',
+    background: 'rgba(24, 29, 40, 0.9)',
+    minWidth: '220px',
+    height: '48px',
+    justifyContent: 'center',
+    borderRadius: '8px',
+    marginLeft: '16px',
+    '&:hover': {
+      border: '2px solid rgba(110, 140, 255, 0.55)',
+      background: 'rgba(34, 44, 68, 0.95)',
+    },
+    '&:disabled': {
+      opacity: 0.5,
+      boxShadow: 'none',
     },
   },
   buttonText: {
