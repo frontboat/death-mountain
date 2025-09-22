@@ -143,6 +143,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [beastDefeated, setBeastDefeated] = useState(false);
   const eventsProcessedRef = useRef(eventsProcessed);
   const agentAbortRef = useRef<AbortController | null>(null);
+  const agentInitRef = useRef(false);
 
   useEffect(() => {
     eventsProcessedRef.current = eventsProcessed;
@@ -434,6 +435,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setActionFailed,
   ]);
 
+  const executeGameActionRef = useRef(executeGameAction);
+
+  useEffect(() => {
+    executeGameActionRef.current = executeGameAction;
+  }, [executeGameAction]);
+
   const getLootSurvivorState = useCallback((): LootSurvivorState => {
     const state = useGameStore.getState();
 
@@ -484,6 +491,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (!autoPlayEnabled) {
+      agentInitRef.current = false;
       if (agentAbortRef.current) {
         agentAbortRef.current.abort();
         agentAbortRef.current = null;
@@ -501,14 +509,20 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       return;
     }
 
+    if (agentInitRef.current || agentAbortRef.current) {
+      return;
+    }
+
     let cancelled = false;
     let agentInstance: ReturnType<typeof createLootSurvivorAgent> | null = null;
     let localAbortController: AbortController | null = null;
 
     const startAutoPlay = async () => {
+      agentInitRef.current = true;
       const { model, modelSettings } = await resolveAgentModel();
 
       if (cancelled) {
+        agentInitRef.current = false;
         return;
       }
 
@@ -518,6 +532,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
           { variant: "warning" },
         );
         setAutoPlayEnabled(false);
+        agentInitRef.current = false;
         return;
       }
 
@@ -526,10 +541,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       agentAbortRef.current = abortController;
       setAgentRunning(true);
 
-      const performDirectorAction = async (action: GameAction): Promise<ActionOutcome> => {
-        const previousActionCount = useGameStore.getState().adventurer?.action_count ?? 0;
-        const startProcessed = eventsProcessedRef.current;
-        const events = await executeGameAction(action);
+    const performDirectorAction = async (action: GameAction): Promise<ActionOutcome> => {
+      const previousActionCount = useGameStore.getState().adventurer?.action_count ?? 0;
+      const startProcessed = eventsProcessedRef.current;
+      const events = await executeGameActionRef.current(action);
         const eventTarget = startProcessed + events.length;
 
         await waitForCondition(() => {
@@ -605,6 +620,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         setAgentRunning(false);
         setAutoPlayEnabled(false);
         agentAbortRef.current = null;
+        agentInitRef.current = false;
       }
     };
     startAutoPlay();
@@ -615,11 +631,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         localAbortController.abort();
       }
       agentAbortRef.current = null;
+      agentInitRef.current = false;
     };
   }, [
     autoPlayEnabled,
     enqueueSnackbar,
-    executeGameAction,
     gameId,
     gameSettings,
     getLootSurvivorState,
