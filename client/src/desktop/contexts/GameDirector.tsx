@@ -541,10 +541,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       agentAbortRef.current = abortController;
       setAgentRunning(true);
 
-    const performDirectorAction = async (action: GameAction): Promise<ActionOutcome> => {
-      const previousActionCount = useGameStore.getState().adventurer?.action_count ?? 0;
-      const startProcessed = eventsProcessedRef.current;
-      const events = await executeGameActionRef.current(action);
+      const performDirectorAction = async (action: GameAction): Promise<ActionOutcome> => {
+        const previousActionCount = useGameStore.getState().adventurer?.action_count ?? 0;
+        const startProcessed = eventsProcessedRef.current;
+        const events = await executeGameActionRef.current(action);
         const eventTarget = startProcessed + events.length;
 
         await waitForCondition(() => {
@@ -583,6 +583,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
           performDirectorAction({ type: "select_stat_upgrades", statUpgrades: stats }),
       };
 
+      let shouldDisableAutoPlay = false;
+
       try {
         agentInstance = createLootSurvivorAgent({
           runtime,
@@ -611,23 +613,28 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         if (!abortController.signal.aborted) {
           console.error("Auto play agent error", error);
           enqueueSnackbar("Auto play stopped due to an error.", { variant: "error" });
+          shouldDisableAutoPlay = true;
         }
       } finally {
         if (agentInstance) {
           await agentInstance.stop().catch(() => undefined);
         }
 
-        setAgentRunning(false);
-        setAutoPlayEnabled(false);
         agentAbortRef.current = null;
         agentInitRef.current = false;
+        localAbortController = null;
+        setAgentRunning(false);
+
+        if (shouldDisableAutoPlay) {
+          setAutoPlayEnabled(false);
+        }
       }
     };
     startAutoPlay();
 
     return () => {
       cancelled = true;
-      if (localAbortController) {
+      if (localAbortController && !localAbortController.signal.aborted) {
         localAbortController.abort();
       }
       agentAbortRef.current = null;
@@ -635,6 +642,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     };
   }, [
     autoPlayEnabled,
+    agentRunning,
     enqueueSnackbar,
     gameId,
     gameSettings,

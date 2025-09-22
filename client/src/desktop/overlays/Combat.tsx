@@ -3,6 +3,7 @@ import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { ability_based_percentage, calculateAttackDamage, calculateCombatStats, getNewItemsEquipped } from '@/utils/game';
 import { Box, Button, Checkbox, Typography } from '@mui/material';
+import AutoPlayToggle from './components/AutoPlayToggle';
 import { useEffect, useMemo, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import Adventurer from './Adventurer';
@@ -168,6 +169,8 @@ export default function CombatOverlay() {
 
       {/* Combat Buttons */}
       {!spectating && <Box sx={styles.buttonContainer}>
+        <AutoPlayToggle />
+
         {hasNewItemsEquipped ? (
           <>
             <Box sx={styles.actionButtonContainer}>

@@ -12,7 +12,7 @@ import type {
   LootSurvivorState,
 } from "./types";
 
-const MAX_MEMORY_EVENTS = 100;
+const MAX_MEMORY_EVENTS = 10;
 
 const statsInputSchema = z
   .object({
