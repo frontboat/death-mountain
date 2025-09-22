@@ -3,7 +3,9 @@ import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { ability_based_percentage, calculateAttackDamage, calculateCombatStats, getNewItemsEquipped } from '@/utils/game';
 import { Box, Button, Checkbox, Typography } from '@mui/material';
+import AutoPlayToggle from './components/AutoPlayToggle';
 import { useEffect, useMemo, useState } from 'react';
+import { useSnackbar } from 'notistack';
 import Adventurer from './Adventurer';
 import Beast from './Beast';
 import InventoryOverlay from './Inventory';
@@ -19,7 +21,9 @@ const equipMessage = "Equipping items";
 export default function CombatOverlay() {
   const { executeGameAction, actionFailed, spectating, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment } = useGameStore();
+  const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment, autoPlayEnabled, agentRunning } = useGameStore();
+  const { enqueueSnackbar } = useSnackbar();
+  const autoPlayActive = autoPlayEnabled || agentRunning;
 
   const [untilDeath, setUntilDeath] = useState(false);
   const [attackInProgress, setAttackInProgress] = useState(false);
@@ -73,18 +77,33 @@ export default function CombatOverlay() {
   }, [actionFailed]);
 
   const handleAttack = () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to attack manually.', { variant: 'info' });
+      return;
+    }
+
     setAttackInProgress(true);
     setCombatLog(attackMessage);
     executeGameAction({ type: 'attack', untilDeath });
   };
 
   const handleFlee = () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play to flee manually.', { variant: 'info' });
+      return;
+    }
+
     setFleeInProgress(true);
     setCombatLog(fleeMessage);
     executeGameAction({ type: 'flee', untilDeath });
   };
 
   const handleEquipItems = () => {
+    if (autoPlayActive) {
+      enqueueSnackbar('Disable auto play before equipping items manually.', { variant: 'info' });
+      return;
+    }
+
     setEquipInProgress(true);
     setCombatLog(equipMessage);
     executeGameAction({ type: 'equip' });
@@ -144,12 +163,14 @@ export default function CombatOverlay() {
         </Button>
       </Box>}
 
-      <InventoryOverlay disabledEquip={attackInProgress || fleeInProgress || equipInProgress} />
+      <InventoryOverlay disabledEquip={autoPlayActive || attackInProgress || fleeInProgress || equipInProgress} />
       <TipsOverlay combatStats={combatStats} />
       <SettingsOverlay />
 
       {/* Combat Buttons */}
       {!spectating && <Box sx={styles.buttonContainer}>
+        <AutoPlayToggle />
+
         {hasNewItemsEquipped ? (
           <>
             <Box sx={styles.actionButtonContainer}>
@@ -157,9 +178,9 @@ export default function CombatOverlay() {
                 variant="contained"
                 onClick={handleEquipItems}
                 sx={styles.attackButton}
-                disabled={equipInProgress}
+                disabled={autoPlayActive || equipInProgress}
               >
-                <Box sx={{ opacity: equipInProgress ? 0.5 : 1 }}>
+                <Box sx={{ opacity: autoPlayActive || equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
                     EQUIP
                   </Typography>
@@ -172,9 +193,9 @@ export default function CombatOverlay() {
                 variant="contained"
                 onClick={undoEquipment}
                 sx={styles.fleeButton}
-                disabled={equipInProgress}
+                disabled={autoPlayActive || equipInProgress}
               >
-                <Box sx={{ opacity: equipInProgress ? 0.5 : 1 }}>
+                <Box sx={{ opacity: autoPlayActive || equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
                     UNDO
                   </Typography>
@@ -189,9 +210,9 @@ export default function CombatOverlay() {
                 variant="contained"
                 onClick={handleAttack}
                 sx={styles.attackButton}
-                disabled={!adventurer || !beast || attackInProgress || fleeInProgress || equipInProgress}
+                disabled={!adventurer || !beast || autoPlayActive || attackInProgress || fleeInProgress || equipInProgress}
               >
-                <Box sx={{ opacity: !adventurer || !beast || attackInProgress || fleeInProgress || equipInProgress ? 0.5 : 1 }}>
+                <Box sx={{ opacity: !adventurer || !beast || autoPlayActive || attackInProgress || fleeInProgress || equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
                     ATTACK
                   </Typography>
@@ -208,9 +229,9 @@ export default function CombatOverlay() {
                 variant="contained"
                 onClick={handleFlee}
                 sx={styles.fleeButton}
-                disabled={adventurer!.stats.dexterity === 0 || fleeInProgress || attackInProgress}
+                disabled={autoPlayActive || adventurer!.stats.dexterity === 0 || fleeInProgress || attackInProgress}
               >
-                <Box sx={{ opacity: adventurer!.stats.dexterity === 0 || fleeInProgress || attackInProgress ? 0.5 : 1 }}>
+                <Box sx={{ opacity: autoPlayActive || adventurer!.stats.dexterity === 0 || fleeInProgress || attackInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
                     FLEE
                   </Typography>
@@ -222,7 +243,7 @@ export default function CombatOverlay() {
             </Box>
 
             <Box sx={styles.deathCheckboxContainer} onClick={() => {
-              if (!attackInProgress && !fleeInProgress && !equipInProgress) {
+              if (!autoPlayActive && !attackInProgress && !fleeInProgress && !equipInProgress) {
                 setUntilDeath(!untilDeath);
               }
             }}>
@@ -231,7 +252,7 @@ export default function CombatOverlay() {
               </Typography>
               <Checkbox
                 checked={untilDeath}
-                disabled={attackInProgress || fleeInProgress || equipInProgress}
+                disabled={autoPlayActive || attackInProgress || fleeInProgress || equipInProgress}
                 onChange={(e) => setUntilDeath(e.target.checked)}
                 size="medium"
                 sx={styles.deathCheckbox}

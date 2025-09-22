@@ -24,7 +24,7 @@ import {
 import { useAnalytics } from "@/utils/analytics";
 
 export interface GameDirectorContext {
-  executeGameAction: (action: GameAction) => void;
+  executeGameAction: (action: GameAction) => Promise<GameEvent[]>;
   actionFailed: number;
   setSpectating: (spectating: boolean) => void;
   spectating: boolean;
@@ -278,8 +278,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   };
 
-  const executeGameAction = async (action: GameAction) => {
-    if (spectating) return;
+  const executeGameAction = async (action: GameAction): Promise<GameEvent[]> => {
+    if (spectating) return [];
 
     let txs: any[] = [];
 
@@ -318,6 +318,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       );
     }
 
+    const manualEquipItems =
+      action.type === "equip"
+        ? action.items && action.items.length > 0
+          ? action.items
+          : newItemsEquipped.map((item) => item.id)
+        : [];
+
     if (action.type === "explore") {
       txs.push(explore(gameId!, action.untilBeast!));
     } else if (action.type === "attack") {
@@ -329,23 +336,25 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     } else if (action.type === "select_stat_upgrades") {
       txs.push(selectStatUpgrades(gameId!, action.statUpgrades!));
     } else if (action.type === "equip") {
-      txs.push(
-        equip(
-          gameId!,
-          newItemsEquipped.map((item) => item.id)
-        )
-      );
+      const itemsToEquip = manualEquipItems.filter((id) => typeof id === "number" && id > 0);
+      if (itemsToEquip.length > 0) {
+        txs.push(equip(gameId!, itemsToEquip));
+      }
     } else if (action.type === "drop") {
       txs.push(drop(gameId!, action.items!));
     }
 
     const events = await executeAction(txs, setActionFailed);
 
-    if (events.some((event: any) => event.type === "defeated_beast")) {
+    const normalizedEvents = Array.isArray(events) ? events : [];
+
+    if (normalizedEvents.some((event: any) => event.type === "defeated_beast")) {
       setBeastDefeated(true);
     }
 
-    setEventQueue((prev) => [...prev, ...events]);
+    setEventQueue((prev) => [...prev, ...normalizedEvents]);
+
+    return normalizedEvents as GameEvent[];
   };
 
   return (

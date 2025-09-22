@@ -27,6 +27,8 @@ interface GameState {
   collectableTokenURI: string | null;
   claimInProgress: boolean;
   selectedStats: Stats;
+  autoPlayEnabled: boolean;
+  agentRunning: boolean;
 
   setGameId: (gameId: number) => void;
   exitGame: () => void;
@@ -53,6 +55,8 @@ interface GameState {
   setCollectableTokenURI: (tokenURI: string | null) => void;
   setClaimInProgress: (data: boolean) => void;
   setSelectedStats: (data: Stats) => void;
+  setAutoPlayEnabled: (enabled: boolean) => void;
+  setAgentRunning: (running: boolean) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -77,6 +81,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   collectableTokenURI: null,
   claimInProgress: false,
   selectedStats: { strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 },
+  autoPlayEnabled: false,
+  agentRunning: false,
   setGameId: (gameId: number) => {
     set({ gameId });
   },
@@ -103,6 +109,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       collectableTokenURI: null,
       selectedStats: { strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 },
       claimInProgress: false,
+      autoPlayEnabled: false,
+      agentRunning: false,
     });
   },
 
@@ -207,4 +215,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   setCollectableTokenURI: (tokenURI: string | null) => set({ collectableTokenURI: tokenURI, claimInProgress: false }),
   setSelectedStats: (data: Stats) => set({ selectedStats: data }),
   setClaimInProgress: (data: boolean) => set({ claimInProgress: data }),
+  setAutoPlayEnabled: (enabled: boolean) => set({ autoPlayEnabled: enabled }),
+  setAgentRunning: (running: boolean) => set({ agentRunning: running }),
 }));

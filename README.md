@@ -86,6 +86,31 @@ pnpm lint          # Run ESLint
 pnpm preview       # Preview production build
 ```
 
+#### Agent Config Server (Optional)
+
+Auto play reads its LLM credentials from a lightweight Express server kept in `server/` so secrets stay off the bundled client.
+
+```bash
+# Install server dependencies
+cd server
+pnpm install
+
+# Copy and edit environment variables
+cp .env.example .env
+# set AGENT_API_KEY and any provider overrides you need
+
+# Start the config server (defaults to http://localhost:8787)
+pnpm dev
+```
+
+When running `pnpm dev` for the client, point Vite at the server with a `client/.env.local` file:
+
+```
+VITE_AGENT_PROXY_TARGET=http://localhost:8787
+```
+
+For non-dev deployments, either keep `/api/agent` reverse-proxied to the same backend or set `VITE_AGENT_API_BASE` to an absolute URL so the client can fetch the model configuration at runtime without shipping the API key.
+
 #### Contract Development
 ```bash
 cd contracts

@@ -18,18 +18,28 @@ import { delay } from "@/utils/utils";
 import {
   createContext,
   PropsWithChildren,
+  useCallback,
   useContext,
   useEffect,
   useReducer,
+  useRef,
   useState,
 } from "react";
 import { useAnalytics } from "@/utils/analytics";
 import { useMarketStore } from "@/stores/marketStore";
 import { useUIStore } from "@/stores/uiStore";
 import { JACKPOT_BEASTS } from "@/constants/beast";
+import { useSnackbar } from "notistack";
+import {
+  createLootSurvivorAgent,
+  resolveAgentModel,
+  type ActionOutcome,
+  type LootSurvivorRuntime,
+  type LootSurvivorState,
+} from "@/agents/daydreams";
 
 export interface GameDirectorContext {
-  executeGameAction: (action: GameAction) => void;
+  executeGameAction: (action: GameAction) => Promise<GameEvent[]>;
   actionFailed: number;
   videoQueue: string[];
   setVideoQueue: (videoQueue: string[]) => void;
@@ -111,9 +121,14 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setCollectable,
     setMetadata,
     setClaimInProgress,
+    autoPlayEnabled,
+    setAutoPlayEnabled,
+    agentRunning,
+    setAgentRunning,
   } = useGameStore();
   const { setIsOpen } = useMarketStore();
   const { skipAllAnimations, skipIntroOutro } = useUIStore();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
   const [spectating, setSpectating] = useState(false);
@@ -126,6 +141,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [skipCombat, setSkipCombat] = useState(false);
   const [showSkipCombat, setShowSkipCombat] = useState(false);
   const [beastDefeated, setBeastDefeated] = useState(false);
+  const eventsProcessedRef = useRef(eventsProcessed);
+  const agentAbortRef = useRef<AbortController | null>(null);
+  const agentInitRef = useRef(false);
+
+  useEffect(() => {
+    eventsProcessedRef.current = eventsProcessed;
+  }, [eventsProcessed]);
 
   useEffect(() => {
     if (gameId && !metadata) {
@@ -315,7 +337,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   };
 
-  const executeGameAction = async (action: GameAction) => {
+  const executeGameAction = useCallback(async (action: GameAction): Promise<GameEvent[]> => {
     let txs: any[] = [];
 
     if (action.type === "start_game") {
@@ -353,6 +375,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       );
     }
 
+    const manualEquipItems =
+      action.type === "equip"
+        ? action.items && action.items.length > 0
+          ? action.items
+          : newItemsEquipped.map((item) => item.id)
+        : [];
+
     if (action.type === "explore") {
       txs.push(explore(gameId!, action.untilBeast!));
     } else if (action.type === "attack") {
@@ -364,28 +393,266 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     } else if (action.type === "select_stat_upgrades") {
       txs.push(selectStatUpgrades(gameId!, action.statUpgrades!));
     } else if (action.type === "equip") {
-      txs.push(
-        equip(
-          gameId!,
-          newItemsEquipped.map((item) => item.id)
-        )
-      );
+      const itemsToEquip = manualEquipItems.filter((id) => typeof id === "number" && id > 0);
+      if (itemsToEquip.length > 0) {
+        txs.push(equip(gameId!, itemsToEquip));
+      }
     } else if (action.type === "drop") {
       txs.push(drop(gameId!, action.items!));
     }
 
     const events = await executeAction(txs, setActionFailed);
+    const normalizedEvents = Array.isArray(events) ? events : [];
 
-    if (events.some((event: any) => event.type === "defeated_beast")) {
+    if (normalizedEvents.some((event: any) => event.type === "defeated_beast")) {
       setBeastDefeated(true);
     }
 
-    if (events.filter((event: any) => event.type === "beast_attack").length >= 2) {
+    if (normalizedEvents.filter((event: any) => event.type === "beast_attack").length >= 2) {
       setShowSkipCombat(true);
     }
 
-    setEventQueue((prev) => [...prev, ...events]);
-  };
+    setEventQueue((prev) => [...prev, ...normalizedEvents]);
+
+    return normalizedEvents as GameEvent[];
+  }, [
+    VRFEnabled,
+    startGame,
+    requestRandom,
+    adventurer,
+    adventurerState,
+    gameId,
+    explore,
+    attack,
+    flee,
+    buyItems,
+    selectStatUpgrades,
+    equip,
+    drop,
+    executeAction,
+    setBeastDefeated,
+    setShowSkipCombat,
+    setActionFailed,
+  ]);
+
+  const executeGameActionRef = useRef(executeGameAction);
+
+  useEffect(() => {
+    executeGameActionRef.current = executeGameAction;
+  }, [executeGameAction]);
+
+  const getLootSurvivorState = useCallback((): LootSurvivorState => {
+    const state = useGameStore.getState();
+
+    if (!state.gameId || !state.adventurer) {
+      throw new Error("Loot Survivor game state is unavailable");
+    }
+
+    return {
+      gameId: state.gameId,
+      adventurer: state.adventurer,
+      bag: state.bag,
+      beast: state.beast,
+      market: state.marketItemIds,
+      collectable: state.collectable,
+    };
+  }, []);
+
+  const waitForCondition = useCallback(
+    (check: () => boolean, signal: AbortSignal, timeoutMs = 30000) =>
+      new Promise<void>((resolve, reject) => {
+        const start = performance.now();
+
+        const tick = () => {
+          if (signal.aborted) {
+            reject(new DOMException("Aborted", "AbortError"));
+            return;
+          }
+
+          if (check()) {
+            resolve();
+            return;
+          }
+
+          if (performance.now() - start > timeoutMs) {
+            reject(new Error("Timed out waiting for agent action to settle"));
+            return;
+          }
+
+          requestAnimationFrame(tick);
+        };
+
+        tick();
+      }),
+    [],
+  );
+
+  const hasAdventurer = Boolean(adventurer);
+
+  useEffect(() => {
+    if (!autoPlayEnabled) {
+      agentInitRef.current = false;
+      if (agentAbortRef.current) {
+        agentAbortRef.current.abort();
+        agentAbortRef.current = null;
+      }
+
+      if (agentRunning) {
+        setAgentRunning(false);
+      }
+
+      return;
+    }
+
+    if (spectating || !gameId || !hasAdventurer || !gameSettings) {
+      setAutoPlayEnabled(false);
+      return;
+    }
+
+    if (agentInitRef.current || agentAbortRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+    let agentInstance: ReturnType<typeof createLootSurvivorAgent> | null = null;
+    let localAbortController: AbortController | null = null;
+
+    const startAutoPlay = async () => {
+      agentInitRef.current = true;
+      const { model, modelSettings } = await resolveAgentModel();
+
+      if (cancelled) {
+        agentInitRef.current = false;
+        return;
+      }
+
+      if (!model) {
+        enqueueSnackbar(
+          "Configure a Daydreams agent model before enabling Auto Play.",
+          { variant: "warning" },
+        );
+        setAutoPlayEnabled(false);
+        agentInitRef.current = false;
+        return;
+      }
+
+      const abortController = new AbortController();
+      localAbortController = abortController;
+      agentAbortRef.current = abortController;
+      setAgentRunning(true);
+
+      const performDirectorAction = async (action: GameAction): Promise<ActionOutcome> => {
+        const previousActionCount = useGameStore.getState().adventurer?.action_count ?? 0;
+        const startProcessed = eventsProcessedRef.current;
+        const events = await executeGameActionRef.current(action);
+        const eventTarget = startProcessed + events.length;
+
+        await waitForCondition(() => {
+          if (abortController.signal.aborted) {
+            return true;
+          }
+
+          const current = useGameStore.getState();
+          const actionCountAdvanced =
+            (current.adventurer?.action_count ?? previousActionCount) > previousActionCount;
+          const eventsSettled = eventsProcessedRef.current >= eventTarget;
+
+          return actionCountAdvanced && eventsSettled;
+        }, abortController.signal, 45000);
+
+        return {
+          events,
+          state: getLootSurvivorState(),
+        };
+      };
+
+      const runtime: LootSurvivorRuntime = {
+        ensureGame: async () => getLootSurvivorState(),
+        getState: async () => getLootSurvivorState(),
+        explore: async (_gameId, options) =>
+          performDirectorAction({ type: "explore", untilBeast: options.untilBeast ?? false }),
+        attack: async (_gameId, options) =>
+          performDirectorAction({ type: "attack", untilDeath: options.untilDeath ?? false }),
+        flee: async (_gameId, options) =>
+          performDirectorAction({ type: "flee", untilDeath: options.untilDeath ?? false }),
+        equip: async (_gameId, items) => performDirectorAction({ type: "equip", items }),
+        drop: async (_gameId, items) => performDirectorAction({ type: "drop", items }),
+        buyItems: async (_gameId, potions, items) =>
+          performDirectorAction({ type: "buy_items", potions, itemPurchases: items }),
+        selectStatUpgrades: async (_gameId, stats) =>
+          performDirectorAction({ type: "select_stat_upgrades", statUpgrades: stats }),
+      };
+
+      let shouldDisableAutoPlay = false;
+
+      try {
+        agentInstance = createLootSurvivorAgent({
+          runtime,
+          model,
+          modelSettings,
+        });
+
+        await agentInstance.start();
+
+        const sessionContext = agentInstance.registry.contexts.get("loot-survivor-session");
+
+        if (!sessionContext) {
+          throw new Error("Loot Survivor session context is not available");
+        }
+
+        await agentInstance.run({
+          context: sessionContext,
+          args: {
+            gameId,
+            autoBattle: true,
+            settings: gameSettings,
+          },
+          abortSignal: abortController.signal,
+        });
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          console.error("Auto play agent error", error);
+          enqueueSnackbar("Auto play stopped due to an error.", { variant: "error" });
+          shouldDisableAutoPlay = true;
+        }
+      } finally {
+        if (agentInstance) {
+          await agentInstance.stop().catch(() => undefined);
+        }
+
+        agentAbortRef.current = null;
+        agentInitRef.current = false;
+        localAbortController = null;
+        setAgentRunning(false);
+
+        if (shouldDisableAutoPlay) {
+          setAutoPlayEnabled(false);
+        }
+      }
+    };
+    startAutoPlay();
+
+    return () => {
+      cancelled = true;
+      if (localAbortController && !localAbortController.signal.aborted) {
+        localAbortController.abort();
+      }
+      agentAbortRef.current = null;
+      agentInitRef.current = false;
+    };
+  }, [
+    autoPlayEnabled,
+    agentRunning,
+    enqueueSnackbar,
+    gameId,
+    gameSettings,
+    getLootSurvivorState,
+    hasAdventurer,
+    setAgentRunning,
+    setAutoPlayEnabled,
+    spectating,
+    waitForCondition,
+  ]);
 
   return (
     <GameDirectorContext.Provider

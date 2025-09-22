@@ -132,11 +132,32 @@ export const useSystemCalls = () => {
     }
   }
 
-  const waitForGlobalState = async (retries: number = 0): Promise<boolean> => {
-    let adventurerState = await getAdventurerState(gameId!);
+  const waitForGlobalState = async (retries: number = 0): Promise<void> => {
+    if (!gameId) {
+      return;
+    }
 
-    if (adventurerState?.action_count === adventurer!.action_count || retries > 9) {
-      return true;
+    const remoteState = await getAdventurerState(gameId);
+
+    if (!remoteState) {
+      if (retries >= 9) {
+        throw new Error("Unable to load latest adventurer state");
+      }
+
+      await delay(500);
+      return waitForGlobalState(retries + 1);
+    }
+
+    const localActionCount = adventurer?.action_count ?? 0;
+
+    if (remoteState.action_count <= localActionCount) {
+      return;
+    }
+
+    if (retries >= 9) {
+      throw new Error(
+        `Previous action still settling (chain=${remoteState.action_count}, local=${localActionCount})`,
+      );
     }
 
     await delay(500);
