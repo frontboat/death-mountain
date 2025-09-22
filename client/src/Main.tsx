@@ -18,7 +18,7 @@ import { PostHogProvider } from "posthog-js/react";
 
 const options = {
   api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-  defaults: "2025-05-24" as const,
+  autocapture: false,
 };
 
 function DojoApp() {
@@ -55,7 +55,7 @@ function DojoApp() {
     <DojoSdkProvider
       sdk={sdk}
       dojoConfig={createDojoConfig(currentNetworkConfig)}
-      clientFn={() => { }}
+      clientFn={() => {}}
     >
       <MetagameProvider>
         <App />
