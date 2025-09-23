@@ -1,11 +1,10 @@
 import { JACKPOT_BEASTS } from '@/constants/beast';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
-import { beastPowerPercent, getCollectableTraits } from '@/utils/beast';
+import { beastPowerPercent, collectableImage, getCollectableTraits } from '@/utils/beast';
 import { calculateGoldReward, calculateLevel } from '@/utils/game';
 import { beastNameSize } from '@/utils/utils';
 import { Box, LinearProgress, Typography, keyframes } from '@mui/material';
-import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import ArmorTooltip from '../components/ArmorTooltip';
 import WeaponTooltip from '../components/WeaponTooltip';
@@ -35,7 +34,7 @@ export default function Beast() {
       {/* Beast Portrait */}
       <Box sx={collectable ? styles.collectablePortraitWrapper : styles.portraitWrapper}>
         {collectable ? <Box sx={{ position: 'relative', overflow: 'hidden', width: '100%', height: '100%', borderRadius: '50%' }}>
-          <img src={`/images/beast_portraits/${beast!.baseName.toLowerCase()}.svg`}
+          <img src={collectableImage(beast!.baseName, collectableTraits!)}
             alt="Beast" style={{
               width: '64px',
               height: '64px',
@@ -44,32 +43,6 @@ export default function Beast() {
               left: '50%',
               transform: 'translate(-50%, -50%)'
             }} />
-
-          {/* Shiny Effect */}
-          {collectableTraits?.shiny && (
-            <motion.div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '200%',
-                height: '100%',
-                borderRadius: '20%',
-                background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%)',
-                pointerEvents: 'none',
-                zIndex: 5,
-              }}
-              animate={{
-                x: ['-100%', '200%'],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                repeatDelay: 1,
-              }}
-            />
-          )}
         </Box> : <img src="/images/beast.png" alt="Beast" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />}
 
         <Box sx={[styles.beastLevelCircle, { left: -4 }, collectable && styles.collectableLevelCircle]}>

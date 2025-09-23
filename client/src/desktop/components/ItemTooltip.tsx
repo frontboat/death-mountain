@@ -174,7 +174,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
           <Box sx={styles.divider} />
           <Box sx={styles.jewelryContainer}>
             <Typography sx={styles.jewelryEffect}>
-              {ItemUtils.getJewelryEffect(item.id)}
+              {ItemUtils.getCurrentJewelryEffect(item.id, level)}
             </Typography>
           </Box>
         </>

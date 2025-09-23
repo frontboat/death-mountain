@@ -5,7 +5,7 @@ import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
 import { screenVariants } from '@/utils/animations';
-import { getBeastImageById } from '@/utils/beast';
+import { getBeastImageById, getCollectableTraits, collectableImage } from '@/utils/beast';
 import { ability_based_percentage, calculateAttackDamage, calculateBeastDamage, calculateCombatStats, calculateGoldReward, calculateLevel, getNewItemsEquipped } from '@/utils/game';
 import { ItemUtils, slotIcons } from '@/utils/loot';
 import { Box, Button, Checkbox, LinearProgress, Typography, keyframes } from '@mui/material';
@@ -149,6 +149,7 @@ export default function BeastScreen() {
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
   const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
   const collectable = beast ? beast!.isCollectable : false;
+  const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
   const isJackpot = currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
 
   const hasNewItemsEquipped = useMemo(() => {
@@ -242,10 +243,10 @@ export default function BeastScreen() {
             )}
 
             <img
-              src={getBeastImageById(beast!.id)}
+              src={collectable ? collectableImage(beast!.baseName, collectableTraits!) : getBeastImageById(beast!.id)}
               alt={beast!.name}
               style={{
-                ...styles.beastImage,
+                ...(collectable ? styles.collectableBeastImage : styles.beastImage),
               }}
             />
             {strike.View}
@@ -253,7 +254,7 @@ export default function BeastScreen() {
             {collectable && (
               <Box sx={styles.collectableContainer}>
                 <Typography sx={styles.collectableText}>
-                  {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
+                  {currentNetworkConfig.beasts ? "Collectable Beast" : ""}
                 </Typography>
               </Box>
             )}
@@ -922,6 +923,11 @@ const styles = {
   beastImage: {
     maxWidth: '100%',
     maxHeight: '100%',
+    objectFit: 'contain' as const,
+  },
+  collectableBeastImage: {
+    maxWidth: '80%',
+    maxHeight: '80%',
     objectFit: 'contain' as const,
   },
   collectableText: {

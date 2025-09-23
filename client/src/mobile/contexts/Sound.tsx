@@ -122,7 +122,10 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
       }
     }
 
-    if (newTrack && newTrack !== new URL(audioRef.current.src).pathname) {
+    const currentTrackPath = new URL(audioRef.current.src).pathname;
+    const newTrackPath = newTrack ? new URL(newTrack).pathname : null;
+
+    if (newTrack && newTrackPath !== currentTrackPath) {
       audioRef.current.crossOrigin = "anonymous";
       audioRef.current.src = newTrack;
       if (playing) {

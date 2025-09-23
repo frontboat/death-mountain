@@ -73,6 +73,10 @@ export default function AdventurerStats() {
       return 'Intellect';
     }
 
+    if (stat === "luck") {
+      return 'Crit Chance';
+    }
+
     return stat.charAt(0).toUpperCase() + stat.slice(1);
   }
 
