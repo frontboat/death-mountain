@@ -184,7 +184,7 @@ export function generateSalt(gameId: number, xp: number) {
 }
 
 export function generateBattleSalt(gameId: number, xp: number, actionCount: number) {
-  let params = [BigInt(xp), BigInt(gameId), BigInt(actionCount)];
+  let params = [BigInt(xp), BigInt(gameId), BigInt(actionCount + 1)];
   let poseidon = starknet.poseidonHashMany(params);
   return poseidon;
 }
