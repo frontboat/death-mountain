@@ -108,6 +108,7 @@ export default function WatchPage() {
         processEvent(event, true);
       });
     } else {
+      console.log('events', events);
       setReplayEvents(events);
     }
 
@@ -140,6 +141,14 @@ export default function WatchPage() {
       processEvent(currentEvent, true);
 
       if (currentEvent.type === 'adventurer' && currentEvent.adventurer?.stat_upgrades_available === 0) {
+        break;
+      }
+
+      if (currentEvent.type === 'attack' && replayEvents[currentIndex + 1]?.type !== 'adventurer') {
+        break;
+      }
+
+      if (currentEvent.type === 'beast_attack' && replayEvents[currentIndex + 1]?.type !== 'adventurer') {
         break;
       }
 

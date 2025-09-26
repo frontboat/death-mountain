@@ -143,6 +143,14 @@ export default function WatchPage() {
         break;
       }
 
+      if (currentEvent.type === 'attack' && replayEvents[currentIndex + 1]?.type !== 'adventurer') {
+        break;
+      }
+
+      if (currentEvent.type === 'beast_attack' && replayEvents[currentIndex + 1]?.type !== 'adventurer') {
+        break;
+      }
+
       currentIndex++;
     }
 
