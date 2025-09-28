@@ -188,11 +188,12 @@ export const calculateBeastDamage = (beast: Beast, adventurer: Adventurer, armor
     if (beast.specialPrefix && beast.specialSuffix) {
       const itemSpecials = ItemUtils.getSpecials(armor.id, armorLevel, adventurer.item_specials_seed);
       if (itemSpecials.suffix === beast.specialSuffix) {
-        damage *= 2; // Suffix match
+        damage += elementalDamage * 2; // Suffix match
       }
       if (itemSpecials.prefix === beast.specialPrefix) {
-        damage *= 8; // Prefix match
+        damage += elementalDamage * 8; // Prefix match
       }
+
     }
 
     critDamage = Math.max(BEAST_MIN_DAMAGE, (damage + elementalDamage) - armorValue);
