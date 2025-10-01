@@ -65,14 +65,14 @@ export default function MainMenu() {
     const checkDungeonOpen = () => {
       const now = Math.floor(Date.now() / 1000);
       setIsDungeonOpen(now >= OPENING_TIME);
-      
+
       // Check if 4x boost is active (second 2-week period)
       const boostStartTime = OPENING_TIME + 1209600;
       const boostEndTime = boostStartTime + 1209600;
       const isInBoostPeriod = now >= boostStartTime && now < boostEndTime;
       setShowBoost(isInBoostPeriod);
-      
-      // Calculate time remaining for boost
+
+      // Calculate time remaining for boost (only once at load)
       if (isInBoostPeriod) {
         setTimeRemaining(boostEndTime - now);
       } else {
@@ -81,9 +81,6 @@ export default function MainMenu() {
     };
 
     checkDungeonOpen();
-    const interval = setInterval(checkDungeonOpen, 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const handleStartGame = () => {
@@ -145,14 +142,13 @@ export default function MainMenu() {
   const formatTimeRemaining = (seconds: number) => {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (days > 0) {
-      return `${days}d ${hours}h ${minutes}m`;
+      return `${days}d ${hours}h`;
     } else if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return `${hours}h`;
     } else {
-      return `${minutes}m`;
+      return 'Less than 1h';
     }
   };
 
@@ -355,7 +351,7 @@ export default function MainMenu() {
                 {showBoost && (
                   <Box sx={styles.boostIndicator}>
                     <Typography sx={styles.boostText}>
-                      🔥 4x Survivor Token Boost
+                      🔥 4x Survivor Token Rewards
                     </Typography>
                     <Typography sx={styles.countdownText}>
                       {formatTimeRemaining(timeRemaining)} remaining
