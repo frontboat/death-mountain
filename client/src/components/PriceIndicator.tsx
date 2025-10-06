@@ -285,16 +285,14 @@ export default function PriceIndicator() {
                 },
               }}
             >
-              <Box sx={{
-                fontSize: '16px',
+              <RefreshIcon sx={{
+                fontSize: '1rem',
                 transform: 'rotate(0deg)',
                 transition: 'transform 0.3s ease',
                 '&:hover': {
-                  transform: 'rotate(180deg)',
+                  transform: 'rotate(90deg)',
                 },
-              }}>
-                ↻
-              </Box>
+              }} />
             </IconButton>
           </Tooltip>
           <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
