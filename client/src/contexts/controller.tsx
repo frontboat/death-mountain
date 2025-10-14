@@ -34,6 +34,7 @@ export interface ControllerContext {
   showTermsOfService: boolean;
   acceptTermsOfService: () => void;
   openBuyTicket: () => void;
+  bulkMintGames: (amount: number, callback: () => void) => void;
 }
 
 // Create a context
@@ -121,6 +122,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       payment,
       userName || "Adventurer",
       txs,
+      1,
       () => {
         navigate(`/survivor/play?mode=entering`);
       }
@@ -136,6 +138,25 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     } else {
       navigate(`/`, { replace: true });
     }
+  };
+
+  const bulkMintGames = async (amount: number, callback: () => void) => {
+    amount = Math.min(amount, 100);
+
+    await buyGame(
+      account,
+      { paymentType: "Ticket" },
+      userName || "Adventurer",
+      [],
+      amount,
+      () => {
+        setTokenBalances(prev => ({
+          ...prev,
+          "TICKET": (Number((prev as any)["TICKET"]) - amount).toString()
+        }));
+        callback();
+      }
+    );
   };
 
   const createBurner = async () => {
@@ -159,6 +180,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
         .goldenToken;
     const allTokens = await getGameTokens(address!, goldenTokenAddress);
+
     if (allTokens.length > 0) {
       const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
       setGoldenPassIds(cooldowns);
@@ -195,6 +217,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
           }),
         logout: () => disconnect(),
         enterDungeon,
+        bulkMintGames,
       }}
     >
       {children}

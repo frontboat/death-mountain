@@ -16,11 +16,14 @@ import { delay, stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 import { useAnalytics } from "@/utils/analytics";
 import { useSnackbar } from "notistack";
+import { useGameTokens } from "./useGameTokens";
+import { num } from "starknet";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
   const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
+  const { getBeastTokenId } = useGameTokens();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
   const { txRevertedEvent } = useAnalytics();
@@ -155,6 +158,7 @@ export const useSystemCalls = () => {
     payment: Payment,
     name: string,
     preCalls: any[],
+    amount: number,
     callback: () => void
   ) => {
     let paymentData =
@@ -166,7 +170,7 @@ export const useSystemCalls = () => {
       preCalls.push({
         contractAddress: DUNGEON_TICKET,
         entrypoint: "approve",
-        calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
+        calldata: CallData.compile([DUNGEON_ADDRESS, amount * 1e18, "0"]),
       });
     }
 
@@ -174,7 +178,7 @@ export const useSystemCalls = () => {
       let tx = await account!.execute(
         [
           ...preCalls,
-          {
+          ...Array.from({ length: amount }, () => ({
             contractAddress: DUNGEON_ADDRESS,
             entrypoint: "buy_game",
             calldata: CallData.compile([
@@ -183,7 +187,7 @@ export const useSystemCalls = () => {
               account!.address, // send game to this address
               false, // soulbound
             ]),
-          },
+          })),
         ]
       );
 
@@ -402,7 +406,7 @@ export const useSystemCalls = () => {
 
     try {
       await waitForClaimBeast();
-      await delay(1000);
+      await delay(3000);
 
       let tx = await account!.execute(
         [
@@ -431,7 +435,7 @@ export const useSystemCalls = () => {
       return tokenId;
     } catch (error) {
       console.error("Error claiming beast:", error);
-      await delay(3000);
+      await delay(1000);
       return claimBeast(gameId, beast, retries + 1);
     }
   };
@@ -449,6 +453,20 @@ export const useSystemCalls = () => {
       contractAddress: DUNGEON_ADDRESS,
       entrypoint: "claim_jackpot",
       calldata: [tokenId],
+    }], () => { });
+  };
+
+  const refreshDungeonStats = async (beast: Beast, waitTime: number) => {
+    if (currentNetworkConfig.name !== "Beast Mode") return;
+
+    let tokenId = await getBeastTokenId(beast);
+    if (!tokenId) return;
+
+    await delay(waitTime);
+    await executeAction([{
+      contractAddress: currentNetworkConfig.beasts,
+      entrypoint: "refresh_dungeon_stats",
+      calldata: [num.toHex(tokenId), "0x0"],
     }], () => { });
   };
 
@@ -543,5 +561,6 @@ export const useSystemCalls = () => {
     requestRandom,
     executeAction,
     claimSurvivorTokens,
+    refreshDungeonStats
   };
 };
