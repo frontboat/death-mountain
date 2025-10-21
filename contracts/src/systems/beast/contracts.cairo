@@ -221,15 +221,7 @@ mod beast_systems {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let kill_index = _get_correct_index(dungeon, kill_index);
             let dungeon = _get_correct_dungeon(dungeon);
-            let adventurer_killed: AdventurerKilled = world.read_model((dungeon, entity_hash, kill_index));
-
-            AdventurerKilled {
-                dungeon: adventurer_killed.dungeon,
-                entity_hash: adventurer_killed.entity_hash,
-                kill_index: adventurer_killed.kill_index,
-                adventurer_id: adventurer_killed.adventurer_id,
-                timestamp: starknet::get_block_timestamp(),
-            }
+            world.read_model((dungeon, entity_hash, kill_index))
         }
 
         fn get_starter_beast(self: @ContractState, starter_weapon_type: Type) -> Beast {
