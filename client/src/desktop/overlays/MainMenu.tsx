@@ -24,14 +24,12 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
+import Typography from "@mui/material/Typography";
 import { useAccount } from "@starknet-react/core";
 import { AnimatePresence } from "framer-motion";
-import { useGameTokens } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { addAddressPadding } from "starknet";
 import PriceIndicator from "../../components/PriceIndicator";
 import Leaderboard from "../components/Leaderboard";
 import WalletConnect from "../components/WalletConnect";
@@ -50,8 +48,6 @@ export default function MainMenu() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [left, setLeft] = useState(getMenuLeftOffset());
   const [isDungeonOpen, setIsDungeonOpen] = useState(false);
-  const [showBoost, setShowBoost] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(0);
 
   useEffect(() => {
     function handleResize() {
@@ -65,19 +61,6 @@ export default function MainMenu() {
     const checkDungeonOpen = () => {
       const now = Math.floor(Date.now() / 1000);
       setIsDungeonOpen(now >= OPENING_TIME);
-
-      // Check if 4x boost is active (second 2-week period)
-      const boostStartTime = OPENING_TIME + 1209600;
-      const boostEndTime = boostStartTime + 1209600;
-      const isInBoostPeriod = now >= boostStartTime && now < boostEndTime;
-      setShowBoost(isInBoostPeriod);
-
-      // Calculate time remaining for boost (only once at load)
-      if (isInBoostPeriod) {
-        setTimeRemaining(boostEndTime - now);
-      } else {
-        setTimeRemaining(0);
-      }
     };
 
     checkDungeonOpen();
@@ -122,35 +105,6 @@ export default function MainMenu() {
 
   let disableGameButtons =
     !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
-
-  const { totalCount } = useGameTokens({
-    owner: account?.address || "0x0",
-    sortBy: "minted_at",
-    sortOrder: "desc",
-    gameOver: false,
-    score: {
-      max: 0,
-    },
-    mintedByAddress: currentNetworkConfig.dungeon
-      ? addAddressPadding(currentNetworkConfig.dungeon)
-      : "0",
-    countOnly: true,
-  });
-
-  const gamesCount = totalCount ?? 0;
-
-  const formatTimeRemaining = (seconds: number) => {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-
-    if (days > 0) {
-      return `${days}d ${hours}h`;
-    } else if (hours > 0) {
-      return `${hours}h`;
-    } else {
-      return 'Less than 1h';
-    }
-  };
 
   return (
     <>
@@ -235,11 +189,6 @@ export default function MainMenu() {
                   >
                     My Games
                   </Typography>
-                  {gamesCount > 0 && (
-                    <Typography color="secondary" fontWeight={500}>
-                      {gamesCount} NEW
-                    </Typography>
-                  )}
                 </Box>
               </Button>
 
@@ -348,16 +297,6 @@ export default function MainMenu() {
               }
 
               <Box sx={styles.bottom}>
-                {showBoost && (
-                  <Box sx={styles.boostIndicator}>
-                    <Typography sx={styles.boostText}>
-                      🔥 4x Survivor Token Rewards
-                    </Typography>
-                    <Typography sx={styles.countdownText}>
-                      {formatTimeRemaining(timeRemaining)} remaining
-                    </Typography>
-                  </Box>
-                )}
                 <WalletConnect />
 
                 <Box sx={styles.bottomRow}>
