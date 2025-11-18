@@ -3,6 +3,7 @@ import { OBSTACLE_NAMES } from "@/constants/obstacle";
 import { Adventurer, Attack, Beast, Item, ItemPurchase, Obstacle, Stats, useEntityModel } from "@/types/game";
 import { preloadAssets } from "./assetLoader";
 import { getBeastImageById, getBeastName, getBeastTier, getBeastType } from "./beast";
+import { getLocationName } from "./game";
 import { streamIds } from "./cloudflare";
 import { ItemUtils } from "./loot";
 
@@ -105,7 +106,7 @@ export const processGameEvent = (event: any): GameEvent => {
       obstacle: {
         id: obstacle.obstacle_id,
         damage: obstacle.damage,
-        location: typeof obstacle.location === 'object' ? Object.keys(obstacle.location)[0] : obstacle.location,
+        location: getLocationName(obstacle.location),
         critical_hit: obstacle.critical_hit,
         dodged: obstacle.dodged
       }
@@ -208,7 +209,7 @@ export const processGameEvent = (event: any): GameEvent => {
       action_count,
       attack: {
         damage: beastAttack.damage,
-        location: beastAttack.location,
+        location: getLocationName(beastAttack.location),
         critical_hit: beastAttack.critical_hit
       }
     };
@@ -229,7 +230,7 @@ export const processGameEvent = (event: any): GameEvent => {
       action_count,
       attack: {
         damage: ambush.damage,
-        location: ambush.location,
+        location: getLocationName(ambush.location),
         critical_hit: ambush.critical_hit,
       }
     };
@@ -312,7 +313,7 @@ export const getEventTitle = (event: GameEvent) => {
       if (event.discovery?.type === 'Loot') return `Discovered ${ItemUtils.getItemName(event.discovery?.amount!)}`;
       return 'Discovered Unknown';
     case 'obstacle':
-      const location = event.obstacle?.location || 'None';
+      const location = getLocationName(event.obstacle?.location);
       const obstacleName = OBSTACLE_NAMES[event.obstacle?.id!] || 'Unknown Obstacle';
       if (event.obstacle?.dodged) {
         return `Avoided ${obstacleName}`;

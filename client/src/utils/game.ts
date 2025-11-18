@@ -4,6 +4,13 @@ import { Adventurer, Beast, CombatStats, Equipment, Item } from "@/types/game";
 import { getArmorType, getAttackType } from "./beast";
 import { ItemType, ItemUtils } from "./loot";
 
+export const getLocationName = (location: string | object | undefined) => {
+  if (typeof location === 'object') {
+    return Object.keys(location)[0];
+  }
+  return location || 'None';
+};
+
 export const calculateLevel = (xp: number) => {
   if (xp === 0) return 1;
   return Math.floor(Math.sqrt(xp));

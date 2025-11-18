@@ -1,49 +1,43 @@
 import { useStarknetApi } from '@/api/starknet';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
+import { useGameEvents } from '@/dojo/useGameEvents';
 import { useGameStore } from '@/stores/gameStore';
-import { useEntityModel } from '@/types/game';
-import { ExplorerReplayEvents, processRawGameEvent } from '@/utils/events';
-import { useQueries } from '@/utils/queries';
-import { useDojoSDK } from '@dojoengine/sdk/react';
+import { ExplorerReplayEvents } from '@/utils/events';
+import { calculateLevel } from '@/utils/game';
 import CloseIcon from '@mui/icons-material/Close';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Slider, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GamePage from './GamePage';
 
 export default function WatchPage() {
-  const { sdk } = useDojoSDK();
   const navigate = useNavigate();
+  const { getGameEvents } = useGameEvents();
   const { enqueueSnackbar } = useSnackbar()
-  const { gameEventsQuery } = useQueries();
-  const { getEntityModel } = useEntityModel();
   const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
   const { gameId, adventurer, popExploreLog } = useGameStore();
   const { getGameState } = useStarknetApi();
 
-  const [subscription, setSubscription] = useState<any>(null);
   const [replayEvents, setReplayEvents] = useState<any[]>([]);
   const [replayIndex, setReplayIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [sliderValue, setSliderValue] = useState(0);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
 
   useEffect(() => {
-    if (false) {
+    if (game_id) {
       setSpectating(true);
       subscribeEvents(game_id);
     } else {
       setSpectating(false);
-      enqueueSnackbar('Replays currently not available', { variant: 'warning', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
       navigate('/survivor');
     }
   }, [game_id]);
@@ -53,6 +47,34 @@ export default function WatchPage() {
       processEvent(replayEvents[0], true)
       replayForward();
     }
+  }, [replayEvents]);
+
+  // Sync slider value with replayIndex
+  useEffect(() => {
+    setSliderValue(replayIndex);
+  }, [replayIndex]);
+
+  // Build efficient mapping of event index to adventurer level
+  const eventLevelMap = useMemo(() => {
+    if (replayEvents.length === 0) return new Map<number, number>();
+
+    const levelMap = new Map<number, number>();
+    let lastKnownXP = 0;
+    let hasAdventurerXP = false;
+
+    // Single pass: for each event, track the last known adventurer XP
+    for (let i = 0; i < replayEvents.length; i++) {
+      const event = replayEvents[i];
+      if (event.type === 'adventurer' && event.adventurer?.xp !== undefined) {
+        lastKnownXP = event.adventurer.xp;
+        hasAdventurerXP = true;
+      }
+      // Map this index to the level based on the last known XP
+      // If we haven't seen any adventurer events yet, default to level 1
+      levelMap.set(i, hasAdventurerXP ? calculateLevel(lastKnownXP) : 1);
+    }
+
+    return levelMap;
   }, [replayEvents]);
 
   useEffect(() => {
@@ -71,32 +93,7 @@ export default function WatchPage() {
   }, [replayIndex, isPlaying]); // Add dependencies
 
   const subscribeEvents = async (gameId: number) => {
-    if (subscription) {
-      try {
-        subscription.cancel();
-      } catch (error) { }
-    }
-
-    const [initialData, sub] = await sdk.subscribeEventQuery({
-      query: gameEventsQuery(gameId),
-      callback: ({ data, error }: { data?: any[]; error?: Error }) => {
-        if (data && data.length > 0) {
-          let events = data
-            .filter((entity: any) =>
-              Boolean(getEntityModel(entity, "GameEvent"))
-            )
-            .map((entity: any) => processRawGameEvent(getEntityModel(entity, "GameEvent")));
-
-          setEventQueue((prev: any) => [...prev, ...events]);
-        }
-      },
-    });
-
-    let events = (initialData?.getItems() || [])
-      .filter((entity: any) => Boolean(getEntityModel(entity, "GameEvent")))
-      .map((entity: any) => processRawGameEvent(getEntityModel(entity, "GameEvent")))
-      .sort((a, b) => a.action_count - b.action_count);
-
+    const events = await getGameEvents(gameId!);
     const gameState = await getGameState(gameId!);
 
     if (!gameState || events.length === 0) {
@@ -104,15 +101,7 @@ export default function WatchPage() {
       return navigate("/survivor");
     }
 
-    if (gameState.adventurer.health > 0) {
-      events.forEach((event: any) => {
-        processEvent(event, true);
-      });
-    } else {
-      setReplayEvents(events);
-    }
-
-    setSubscription(sub);
+    setReplayEvents(events);
   };
 
   const handleEndWatching = () => {
@@ -188,6 +177,43 @@ export default function WatchPage() {
     setReplayIndex(currentIndex);
   }
 
+  const jumpToIndex = (targetIndex: number) => {
+    if (targetIndex < 0 || targetIndex >= replayEvents.length) return;
+    if (targetIndex === replayIndex) return;
+
+    // Process events rapidly from current index to target index
+    if (targetIndex > replayIndex) {
+      // Move forward - process all events from current to target
+      for (let i = replayIndex + 1; i <= targetIndex; i++) {
+        processEvent(replayEvents[i], true);
+      }
+    } else {
+      // Move backward - process events in reverse
+      for (let i = replayIndex; i > targetIndex; i--) {
+        const event = replayEvents[i];
+        if (ExplorerReplayEvents.includes(event.type)) {
+          popExploreLog();
+        } else {
+          processEvent(event, true);
+        }
+      }
+    }
+
+    setReplayIndex(targetIndex);
+  }
+
+  const handleSliderChange = (_event: Event, newValue: number | number[]) => {
+    // Update slider value for visual feedback while dragging
+    const value = Array.isArray(newValue) ? newValue[0] : newValue;
+    setSliderValue(Math.round(value));
+  }
+
+  const handleSliderChangeCommitted = (_event: Event | React.SyntheticEvent, newValue: number | number[]) => {
+    // Only jump when user releases the slider
+    const targetIndex = Array.isArray(newValue) ? newValue[0] : newValue;
+    jumpToIndex(Math.max(1, Math.round(targetIndex)));
+  }
+
   if (!spectating) return null;
 
   const isLoading = !gameId || !adventurer;
@@ -212,7 +238,7 @@ export default function WatchPage() {
           <>
             <VideocamIcon sx={styles.theatersIcon} />
 
-            <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-evenly' }}>
+            <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-evenly', gap: '8px' }}>
               <Button
                 disabled={isPlaying}
                 onClick={replayBackward}
@@ -221,12 +247,23 @@ export default function WatchPage() {
                 <SkipPreviousIcon />
               </Button>
 
-              {/* <Button
-                onClick={() => handlePlayPause(!isPlaying)}
-                sx={styles.controlButton}
-              >
-                {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-              </Button> */}
+              <Box sx={{ flex: 1, px: 1 }}>
+                <Slider
+                  value={sliderValue}
+                  min={1}
+                  max={Math.max(0, replayEvents.length - 1)}
+                  onChange={handleSliderChange}
+                  onChangeCommitted={handleSliderChangeCommitted}
+                  disabled={isPlaying || replayEvents.length === 0}
+                  valueLabelDisplay="auto"
+                  valueLabelFormat={(value) => {
+                    const level = eventLevelMap.get(value) || 1;
+                    return `Lvl ${level}`;
+                  }}
+                  sx={styles.slider}
+                  size="small"
+                />
+              </Box>
 
               <Button
                 onClick={replayForward}
@@ -290,5 +327,37 @@ const styles = {
   },
   theatersIcon: {
     color: '#EDCF33',
+  },
+  slider: {
+    color: 'rgba(128, 255, 0, 1)',
+    '& .MuiSlider-thumb': {
+      '&:hover, &.Mui-focusVisible': {
+        boxShadow: '0 0 0 8px rgba(128, 255, 0, 0.16)',
+      },
+    },
+    '& .MuiSlider-track': {
+      backgroundColor: 'rgba(128, 255, 0, 1)',
+    },
+    '& .MuiSlider-rail': {
+      backgroundColor: 'rgba(128, 255, 0, 0.3)',
+    },
+    '& .MuiSlider-valueLabel': {
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      color: 'rgba(128, 255, 0, 1)',
+      border: '1px solid rgba(128, 255, 0, 0.4)',
+      fontSize: '0.75rem',
+      '&::before': {
+        borderTopColor: 'rgba(128, 255, 0, 0.4)',
+      },
+    },
+    '&.Mui-disabled': {
+      color: 'rgba(128, 255, 0, 0.5)',
+      '& .MuiSlider-track': {
+        backgroundColor: 'rgba(128, 255, 0, 0.5)',
+      },
+      '& .MuiSlider-rail': {
+        backgroundColor: 'rgba(128, 255, 0, 0.2)',
+      },
+    },
   },
 };
