@@ -17,9 +17,9 @@ const fleeMessage = "Attempting to flee";
 const equipMessage = "Equipping items";
 
 export default function CombatOverlay() {
-  const { executeGameAction, actionFailed, spectating, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
+  const { executeGameAction, actionFailed, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { gameId, adventurer, adventurerState, beast, battleEvent, bag, undoEquipment } = useGameStore();
+  const { gameId, adventurer, adventurerState, beast, battleEvent, bag, undoEquipment, spectating } = useGameStore();
 
   const [untilDeath, setUntilDeath] = useState(false);
   const [attackInProgress, setAttackInProgress] = useState(false);
@@ -124,7 +124,7 @@ export default function CombatOverlay() {
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
-      <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${isJackpot ? `jackpot_${beast!.baseName.toLowerCase()}` : beast!.baseName.toLowerCase()}.png')` }]} />
+      {beast?.baseName && <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${isJackpot ? `jackpot_${beast!.baseName.toLowerCase()}` : beast!.baseName.toLowerCase()}.png')` }]} />}
 
       {/* Adventurer */}
       <Adventurer combatStats={combatStats} />

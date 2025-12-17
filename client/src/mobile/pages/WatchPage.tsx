@@ -17,12 +17,14 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GamePage from './GamePage';
+import { useDungeon } from '@/dojo/useDungeon';
 
 export default function WatchPage() {
   const navigate = useNavigate();
+  const dungeon = useDungeon();
   const { enqueueSnackbar } = useSnackbar()
-  const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
-  const { gameId, adventurer, popExploreLog } = useGameStore();
+  const { processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
+  const { gameId, adventurer, popExploreLog, spectating, setSpectating } = useGameStore();
   const { getGameState } = useStarknetApi();
   const { getGameEvents } = useGameEvents();
 
@@ -33,6 +35,7 @@ export default function WatchPage() {
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
+  const beast = searchParams.get('beast');
 
   useEffect(() => {
     if (game_id) {
@@ -40,12 +43,28 @@ export default function WatchPage() {
       subscribeEvents(game_id);
     } else {
       setSpectating(false);
-      navigate('/survivor');
+      navigate(`/${dungeon.id}`);
     }
   }, [game_id]);
 
   useEffect(() => {
-    if (replayEvents.length > 0 && replayIndex === 0) {
+    if (beast && replayEvents.length > 0) {
+      let [prefix, suffix, name] = beast.toLowerCase().split(/[-_]/);
+      let replayIndex = replayEvents.findIndex((event) => event.type === 'beast'
+        && event.beast?.baseName.toLowerCase() === name && event.beast?.specialPrefix?.toLowerCase() === prefix && event.beast?.specialSuffix?.toLowerCase() === suffix);
+
+      if (replayIndex !== -1) {
+        let adventurerIndex = replayEvents.slice(replayIndex).findIndex((event) => event.type === 'adventurer');
+        jumpToIndex(replayIndex + adventurerIndex);
+      } else {
+        processEvent(replayEvents[0], true)
+        replayForward();
+      }
+    }
+  }, [beast, replayEvents]);
+
+  useEffect(() => {
+    if (replayEvents.length > 0 && replayIndex === 0 && !beast) {
       processEvent(replayEvents[0], true)
       replayForward();
     }
@@ -100,7 +119,7 @@ export default function WatchPage() {
 
     if (!gameState || events.length === 0) {
       enqueueSnackbar('Failed to load game', { variant: 'warning', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
-      return navigate("/survivor");
+      return navigate(`/${dungeon.id}`);
     }
 
     setReplayEvents(events);
@@ -108,7 +127,7 @@ export default function WatchPage() {
 
   const handleEndWatching = () => {
     setSpectating(false);
-    navigate('/survivor');
+    navigate(`/${dungeon.id}`);
   };
 
   const handlePlayPause = (play: boolean) => {

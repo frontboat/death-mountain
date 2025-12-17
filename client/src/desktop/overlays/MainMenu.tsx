@@ -1,18 +1,14 @@
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
-import { OPENING_TIME } from "@/contexts/Statistics";
 import discordIcon from "@/desktop/assets/images/discord.png";
 import AdventurersList from "@/desktop/components/AdventurersList";
 import Settings from "@/desktop/components/Settings";
-import DungeonRewards from "@/dungeons/beasts/DungeonRewards";
+import { useDungeon } from "@/dojo/useDungeon";
 import {
-  ChainId,
-  getNetworkConfig,
-  NetworkConfig,
+  ChainId
 } from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
@@ -33,21 +29,18 @@ import { useNavigate } from "react-router-dom";
 import PriceIndicator from "../../components/PriceIndicator";
 import Leaderboard from "../components/Leaderboard";
 import WalletConnect from "../components/WalletConnect";
-import StatisticsModal from "./StatisticsModal";
 
 export default function MainMenu() {
   const navigate = useNavigate();
   const { account } = useAccount();
   const { login } = useController();
-  const { currentNetworkConfig, setCurrentNetworkConfig } =
-    useDynamicConnector();
+  const dungeon = useDungeon();
+  const { currentNetworkConfig } = useDynamicConnector();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [left, setLeft] = useState(getMenuLeftOffset());
-  const [isDungeonOpen, setIsDungeonOpen] = useState(false);
 
   useEffect(() => {
     function handleResize() {
@@ -57,31 +50,28 @@ export default function MainMenu() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const checkDungeonOpen = () => {
-      const now = Math.floor(Date.now() / 1000);
-      setIsDungeonOpen(now >= OPENING_TIME);
-    };
-
-    checkDungeonOpen();
-  }, []);
-
-  const handleStartGame = () => {
-    if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
-      if (!account) {
-        login();
-        return;
-      }
-
-      setShowPaymentOptions(true);
-    } else {
-      navigate(`/survivor/play`);
+  const handleMainButtonClick = () => {
+    if (dungeon.externalLink) {
+      window.open(dungeon.externalLink, "_blank");
+      return;
     }
+
+    if (dungeon.network === ChainId.WP_PG_SLOT) {
+      navigate(`/${dungeon.id}/play`);
+      return;
+    }
+
+    if (!account) {
+      login();
+      return;
+    }
+
+    setShowPaymentOptions(true);
   };
 
   const handleShowAdventurers = () => {
     if (
-      currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN &&
+      currentNetworkConfig.chainId === ChainId.SN_MAIN &&
       !account
     ) {
       login();
@@ -91,20 +81,8 @@ export default function MainMenu() {
     setShowAdventurers(true);
   };
 
-  const switchMode = () => {
-    if (currentNetworkConfig.name === "Beast Mode") {
-      setCurrentNetworkConfig(
-        getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig
-      );
-    } else {
-      setCurrentNetworkConfig(
-        getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
-      );
-    }
-  };
-
-  let disableGameButtons =
-    !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
+  let disableGameButtons = dungeon.status !== "online";
+  let DungeonRewards = dungeon.rewards;
 
   return (
     <>
@@ -123,7 +101,7 @@ export default function MainMenu() {
               <Box sx={styles.headerBox}>
                 <Typography sx={styles.gameTitle}>LOOT SURVIVOR 2</Typography>
                 <Typography color="secondary" sx={styles.modeTitle}>
-                  {currentNetworkConfig.name}
+                  {dungeon.name}
                 </Typography>
               </Box>
 
@@ -131,7 +109,7 @@ export default function MainMenu() {
                 variant="outlined"
                 fullWidth
                 size="large"
-                onClick={handleStartGame}
+                onClick={handleMainButtonClick}
                 disabled={disableGameButtons}
                 sx={{
                   px: 1,
@@ -153,9 +131,7 @@ export default function MainMenu() {
                         : "#d0c98d",
                     }}
                   >
-                    {currentNetworkConfig.name === "Beast Mode"
-                      ? "Buy Game"
-                      : "Start Game"}
+                    {dungeon.mainButtonText}
                   </Typography>
                 </Box>
               </Button>
@@ -192,22 +168,18 @@ export default function MainMenu() {
                 </Box>
               </Button>
 
-              <Button
+              {dungeon.includePractice && <Button
                 variant="outlined"
                 fullWidth
                 size="large"
-                onClick={switchMode}
+                onClick={() => navigate(`/${dungeon.id}/play?mode=practice`)}
                 sx={{ pl: 1, height: "36px" }}
               >
-                {currentNetworkConfig.name === "Beast Mode" ? (
-                  <img
-                    src="/images/practice.png"
-                    alt="practice"
-                    style={{ width: 20, height: 20 }}
-                  />
-                ) : (
-                  <AttachMoneyIcon sx={{ fontSize: 20 }} />
-                )}
+                <img
+                  src="/images/practice.png"
+                  alt="practice"
+                  style={{ width: 20, height: 20 }}
+                />
                 <Typography
                   sx={{
                     ml: 1,
@@ -217,11 +189,9 @@ export default function MainMenu() {
                     color: "#d0c98d",
                   }}
                 >
-                  {currentNetworkConfig.name === "Beast Mode"
-                    ? "Practice for Free"
-                    : "Play for Real"}
+                  Practice for Free
                 </Typography>
-              </Button>
+              </Button>}
 
               <Divider sx={{ width: "100%", my: 0.5 }} />
 
@@ -265,21 +235,7 @@ export default function MainMenu() {
                 </Typography>
               </Button>
 
-              {/* <Button
-                variant="outlined"
-                fullWidth
-                size="large"
-                onClick={() => setShowStats(true)}
-                sx={{ px: 1, height: '36px' }}
-                disabled={true}
-              >
-                <BarChartIcon sx={{ fontSize: 20, mr: 1 }} />
-                <Typography sx={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.3)', fontWeight: 500, letterSpacing: 0.5 }}>
-                  Statistics
-                </Typography>
-              </Button> */}
-
-              {currentNetworkConfig.name === "Beast Mode" && (
+              {dungeon.ticketAddress && (
                 <>
                   <PriceIndicator />
 
@@ -300,7 +256,7 @@ export default function MainMenu() {
               )}
 
               <Box sx={styles.bottom}>
-                <WalletConnect />
+                {!dungeon.hideController ? <WalletConnect /> : null}
 
                 <Box sx={styles.bottomRow}>
                   <Typography sx={styles.alphaVersion}>
@@ -359,7 +315,6 @@ export default function MainMenu() {
             </>
           )}
         </AnimatePresence>
-        <StatisticsModal open={showStats} onClose={() => setShowStats(false)} />
       </Box>
 
       {showPaymentOptions && (
@@ -369,9 +324,9 @@ export default function MainMenu() {
         />
       )}
 
-      <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
+      {DungeonRewards ? <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
         <DungeonRewards />
-      </Box>
+      </Box> : null}
     </>
   );
 }
