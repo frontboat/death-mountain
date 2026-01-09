@@ -79,9 +79,6 @@ export const useSystemCalls = () => {
         ['equip', 'drop', 'select_stat_upgrades', 'buy_items'].includes(call.entrypoint)
       );
       setPreCalls(prev => [...prev, ...optimisticCalls]);
-      if (optimisticCalls[0].entrypoint === 'select_stat_upgrades') {
-        sessionStorage.setItem('select_stat_upgrades', JSON.stringify(optimisticCalls[0]));
-      }
 
       // Return optimistic events for all optimistic calls
       return optimisticCalls.flatMap(call =>
@@ -93,12 +90,7 @@ export const useSystemCalls = () => {
       await waitForGlobalState(calls, 0);
 
       let callsToExecute = [...preCalls, ...calls];
-      let selectStatUpgrades = sessionStorage.getItem('select_stat_upgrades');
-      if (selectStatUpgrades && !callsToExecute.find((call: any) => call.entrypoint === 'select_stat_upgrades')) {
-        console.log('selectStatUpgrades missing!', preCalls, selectStatUpgrades);
-        callsToExecute.unshift(JSON.parse(selectStatUpgrades));
-      }
-
+      console.log('callsToExecute', callsToExecute);
       let tx = await account!.execute(callsToExecute);
       let receipt: any = await waitForPreConfirmedTransaction(tx.transaction_hash, 0);
 
@@ -119,10 +111,6 @@ export const useSystemCalls = () => {
         await delay(3000);
         window.location.reload();
         return;
-      }
-
-      if (translatedEvents.some((event: GameEvent) => event?.type === 'stat_upgrade')) {
-        sessionStorage.removeItem('select_stat_upgrades');
       }
 
       setPreCalls([]);
