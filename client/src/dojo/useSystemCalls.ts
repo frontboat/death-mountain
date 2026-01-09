@@ -87,7 +87,7 @@ export const useSystemCalls = () => {
     }
 
     try {
-      await waitForGlobalState(calls, 0);
+      await waitForGlobalState(preCalls, calls, 0);
 
       let callsToExecute = [...preCalls, ...calls];
       console.log('callsToExecute', callsToExecute);
@@ -160,7 +160,7 @@ export const useSystemCalls = () => {
     }
   }
 
-  const waitForGlobalState = async (calls: any, retries: number): Promise<boolean> => {
+  const waitForGlobalState = async (preCalls: any, calls: any, retries: number): Promise<boolean> => {
     if (!adventurer) return true;
 
     if (beast && adventurer.beast_health > 0 && adventurer.beast_health < beast.health) {
@@ -189,13 +189,14 @@ export const useSystemCalls = () => {
     }
 
     let adventurerState = await getAdventurerState(gameId!);
+    let optimisticActionCount = preCalls.filter((call: any) => ['drop', 'select_stat_upgrades', 'buy_items'].includes(call.entrypoint)).length;
 
-    if (adventurerState?.action_count === adventurer!.action_count || retries > 9) {
+    if (adventurerState?.action_count === (adventurer!.action_count - optimisticActionCount) || retries > 9) {
       return true;
     }
 
     await delay(500);
-    return waitForGlobalState(calls, retries + 1);
+    return waitForGlobalState(preCalls, calls, retries + 1);
   };
 
   /**
