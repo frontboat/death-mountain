@@ -191,7 +191,7 @@ export const useSystemCalls = () => {
     let adventurerState = await getAdventurerState(gameId!);
     let optimisticActionCount = preCalls.filter((call: any) => ['drop', 'select_stat_upgrades', 'buy_items'].includes(call.entrypoint)).length;
 
-    if (adventurerState?.action_count === (adventurer!.action_count - optimisticActionCount) || retries > 9) {
+    if ((adventurerState?.action_count || 0) >= (adventurer!.action_count - optimisticActionCount) || retries > 9) {
       return true;
     }
 
