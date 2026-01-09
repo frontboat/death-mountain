@@ -59,7 +59,7 @@ const renderTierToggleButton = (tier: Tier) => (
   </ToggleButton>
 );
 
-export default function MarketOverlay() {
+export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: boolean }) {
   const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket } = useGameStore();
   const { executeGameAction, actionFailed } = useGameDirector();
   const {
@@ -168,17 +168,29 @@ export default function MarketOverlay() {
   };
 
   const handleCheckout = () => {
+    if (disabledPurchase) return;
+
     setInProgress(true);
 
-    let itemPurchases = cart.items.map(item => ({
-      item_id: item.id,
-      equip: adventurer?.equipment[ItemUtils.getItemSlot(item.id).toLowerCase() as keyof typeof adventurer.equipment]?.id === 0 ? true : false,
-    }));
+    const slotsToEquip = new Set<string>();
+    let itemPurchases = cart.items.map(item => {
+      const slot = ItemUtils.getItemSlot(item.id).toLowerCase();
+      const slotEmpty = adventurer?.equipment[slot as keyof typeof adventurer.equipment]?.id === 0;
+      const shouldEquip = slotEmpty && !slotsToEquip.has(slot);
+      if (shouldEquip) {
+        slotsToEquip.add(slot);
+      }
+      return {
+        item_id: item.id,
+        equip: shouldEquip,
+      };
+    });
 
     executeGameAction({
       type: 'buy_items',
       potions: cart.potions,
       itemPurchases,
+      remainingGold,
     });
   };
 
@@ -242,7 +254,7 @@ export default function MarketOverlay() {
               <Button
                 variant="outlined"
                 onClick={handleCheckout}
-                disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0}
+                disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0 || disabledPurchase}
                 sx={{ height: '34px', width: '170px', justifyContent: 'center' }}
               >
                 {inProgress
@@ -267,6 +279,7 @@ export default function MarketOverlay() {
 
             {/* Main Content */}
             <Box sx={styles.mainContent}>
+
               {/* Potions Section */}
               <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-end', mb: '6px' }}>
                 <Box sx={styles.potionsSection}>
@@ -401,6 +414,15 @@ export default function MarketOverlay() {
                               {item.type}
                             </Typography>
                           </Box>
+                          {adventurer?.item_specials_seed !== 0 && (() => {
+                            const specials = ItemUtils.getSpecials(item.id, 15, adventurer!.item_specials_seed);
+                            const statBonus = specials.special1 ? ItemUtils.getStatBonus(specials.special1) : null;
+                            return statBonus ? (
+                              <Typography sx={styles.itemStatBonus}>
+                                {statBonus}
+                              </Typography>
+                            ) : null;
+                          })()}
                         </Box>
 
                         <Box sx={styles.itemFooter}>
@@ -911,5 +933,12 @@ const styles = {
   },
   itemUnaffordable: {
     opacity: 0.5,
+  },
+  itemStatBonus: {
+    color: '#808080',
+    fontSize: '0.75rem',
+    fontWeight: '500',
+    marginTop: '2px',
+    opacity: 0.8,
   },
 };

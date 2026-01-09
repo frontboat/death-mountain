@@ -11,24 +11,26 @@ import {
   Payment,
   Stats,
 } from "@/types/game";
-import { translateGameEvent } from "@/utils/translation";
-import { getContractByName } from "@dojoengine/core";
-import { delay, stringToFelt } from "@/utils/utils";
-import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 import { useAnalytics } from "@/utils/analytics";
+import { GameEvent } from "@/utils/events";
+import { optimisticGameEvents, translateGameEvent } from "@/utils/translation";
+import { delay, stringToFelt } from "@/utils/utils";
+import { getContractByName } from "@dojoengine/core";
 import { useSnackbar } from "notistack";
+import { useState } from "react";
+import { CairoOption, CairoOptionVariant, CallData, byteArray, num } from "starknet";
 import { useGameTokens } from "./useGameTokens";
-import { num } from "starknet";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
-  const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
+  const { setCollectableTokenURI, gameId, adventurer, beast, bag, exploreLog } = useGameStore();
   const { getBeastTokenId } = useGameTokens();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
   const dungeon = useDungeon();
   const { txRevertedEvent } = useAnalytics();
+  const [preCalls, setPreCalls] = useState<any[]>([]);
 
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
@@ -64,13 +66,40 @@ export const useSystemCalls = () => {
    *   - drop: Function to drop items
    *   - levelUp: Function to level up and purchase items
    */
+
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
-    try {
-      if (adventurer) {
-        await waitForGlobalState();
+    // Check if ANY of the calls are optimistic
+    const hasOptimisticCall = calls.some(call =>
+      ['drop', 'select_stat_upgrades', 'buy_items'].includes(call.entrypoint)
+    );
+
+    if (hasOptimisticCall) {
+      // Add ALL optimistic calls to preCalls (not just the last one)
+      const optimisticCalls = calls.filter(call =>
+        ['equip', 'drop', 'select_stat_upgrades', 'buy_items'].includes(call.entrypoint)
+      );
+      setPreCalls(prev => [...prev, ...optimisticCalls]);
+      if (optimisticCalls[0].entrypoint === 'select_stat_upgrades') {
+        sessionStorage.setItem('select_stat_upgrades', JSON.stringify(optimisticCalls[0]));
       }
 
-      let tx = await account!.execute(calls);
+      // Return optimistic events for all optimistic calls
+      return optimisticCalls.flatMap(call =>
+        optimisticGameEvents(adventurer!, bag, call)
+      );
+    }
+
+    try {
+      await waitForGlobalState(calls, 0);
+
+      let callsToExecute = [...preCalls, ...calls];
+      let selectStatUpgrades = sessionStorage.getItem('select_stat_upgrades');
+      if (selectStatUpgrades && !callsToExecute.find((call: any) => call.entrypoint === 'select_stat_upgrades')) {
+        console.log('selectStatUpgrades missing!', preCalls, selectStatUpgrades);
+        callsToExecute.unshift(JSON.parse(selectStatUpgrades));
+      }
+
+      let tx = await account!.execute(callsToExecute);
       let receipt: any = await waitForPreConfirmedTransaction(tx.transaction_hash, 0);
 
       if (receipt.execution_status === "REVERTED") {
@@ -92,7 +121,12 @@ export const useSystemCalls = () => {
         return;
       }
 
-      return translatedEvents.filter(Boolean);
+      if (translatedEvents.some((event: GameEvent) => event?.type === 'stat_upgrade')) {
+        sessionStorage.removeItem('select_stat_upgrades');
+      }
+
+      setPreCalls([]);
+      return translatedEvents.filter((event: GameEvent) => Boolean(event) && event.action_count > (adventurer?.action_count || 0));
     } catch (error) {
       console.error("Error executing action:", error);
       forceResetAction();
@@ -138,7 +172,34 @@ export const useSystemCalls = () => {
     }
   }
 
-  const waitForGlobalState = async (retries: number = 0): Promise<boolean> => {
+  const waitForGlobalState = async (calls: any, retries: number): Promise<boolean> => {
+    if (!adventurer) return true;
+
+    if (beast && adventurer.beast_health > 0 && adventurer.beast_health < beast.health) {
+      return true;
+    }
+
+    let lastEvent = exploreLog[exploreLog.length - 1];
+    if (lastEvent?.type === "discovery") {
+      if (lastEvent.discovery?.type === "Health") {
+        return true;
+      }
+      if (lastEvent.discovery?.type === "Gold" && !calls.find((call: any) => call.entrypoint === 'buy_items')) {
+        return true;
+      }
+      if (lastEvent.discovery?.type === "Loot" && !calls.find((call: any) => call.entrypoint === 'equip' || call.entrypoint === 'drop')) {
+        return true;
+      }
+    } else if (lastEvent?.type === "obstacle") {
+      if (!calls.find((call: any) => call.entrypoint === 'buy_items' && call.calldata[1] > 0)) {
+        return true;
+      }
+    } else if (lastEvent?.type === "buy_items") {
+      if (lastEvent.items_purchased?.length === 0 || !calls.find((call: any) => call.entrypoint === 'equip')) {
+        return true;
+      }
+    }
+
     let adventurerState = await getAdventurerState(gameId!);
 
     if (adventurerState?.action_count === adventurer!.action_count || retries > 9) {
@@ -146,7 +207,7 @@ export const useSystemCalls = () => {
     }
 
     await delay(500);
-    return waitForGlobalState(retries + 1);
+    return waitForGlobalState(calls, retries + 1);
   };
 
   /**
@@ -353,11 +414,12 @@ export const useSystemCalls = () => {
    * @param statUpgrades Object containing stat upgrades
    * @param items Array of items to purchase
    */
-  const buyItems = (gameId: number, potions: number, items: ItemPurchase[]) => {
+  const buyItems = (gameId: number, potions: number, items: ItemPurchase[], remainingGold: number) => {
     return {
       contractAddress: GAME_ADDRESS,
       entrypoint: "buy_items",
       calldata: [gameId, potions, items],
+      remainingGold,
     };
   };
 
