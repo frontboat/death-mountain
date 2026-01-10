@@ -12,7 +12,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onBack }: SettingsProps) {
-  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro } = useUIStore();
+  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro, skipFirstBattle, setSkipFirstBattle } = useUIStore();
   const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
 
   const handleSwitchToMobile = () => {
@@ -52,7 +52,7 @@ export default function Settings({ onBack }: SettingsProps) {
         <Box sx={styles.settingSection}>
           <Typography sx={styles.sectionTitle}>Sound</Typography>
 
-          <Box sx={styles.soundControl}>
+          <Box sx={styles.soundControl} mt={1}>
             <Typography width="45px">Sfx</Typography>
 
             <IconButton
@@ -148,9 +148,29 @@ export default function Settings({ onBack }: SettingsProps) {
 
         <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
+        {/* Animations Section */}
+        <Box sx={styles.settingSection}>
+          <Typography sx={[styles.sectionTitle]}>Game</Typography>
+          <Box sx={styles.animationsControl}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={skipFirstBattle}
+                  onChange={(e) => setSkipFirstBattle(e.target.checked)}
+                  sx={styles.checkbox}
+                />
+              }
+              label="Skip first battle"
+              sx={styles.checkboxLabel}
+            />
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
         {/* Client Settings */}
         <Box sx={styles.settingSection}>
-          <Typography sx={styles.sectionTitle} color="primary">
+          <Typography sx={styles.sectionTitle} color="primary" mb={1}>
             Client
           </Typography>
 
@@ -190,7 +210,6 @@ const styles = {
   settingSection: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 1,
   },
   sectionTitle: {
     fontSize: '16px',

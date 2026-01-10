@@ -268,10 +268,6 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
             }
           }
 
-          if (isNew && isWeaponSlot && [Tier.T1, Tier.T2, Tier.T3].includes(tier) && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5) {
-            onItemClick(item);
-          }
-
           return (
             <Tooltip
               key={item.id}

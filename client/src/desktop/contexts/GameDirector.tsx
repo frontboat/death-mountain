@@ -19,6 +19,7 @@ import {
   processGameEvent,
 } from "@/utils/events";
 import { getNewItemsEquipped, incrementBeastsCollected } from "@/utils/game";
+import { optimisticGameEvents } from "@/utils/translation";
 import { delay, generateBattleSalt, generateSalt } from "@/utils/utils";
 import {
   createContext,
@@ -94,6 +95,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const {
     gameId,
     beast,
+    bag,
     adventurer,
     adventurerState,
     collectable,
@@ -117,7 +119,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     spectating,
   } = useGameStore();
   const { setIsOpen } = useMarketStore();
-  const { skipAllAnimations, skipIntroOutro } = useUIStore();
+  const { skipAllAnimations, skipIntroOutro, skipFirstBattle } = useUIStore();
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
   const [actionFailed, setActionFailed] = useReducer((x) => x + 1, 0);
@@ -129,6 +131,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [skipCombat, setSkipCombat] = useState(false);
   const [showSkipCombat, setShowSkipCombat] = useState(false);
   const [beastDefeated, setBeastDefeated] = useState(false);
+  const [optimisticTxs, setOptimisticTxs] = useState<any[]>([]);
+  const [startingEvent, setStartingEvent] = useState<GameEvent[] | null>(null);
 
   useEffect(() => {
     if (gameId && !metadata) {
@@ -347,7 +351,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   };
 
   const executeGameAction = async (action: GameAction) => {
-    let txs: any[] = [];
+    if (spectating) return;
+    let txs: any[] = [...optimisticTxs];
 
     if (action.type === "start_game") {
       if (
@@ -362,6 +367,19 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       }
 
       txs.push(startGame(action.gameId!));
+
+      if (action.settings.adventurer.xp === 0) {
+        if (VRFEnabled) {
+          txs.push(requestRandom(generateBattleSalt(gameId!, 0, 1)));
+        }
+        txs.push(attack(gameId!, false));
+      }
+    }
+
+    if (action.type === "attack" && adventurer!.xp === 0 && startingEvent) {
+      setEventQueue((prev) => [...prev, ...startingEvent]);
+      setStartingEvent(null);
+      return;
     }
 
     if (VRFEnabled && action.type === "explore") {
@@ -407,10 +425,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       txs.push(attack(gameId!, action.untilDeath!));
     } else if (action.type === "flee") {
       txs.push(flee(gameId!, action.untilDeath!));
-    } else if (action.type === "buy_items") {
-      txs.push(buyItems(gameId!, action.potions!, action.itemPurchases!, action.remainingGold!));
-    } else if (action.type === "select_stat_upgrades") {
-      txs.push(selectStatUpgrades(gameId!, action.statUpgrades!));
     } else if (action.type === "equip") {
       txs.push(
         equip(
@@ -418,11 +432,21 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
           newItemsEquipped.map((item) => item.id)
         )
       );
+    } else if (action.type === "buy_items") {
+      setOptimisticTxs((prev) => [...prev, buyItems(gameId!, action.potions!, action.itemPurchases!)]);
+    } else if (action.type === "select_stat_upgrades") {
+      setOptimisticTxs((prev) => [...prev, selectStatUpgrades(gameId!, action.statUpgrades!)]);
     } else if (action.type === "drop") {
-      txs.push(drop(gameId!, action.items!));
+      setOptimisticTxs((prev) => [...prev, drop(gameId!, action.items!)]);
     }
 
-    const events = await executeAction(txs, setActionFailed);
+    const hasOptimisticTx = ['drop', 'select_stat_upgrades', 'buy_items'].includes(action.type)
+    let events = [];
+    if (hasOptimisticTx) {
+      events = optimisticGameEvents(adventurer!, bag, action);
+    } else {
+      events = await executeAction(txs, setActionFailed, () => setOptimisticTxs([]));
+    }
     if (!events) return;
 
     if (dungeon.id === "survivor" && events.some((event: any) => event.type === "defeated_beast")) {
@@ -438,6 +462,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       events.filter((event: any) => event.type === "beast_attack").length >= 2
     ) {
       setShowSkipCombat(true);
+    }
+
+    if (action.type === "start_game" && action.settings.adventurer.xp === 0 && !skipFirstBattle) {
+      setStartingEvent(events.filter((event: any) => event.action_count === 2));
+      events = events.filter((event: any) => event.action_count === 1);
     }
 
     setEventQueue((prev) => [...prev, ...events]);

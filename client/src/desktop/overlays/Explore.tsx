@@ -3,7 +3,7 @@ import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { streamIds } from '@/utils/cloudflare';
 import { getEventTitle } from '@/utils/events';
-import { ItemUtils } from '@/utils/loot';
+import { ItemUtils, Tier } from '@/utils/loot';
 import { Box, Button, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import BeastCollectedPopup from '../../components/BeastCollectedPopup';
@@ -61,7 +61,9 @@ export default function ExploreOverlay() {
     let itemPurchases = cart.items.map(item => {
       const slot = ItemUtils.getItemSlot(item.id).toLowerCase();
       const slotEmpty = adventurer?.equipment[slot as keyof typeof adventurer.equipment]?.id === 0;
-      const shouldEquip = slotEmpty && !slotsToEquip.has(slot);
+      const shouldEquip = (slotEmpty && !slotsToEquip.has(slot))
+        || slot === 'weapon' && [Tier.T1, Tier.T2].includes(ItemUtils.getItemTier(item.id)) && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5;
+
       if (shouldEquip) {
         slotsToEquip.add(slot);
       }

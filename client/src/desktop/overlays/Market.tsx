@@ -176,7 +176,9 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
     let itemPurchases = cart.items.map(item => {
       const slot = ItemUtils.getItemSlot(item.id).toLowerCase();
       const slotEmpty = adventurer?.equipment[slot as keyof typeof adventurer.equipment]?.id === 0;
-      const shouldEquip = slotEmpty && !slotsToEquip.has(slot);
+      const shouldEquip = (slotEmpty && !slotsToEquip.has(slot))
+        || slot === 'weapon' && [Tier.T1, Tier.T2].includes(ItemUtils.getItemTier(item.id)) && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5;
+
       if (shouldEquip) {
         slotsToEquip.add(slot);
       }
