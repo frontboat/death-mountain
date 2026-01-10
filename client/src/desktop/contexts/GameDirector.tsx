@@ -119,7 +119,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     spectating,
   } = useGameStore();
   const { setIsOpen } = useMarketStore();
-  const { skipAllAnimations, skipIntroOutro, skipFirstBattle } = useUIStore();
+  const { skipAllAnimations, skipIntroOutro, skipFirstBattle, fastBattle } = useUIStore();
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
   const [actionFailed, setActionFailed] = useReducer((x) => x + 1, 0);
@@ -346,7 +346,9 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     if (delayTimes[event.type] && !skipDelay) {
-      await delay(delayTimes[event.type]);
+      if (event.type === "flee" || !fastBattle) {
+        await delay(delayTimes[event.type]);
+      }
     }
   };
 
@@ -464,9 +466,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setShowSkipCombat(true);
     }
 
-    if (action.type === "start_game" && action.settings.adventurer.xp === 0 && !skipFirstBattle) {
-      setStartingEvent(events.filter((event: any) => event.action_count === 2));
-      events = events.filter((event: any) => event.action_count === 1);
+    if (action.type === "start_game" && action.settings.adventurer.xp === 0) {
+      if (!skipFirstBattle) {
+        setStartingEvent(events.filter((event: any) => event.action_count === 2));
+        events = events.filter((event: any) => event.action_count === 1);
+      } else {
+        events = events.filter((event: any) => event.action_count === 2);
+      }
     }
 
     setEventQueue((prev) => [...prev, ...events]);

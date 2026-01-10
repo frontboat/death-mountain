@@ -18,7 +18,7 @@ export default function SettingsOverlay() {
   const dungeon = useDungeon();
   const { showSettings, setShowSettings } = useGameStore();
   const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
-  const { skipAllAnimations, setSkipAllAnimations } = useUIStore();
+  const { skipAllAnimations, setSkipAllAnimations, fastBattle, setFastBattle } = useUIStore();
   const navigate = useNavigate();
   const handleExitGame = () => {
     navigate('/');
@@ -145,6 +145,20 @@ export default function SettingsOverlay() {
                       />
                     }
                     label="Skip all animations"
+                    sx={styles.checkboxLabel}
+                  />
+                </Box>
+
+                <Box sx={styles.animationsControl} mt={-1}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={fastBattle}
+                        onChange={(e) => setFastBattle(e.target.checked)}
+                        sx={styles.checkbox}
+                      />
+                    }
+                    label="Skip Battle Attacks"
                     sx={styles.checkboxLabel}
                   />
                 </Box>

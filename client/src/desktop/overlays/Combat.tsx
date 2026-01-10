@@ -11,6 +11,7 @@ import SettingsOverlay from './Settings';
 import TipsOverlay from './Tips';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 import { useDynamicConnector } from '@/contexts/starknet';
+import { useUIStore } from '@/stores/uiStore';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -20,6 +21,7 @@ export default function CombatOverlay() {
   const { executeGameAction, actionFailed, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
   const { currentNetworkConfig } = useDynamicConnector();
   const { gameId, adventurer, adventurerState, beast, battleEvent, bag, undoEquipment, spectating } = useGameStore();
+  const { fastBattle } = useUIStore();
 
   const [untilDeath, setUntilDeath] = useState(false);
   const [attackInProgress, setAttackInProgress] = useState(false);
@@ -35,7 +37,7 @@ export default function CombatOverlay() {
 
   useEffect(() => {
     if (battleEvent && !skipCombat) {
-      if (battleEvent.type === "attack") {
+      if (battleEvent.type === "attack" && !fastBattle) {
         setCombatLog(`You attacked ${beast!.baseName} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
       }
 

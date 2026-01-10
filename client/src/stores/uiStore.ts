@@ -25,6 +25,8 @@ interface UIState {
   // Game
   setSkipFirstBattle: (skip: boolean) => void
   skipFirstBattle: boolean
+  setFastBattle: (fast: boolean) => void
+  fastBattle: boolean
 }
 
 export const useUIStore = create<UIState>()(
@@ -49,6 +51,8 @@ export const useUIStore = create<UIState>()(
       // Game
       setSkipFirstBattle: (skip) => set({ skipFirstBattle: skip }),
       skipFirstBattle: false,
+      setFastBattle: (fast) => set({ fastBattle: fast }),
+      fastBattle: false,
 
       // Client preferences
       setUseMobileClient: (useMobile) => set({ useMobileClient: useMobile }),
@@ -61,6 +65,7 @@ export const useUIStore = create<UIState>()(
         skipIntroOutro: state.skipIntroOutro,
         skipAllAnimations: state.skipAllAnimations,
         skipFirstBattle: state.skipFirstBattle,
+        fastBattle: state.fastBattle,
       }),
     }
   )

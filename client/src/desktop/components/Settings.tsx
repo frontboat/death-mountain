@@ -12,7 +12,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onBack }: SettingsProps) {
-  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro, skipFirstBattle, setSkipFirstBattle } = useUIStore();
+  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro, skipFirstBattle, setSkipFirstBattle, fastBattle, setFastBattle } = useUIStore();
   const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
 
   const handleSwitchToMobile = () => {
@@ -164,6 +164,18 @@ export default function Settings({ onBack }: SettingsProps) {
               sx={styles.checkboxLabel}
             />
           </Box>
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={fastBattle}
+                onChange={(e) => setFastBattle(e.target.checked)}
+                sx={styles.checkbox}
+              />
+            }
+            label="Skip Battle Attacks"
+            sx={styles.checkboxLabel}
+          />
         </Box>
 
         <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
