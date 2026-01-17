@@ -623,7 +623,7 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
             )}
 
             {(!advancedMode || activeTab === 'market') && (
-              <Box sx={advancedMode ? styles.marketContent : undefined}>
+              <Box sx={styles.marketContent}>
                 {/* Top Bar */}
                 {marketAvailable && <Box sx={styles.topBar}>
                   <Box sx={styles.goldDisplay}>
