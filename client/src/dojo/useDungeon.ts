@@ -2,7 +2,7 @@
 import BeastModeRewards from "@/dungeons/BeastModeRewards";
 import { ChainId } from "@/utils/networkConfig";
 import { ComponentType } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 export interface Dungeon {
   id: string;
@@ -51,9 +51,31 @@ export const DUNGEONS: Record<string, Dungeon> = {
 }
 
 export const useDungeon = () => {
-  const { dungeonId } = useParams();
+  const params = useParams();
+  const location = useLocation();
+  
+  // Try to get dungeonId from route params first
+  let dungeonId = params?.dungeonId;
+  
+  // If not available from params (e.g., when called outside Route context),
+  // try to parse it from the location pathname
+  if (!dungeonId && location.pathname) {
+    // Match the first path segment (works for both "/budokan" and "/budokan/play")
+    const pathMatch = location.pathname.match(/\/([^/]+)(?:\/|$)/);
+    if (pathMatch && pathMatch[1] && pathMatch[1] !== '') {
+      dungeonId = pathMatch[1];
+    }
+  }
 
-  const dungeon = DUNGEONS[dungeonId || "survivor"];
+  if (!dungeonId) {
+    return DUNGEONS["survivor"];
+  }
+
+  const dungeon = DUNGEONS[dungeonId];
+  
+  if (!dungeon) {
+    return DUNGEONS["survivor"];
+  }
 
   return dungeon;
 }
