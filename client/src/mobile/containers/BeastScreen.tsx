@@ -14,7 +14,7 @@ import { suggestBestCombatGear } from '@/utils/gearSuggestion';
 import { Box, Button, Checkbox, LinearProgress, Typography, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useLottie } from 'lottie-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
@@ -55,6 +55,10 @@ export default function BeastScreen({ setIsBattling }: BeastScreenProps) {
   const [simulationResult, setSimulationResult] = useState(defaultSimulationResult);
   const [simulationActionCount, setSimulationActionCount] = useState<number | null>(null);
   const [ownerName, setOwnerName] = useState<string | null>(null);
+
+  // Refs to capture damage values when animations start (to avoid race condition when fastBattle is true)
+  const adventurerStrikeDamageRef = useRef<number>(0);
+  const beastStrikeDamageRef = useRef<number>(0);
 
   const hasNewItemsEquipped = useMemo(() => {
     if (!adventurer?.equipment || !adventurerState?.equipment) return false;
@@ -100,7 +104,7 @@ export default function BeastScreen({ setIsBattling }: BeastScreenProps) {
     autoplay: false,
     style: { position: 'absolute', width: '60%', height: '60%', top: '20%', right: '20%' },
     onComplete: () => {
-      setBeastHealth(prev => Math.max(0, prev - battleEvent?.attack?.damage!));
+      setBeastHealth(prev => Math.max(0, prev - adventurerStrikeDamageRef.current));
       strike.stop();
     }
   });
@@ -111,7 +115,7 @@ export default function BeastScreen({ setIsBattling }: BeastScreenProps) {
     autoplay: false,
     style: { position: 'absolute', width: '60%', height: '60%', top: '30%', right: '20%' },
     onComplete: () => {
-      setHealth(prev => Math.max(0, prev - battleEvent?.attack?.damage!));
+      setHealth(prev => Math.max(0, prev - beastStrikeDamageRef.current));
       beastStrike.stop();
     }
   });
@@ -125,6 +129,8 @@ export default function BeastScreen({ setIsBattling }: BeastScreenProps) {
   useEffect(() => {
     if (battleEvent && !skipCombat) {
       if (battleEvent.type === "attack") {
+        // Capture damage before playing animation to avoid race condition when fastBattle is true
+        adventurerStrikeDamageRef.current = battleEvent.attack?.damage ?? 0;
         strike.play();
         if (!fastBattle) {
           setCombatLog(`You attacked ${beast!.baseName} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
@@ -132,6 +138,8 @@ export default function BeastScreen({ setIsBattling }: BeastScreenProps) {
       }
 
       else if (battleEvent.type === "beast_attack") {
+        // Capture damage before playing animation to avoid race condition when fastBattle is true
+        beastStrikeDamageRef.current = battleEvent.attack?.damage ?? 0;
         beastStrike.play();
         setCombatLog(`${beast!.baseName} attacked your ${battleEvent.attack?.location} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
       }
