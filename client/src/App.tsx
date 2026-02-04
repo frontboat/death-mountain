@@ -30,7 +30,7 @@ function AppContent() {
         <TermsOfServiceModal open={showTermsOfService} onAccept={acceptTermsOfService} onDecline={logout} />
       )}
       {shouldShowMobile && showTermsOfService && (
-        <TermsOfServiceScreen onAccept={acceptTermsOfService} />
+        <TermsOfServiceScreen onAccept={acceptTermsOfService} onDecline={logout} />
       )}
 
       {!shouldShowMobile && (
